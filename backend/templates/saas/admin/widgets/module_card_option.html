@@ -1,0 +1,27 @@
+<label class="ma7aly-module-card{% if option.selected %} is-selected{% endif %}" data-module="{{ option.value }}">
+  <input
+    type="checkbox"
+    name="{{ widget.name }}"
+    value="{{ option.value }}"
+    class="ma7aly-module-card__input"
+    {% if widget.attrs.id %}id="{{ widget.attrs.id }}_{{ option.index }}"{% endif %}
+    {% if option.selected %}checked{% endif %}
+  >
+  <span class="ma7aly-module-card__check" aria-hidden="true"><i class="fas fa-check"></i></span>
+  <span class="ma7aly-module-card__icon" aria-hidden="true">
+    {% if option.value == "hr" %}
+      <i class="fas fa-users"></i>
+    {% elif option.value == "purchases" %}
+      <i class="fas fa-shopping-bag"></i>
+    {% elif option.value == "inventory" %}
+      <i class="fas fa-boxes"></i>
+    {% elif option.value == "pos" %}
+      <i class="fas fa-cash-register"></i>
+    {% elif option.value == "accounting" %}
+      <i class="fas fa-calculator"></i>
+    {% else %}
+      <i class="fas fa-puzzle-piece"></i>
+    {% endif %}
+  </span>
+  <span class="ma7aly-module-card__label">{{ option.label }}</span>
+</label>

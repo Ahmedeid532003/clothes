@@ -1,0 +1,51 @@
+---
+description: Ma7alyErp product spec from PDF — source of truth for features, architecture, and UI
+alwaysApply: true
+---
+
+# Ma7alyErp — Product Spec (from PDF)
+
+**Source document (always consult when scoping features):**
+`H:\AK Tech\Clothes\اخر تطوير وكتابه.pdf`
+
+**Detailed index:** `docs/MAHALY-ERP-SPEC.md`
+
+## What we are building
+
+Multi-tenant **SaaS ERP for clothing retailers** (Egypt/MENA), branded **Ma7alyErp** / `mahalyerp.com`.
+
+Three layers:
+1. **SaaS Super Admin** — programming company: subscriptions, plans, tenant DBs, billing (Fawry/Paymob/etc.), freeze on late pay, support tickets.
+2. **Tenant ERP** — per shop: full ERP on web (accounts, inventory w/ size-color, purchases, sales/POS/installments, HR, light manufacturing, reports, ETA tax).
+3. **Android app** — tenant ERP on mobile + B2C marketplace (geo-sorted shops), consumer pays installments; platform commission on payments.
+
+## Non-negotiable architecture
+
+- **Tenant isolation:** subdomain per company (`company1.mahalyerp.com`), **separate DB per tenant**, unique usernames globally (`user@company`).
+- **Branch vs warehouse:** **Branch** = only sales/purchase/POS outlet. **Warehouses** = storage/transfers only; never appear on sales/purchase screens.
+- **Season** flows through purchases, sales, reports, reorder logic (active season from admin).
+- **Concurrent users:** unlimited user records; login limited by subscription count with clear Arabic message.
+- **UI:** black gradient sidebar, Cairo + table font Times New Roman bold, RTL Arabic + LTR English, ~80% screens = standard CRUD pattern (drawer, export, columns, advanced filter). References: Stockifly, CoreUI, AdminLTE. Two dashboards: owner metrics + user quick-access home.
+
+## Clothing-specific modules (priority custom logic)
+
+- Purchase invoice: supplier+season, matrix size/color, smart search, side drawer product create.
+- Reorder threshold (% of inbound sold) → alerts → purchase order PDF → WhatsApp → PO tracking.
+- Supplier occasion discount (okazion) vs general promotions (sales price only).
+- Orders (pre-scan barcodes) → load into sale/transfer/returns/stock count.
+- Stock count/reconciliation vs ledger.
+- POS: fullscreen, tabs (sale / exchange / collect), multi-payment, installment plans, multi-seller per invoice, auto transfer if insufficient stock.
+- Shifts/cash drawer → treasury handoff.
+- Customer: guarantors, installment collection & restructuring, late-payment bulk SMS/WhatsApp.
+- Expenses split: supplier payments | general | payroll+advances.
+
+## Current codebase vs spec
+
+Frontend prototype only (React/Vite): partial UI (Home, Dashboard, Departments, Purchases mock). **No backend, no SaaS, no real DB, no Android.** Extend UI toward spec; new backend/tenant model is separate work.
+
+## When implementing
+
+1. Read relevant PDF section + `docs/MAHALY-ERP-SPEC.md` before new features.
+2. Match existing UI patterns (sidebar, i18n ar/en, CRUD shell).
+3. Do not assume Gemini/API — not required for ERP.
+4. Ask user if PDF and implementation conflict; PDF is product authority unless user overrides.

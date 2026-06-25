@@ -1,0 +1,98 @@
+/* حقول الفروع مخفية افتراضياً — يُظهرها JS عند اختيار الباقة */
+.form-group[class*="field-branch_"] {
+  display: none !important;
+}
+
+.form-group[class*="field-branch_"].ma7aly-branch-visible {
+  display: block !important;
+}
+
+/* إظهار الحقول التي بها أخطاء حتى لو كانت مخفية */
+.form-group.errors[class*="field-branch_"],
+.form-group.field-modules.errors,
+.form-group:has(ul.errorlist li)[class*="field-branch_"] {
+  display: block !important;
+}
+
+.ma7aly-form-errors {
+  margin-bottom: 1.25rem;
+  border-right: 4px solid #dc2626;
+}
+
+.ma7aly-form-errors ul li {
+  margin-bottom: 0.35rem;
+}
+
+/* صناديق اختيار الموديولات */
+.ma7aly-modules-checkboxes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem 1.25rem;
+}
+
+.ma7aly-modules-checkboxes li label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem 0;
+}
+
+.form-group.field-modules .help {
+  margin-top: 0.5rem;
+  color: #475569;
+}
+
+.branch-plan-hint {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-right: 4px solid #2563eb;
+  border-radius: 10px;
+  color: #1e3a8a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.branch-plan-hint--warn {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-right-color: #d97706;
+  color: #92400e;
+}
+
+.tab-pane .form-group[class*="field-branch_"].ma7aly-branch-visible {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.tab-pane .form-group[class*="field-branch_"][class*="_image"].ma7aly-branch-visible {
+  margin-top: -0.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+#tenant_form .errornote,
+#tenant_form ul.errorlist {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  color: #b91c1c;
+  font-weight: 600;
+  list-style: none;
+}
+
+#tenant_form .form-group.errors input,
+#tenant_form .form-group.errors select {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}

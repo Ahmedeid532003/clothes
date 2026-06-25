@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+{% load i18n jazzmin %}
+
+{% block content_title %}تفاصيل إيرادات الاشتراكات{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">الرئيسية</a></li>
+  <li class="breadcrumb-item active">إيرادات الاشتراكات</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row w-100 mb-4">
+  <div class="col-lg-4 col-md-6 mb-3">
+    <div class="card ma7aly-stat-card ma7aly-stat-revenue shadow-sm h-100">
+      <div class="card-body">
+        <p class="ma7aly-stat-label mb-1">إجمالي المبالغ (الفلتر الحالي)</p>
+        <h3 class="ma7aly-stat-value mb-0">{{ summary_total_display }}</h3>
+        <small class="opacity-90">{{ summary_count }} دفعة</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8 col-md-6 mb-3 d-flex align-items-center flex-wrap gap-2">
+    {% for key, label in period_choices %}
+    <a href="?period={{ key }}"
+       class="btn btn-sm {% if period == key %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      {{ label }}
+    </a>
+    {% endfor %}
+    <a href="{{ add_payment_url }}" class="btn btn-sm btn-success ms-md-auto">
+      <i class="fas fa-plus"></i> تسجيل دفعة
+    </a>
+    <a href="{{ payment_list_url }}" class="btn btn-sm btn-outline-primary">
+      كل المدفوعات
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white border-bottom">
+    <h5 class="mb-0"><i class="fas fa-receipt text-success me-2"></i>من اشترك وبكم</h5>
+  </div>
+  <div class="card-body p-0">
+    {% if payments %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 ma7aly-revenue-table">
+        <thead class="table-light">
+          <tr>
+            <th>المنشأة</th>
+            <th>الباقة</th>
+            <th>المبلغ</th>
+            <th>طريقة الدفع</th>
+            <th>تاريخ الدفع</th>
+            <th>مرجع العملية</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in payments %}
+          <tr>
+            <td>
+              <strong>{{ row.tenant_name }}</strong><br>
+              <small class="text-muted">{{ row.tenant_slug }}</small>
+            </td>
+            <td>{{ row.plan_name }}</td>
+            <td><strong class="text-success">{{ row.amount_display }}</strong></td>
+            <td>{{ row.method_display }}</td>
+            <td>{{ row.paid_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ row.reference }}</td>
+            <td class="text-nowrap">
+              <a href="{{ row.tenant_admin_url }}" class="btn btn-sm btn-outline-secondary">المنشأة</a>
+              <a href="{{ row.admin_url }}" class="btn btn-sm btn-outline-primary">الدفعة</a>
+            </td>
+          </tr>
+          {% if row.notes %}
+          <tr class="ma7aly-revenue-notes-row">
+            <td colspan="7" class="text-muted small py-1 ps-4">
+              <i class="fas fa-sticky-note"></i> {{ row.notes }}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-center text-muted">
+      <p class="mb-3">لا توجد مدفوعات مسجّلة{% if period != "all" %} في هذه الفترة{% endif %}.</p>
+      <a href="{{ add_payment_url }}" class="btn btn-success">تسجيل أول دفعة</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

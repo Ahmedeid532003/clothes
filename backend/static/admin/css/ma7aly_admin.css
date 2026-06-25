@@ -1,0 +1,306 @@
+/* Ma7alyERP — لوحة تحكم Django Admin */
+
+/* ── كروت الإحصائيات ── */
+.ma7aly-stats-row .ma7aly-stat-card {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ma7aly-stats-row .ma7aly-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ma7aly-stat-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 55%, #1e40af 100%);
+  color: #fff;
+}
+
+.ma7aly-stat-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%);
+  color: #fff;
+}
+
+.ma7aly-stat-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 55%, #b45309 100%);
+  color: #fff;
+}
+
+.ma7aly-stat-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%);
+  color: #fff;
+}
+
+.ma7aly-stat-revenue {
+  background: linear-gradient(135deg, #059669 0%, #10b981 55%, #047857 100%);
+  color: #fff;
+}
+
+.ma7aly-stat-card-link {
+  color: inherit;
+}
+
+.ma7aly-stat-card-link:hover .ma7aly-stat-card {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+}
+
+.ma7aly-stat-sub {
+  display: block;
+  font-size: 0.78rem;
+  opacity: 0.92;
+  margin-top: 0.2rem;
+}
+
+.ma7aly-stat-chevron {
+  font-size: 0.9rem;
+}
+
+.ma7aly-revenue-table th {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.ma7aly-revenue-notes-row td {
+  background: #f8fafc;
+  border-top: none !important;
+}
+
+/* ── تنبيهات الاشتراكات ── */
+.ma7aly-sub-table th {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.ma7aly-sub-row.ma7aly-sub-frozen td {
+  background: #fef2f2;
+}
+
+.ma7aly-sub-row.ma7aly-sub-critical td {
+  background: #fff7ed;
+}
+
+.ma7aly-sub-row.ma7aly-sub-grace td {
+  background: #fffbeb;
+}
+
+.ma7aly-sub-row.ma7aly-sub-warning td {
+  background: #eff6ff;
+}
+
+.ma7aly-sub-alerts .alert {
+  border-right: 4px solid #f59e0b;
+}
+
+.ma7aly-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.ma7aly-stat-label {
+  font-size: 0.82rem;
+  opacity: 0.92;
+  margin-bottom: 0.15rem;
+}
+
+.ma7aly-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.ma7aly-stats-row + .row .badge {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: 8px;
+}
+
+/* ── كروت التطبيقات والجداول ── */
+.ma7aly-app-card {
+  border-radius: 14px;
+  border: none;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.ma7aly-app-card:nth-child(odd) .card-header {
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #fff !important;
+}
+
+.ma7aly-app-card:nth-child(even) .card-header {
+  background: linear-gradient(90deg, #0d9488 0%, #14b8a6 100%) !important;
+  color: #fff !important;
+}
+
+.ma7aly-app-card .card-header h5 {
+  color: inherit !important;
+  font-weight: 700;
+}
+
+.ma7aly-dash-table {
+  margin-bottom: 0;
+}
+
+.ma7aly-dash-table thead {
+  display: none;
+}
+
+.ma7aly-dash-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.ma7aly-dash-table tbody tr:hover {
+  background: #f1f5f9 !important;
+}
+
+.ma7aly-dash-table tbody td {
+  padding: 0.85rem 0.5rem;
+  vertical-align: middle;
+  border-top: 1px solid #f1f5f9;
+}
+
+.ma7aly-dash-table tbody td:first-child a {
+  color: #1e293b;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ma7aly-dash-table tbody td:first-child a:hover {
+  color: #2563eb;
+}
+
+.ma7aly-dash-table .btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+}
+
+/* آخر النشاطات */
+#recent-actions-module {
+  border-radius: 14px;
+  border: none;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+}
+
+#recent-actions-module .card-header {
+  background: linear-gradient(90deg, #334155 0%, #475569 100%) !important;
+  color: #fff !important;
+}
+
+#recent-actions-module .card-header h4 {
+  color: #fff !important;
+}
+
+/* قوائم وجداول الأدمن العامة */
+#result_list {
+  border-radius: 10px;
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#result_list thead th {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #334155;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 0.75rem;
+}
+
+#result_list tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+#result_list tbody tr:hover {
+  background: #eff6ff !important;
+}
+
+.change-list .card,
+.module.filtered {
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.submit-row {
+  border-radius: 0 0 12px 12px;
+}
+
+/* ── تقويم التاريخ (عربي / RTL + Jazzmin tabs) ── */
+.change-form .tab-content,
+.change-form .tab-pane.active,
+.change-form .card-body,
+.change-form .card {
+  overflow: visible !important;
+}
+
+.tab-pane .inline-related {
+  overflow-x: auto;
+}
+
+.calendarbox {
+  min-width: 19em;
+  width: 19em !important;
+  max-width: min(19em, calc(100vw - 24px));
+  overflow: visible !important;
+  z-index: 10050 !important;
+}
+
+.calendarbox .calendar {
+  overflow: hidden;
+  border-radius: 0 0 8px 8px;
+}
+
+.calendar table {
+  table-layout: fixed;
+  width: 100% !important;
+}
+
+.calendar th,
+.calendar td {
+  text-align: center !important;
+  vertical-align: middle;
+  padding: 6px 2px !important;
+}
+
+.calendar td a {
+  display: block;
+  padding: 6px 2px !important;
+}
+
+.calendarbox h2,
+.calendar caption {
+  padding: 8px 10px !important;
+  font-size: 0.875rem !important;
+}
+
+.calendarnav-previous,
+.calendarnav-next {
+  z-index: 2;
+}
+
+html[dir="rtl"] .calendar-shortcuts {
+  direction: rtl;
+  text-align: center;
+}
+
+html[dir="rtl"] .calendarnav-previous {
+  right: 8px !important;
+  left: auto !important;
+}
+
+html[dir="rtl"] .calendarnav-next {
+  left: 8px !important;
+  right: auto !important;
+}

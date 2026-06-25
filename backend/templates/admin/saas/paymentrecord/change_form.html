@@ -1,0 +1,45 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'saas/admin/payment_record.css' %}">
+{% endblock %}
+
+{% block form_top %}
+  <div id="ma7aly-billing-panel" class="ma7aly-billing-panel" hidden>
+    <div class="ma7aly-billing-panel__title">
+      <i class="fas fa-file-invoice-dollar"></i> ملخص التجديد
+    </div>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <span class="ma7aly-billing-label">الباقة</span>
+        <strong id="ma7aly-billing-plan">—</strong>
+      </div>
+      <div class="col-md-4">
+        <span class="ma7aly-billing-label">السعر الشهري</span>
+        <strong id="ma7aly-billing-monthly">—</strong>
+      </div>
+      <div class="col-md-4">
+        <span class="ma7aly-billing-label">انتهاء الاشتراك الحالي</span>
+        <strong id="ma7aly-billing-current-end">—</strong>
+      </div>
+      <div class="col-md-4">
+        <span class="ma7aly-billing-label">بعد التجديد</span>
+        <strong id="ma7aly-billing-new-end" class="text-success">—</strong>
+      </div>
+    </div>
+    <p id="ma7aly-billing-warning" class="ma7aly-billing-warning mb-0" hidden></p>
+  </div>
+  {{ block.super }}
+{% endblock %}
+
+{% block extrajs %}
+  {{ block.super }}
+  {% if ma7aly_billing_url_template %}
+    <script>
+      window.MA7ALY_BILLING_URL_TEMPLATE = "{{ ma7aly_billing_url_template|escapejs }}";
+    </script>
+  {% endif %}
+  <script src="{% static 'saas/admin/payment_record.js' %}"></script>
+{% endblock %}

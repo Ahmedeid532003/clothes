@@ -1,0 +1,6 @@
+{% extends "admin/base.html" %}
+
+{% block messages %}
+  {% include "admin/includes/subscription_alerts.html" %}
+  {{ block.super }}
+{% endblock %}

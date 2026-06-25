@@ -1,0 +1,51 @@
+/* نموذج تسجيل دفعة الاشتراك */
+
+.form-group.field-tenant {
+  max-width: 100%;
+}
+
+.form-group.field-tenant select.ma7aly-tenant-select,
+.form-group.field-tenant .select2-container {
+  width: 100% !important;
+  max-width: 42rem;
+}
+
+.form-group.field-tenant .select2-selection--single {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.ma7aly-billing-panel {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 100%);
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.ma7aly-billing-panel__title {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #065f46;
+}
+
+.ma7aly-billing-label {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.ma7aly-billing-warning {
+  margin-top: 0.75rem;
+  color: #b45309;
+  font-size: 0.875rem;
+}
+
+.form-group.field-renewal_months {
+  max-width: 12rem;
+}
+
+.form-group.field-amount {
+  max-width: 16rem;
+}

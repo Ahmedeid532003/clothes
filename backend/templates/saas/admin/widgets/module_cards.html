@@ -1,0 +1,9 @@
+{% with id=widget.attrs.id %}
+<div class="ma7aly-module-grid"{% if id %} id="{{ id }}"{% endif %}>
+  {% for group, options, index in widget.optgroups %}
+    {% for option in options %}
+      {% include "saas/admin/widgets/module_card_option.html" with option=option widget=widget only %}
+    {% endfor %}
+  {% endfor %}
+</div>
+{% endwith %}

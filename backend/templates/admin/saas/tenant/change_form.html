@@ -1,0 +1,29 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block form_top %}
+  {% if adminform.form.errors and not is_popup %}
+    <div class="alert alert-danger ma7aly-form-errors" role="alert">
+      <h5 class="alert-heading mb-2">يرجى تصحيح الأخطاء التالية:</h5>
+      <ul class="mb-0">
+        {% for bound_field in adminform.form %}
+          {% for err in bound_field.errors %}
+            <li><strong>{{ bound_field.label }}:</strong> {{ err }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for err in adminform.form.non_field_errors %}
+          <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block extrajs %}
+  {{ block.super }}
+  {% if ma7aly_plan_limits %}
+    <script>window.MA7ALY_PLAN_LIMITS = {{ ma7aly_plan_limits|safe }};</script>
+  {% endif %}
+  <script src="{% static 'saas/admin/tenant_add.js' %}"></script>
+{% endblock %}

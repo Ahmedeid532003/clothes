@@ -1,0 +1,204 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin log %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block content_title %}لوحة تحكم المنصة{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">الرئيسية</a></li>
+  <li class="breadcrumb-item active">لوحة التحكم</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+{% if admin_stats %}
+<div class="row w-100 mb-4 ma7aly-stats-row">
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card ma7aly-stat-card ma7aly-stat-primary shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="ma7aly-stat-icon"><i class="fas fa-store"></i></div>
+        <div>
+          <p class="ma7aly-stat-label mb-0">إجمالي المنشآت</p>
+          <h3 class="ma7aly-stat-value mb-0">{{ admin_stats.total_tenants }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card ma7aly-stat-card ma7aly-stat-success shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="ma7aly-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div>
+          <p class="ma7aly-stat-label mb-0">منشآت نشطة</p>
+          <h3 class="ma7aly-stat-value mb-0">{{ admin_stats.active_tenants }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card ma7aly-stat-card ma7aly-stat-warning shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="ma7aly-stat-icon"><i class="fas fa-snowflake"></i></div>
+        <div>
+          <p class="ma7aly-stat-label mb-0">منشآت مجمدة</p>
+          <h3 class="ma7aly-stat-value mb-0">{{ admin_stats.frozen_tenants }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card ma7aly-stat-card ma7aly-stat-danger shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <div class="ma7aly-stat-icon"><i class="fas fa-clock"></i></div>
+        <div>
+          <p class="ma7aly-stat-label mb-0">اشتراكات تنتهي خلال 7 أيام</p>
+          <h3 class="ma7aly-stat-value mb-0">{{ admin_stats.expiring_soon }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row w-100 mb-3 ma7aly-stats-row">
+  <div class="col-lg-4 col-md-6 mb-3">
+    <a href="{{ admin_stats.revenue_details_url }}" class="ma7aly-stat-card-link d-block h-100 text-decoration-none">
+      <div class="card ma7aly-stat-card ma7aly-stat-revenue shadow-sm h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="ma7aly-stat-icon"><i class="fas fa-coins"></i></div>
+          <div>
+            <p class="ma7aly-stat-label mb-0">إيرادات الاشتراكات</p>
+            <h3 class="ma7aly-stat-value mb-0">{{ admin_stats.total_revenue_display }}</h3>
+            <small class="ma7aly-stat-sub">هذا الشهر: {{ admin_stats.revenue_this_month_display }} · {{ admin_stats.payment_count }} دفعة</small>
+          </div>
+          <i class="fas fa-chevron-left ma7aly-stat-chevron ms-auto opacity-75"></i>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+<div class="row w-100 mb-4">
+  <div class="col-md-6"><span class="badge badge-info p-2">قيد التجهيز: {{ admin_stats.provisioning_tenants }}</span></div>
+  <div class="col-md-6 text-md-end"><span class="badge badge-secondary p-2">باقات نشطة: {{ admin_stats.active_plans }}</span></div>
+</div>
+{% endif %}
+
+{% if admin_subscription_alerts %}
+<div id="ma7aly-subscription-alerts" class="row w-100 mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-bell text-warning me-2"></i>تنبيهات انتهاء الاشتراكات</h5>
+        <span class="badge bg-warning text-dark">{{ admin_subscription_summary.total }} تنبيه</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 ma7aly-sub-table">
+            <thead class="table-light">
+              <tr>
+                <th>المنشأة</th>
+                <th>الباقة</th>
+                <th>ينتهي في</th>
+                <th>آخر يوم مسموح</th>
+                <th>متبقي</th>
+                <th>الحالة</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in admin_subscription_alerts %}
+              <tr class="ma7aly-sub-row ma7aly-sub-{{ row.level }}">
+                <td><strong>{{ row.tenant_name }}</strong><br><small class="text-muted">{{ row.tenant_slug }}</small></td>
+                <td>{{ row.plan_name }}</td>
+                <td>{{ row.ends_at }}</td>
+                <td>{{ row.deadline }}</td>
+                <td>
+                  {% if row.days_until_deadline < 0 %}
+                    <span class="text-danger">منتهٍ</span>
+                  {% elif row.days_until_end >= 0 %}
+                    {{ row.days_until_end }} يوم للانتهاء
+                  {% else %}
+                    سماح: {{ row.days_until_deadline }} يوم
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.level == "frozen" %}<span class="badge bg-danger">مجمد</span>
+                  {% elif row.level == "grace" %}<span class="badge bg-warning text-dark">فترة سماح</span>
+                  {% elif row.level == "critical" %}<span class="badge bg-danger">حرج</span>
+                  {% else %}<span class="badge bg-info">قريب الانتهاء</span>{% endif %}
+                </td>
+                <td>
+                  {% if row.admin_url %}<a href="{{ row.admin_url }}" class="btn btn-sm btn-outline-primary">فتح</a>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% get_side_menu using="app_list" as dashboard_list %}
+{% if dashboard_list %}{% widthratio dashboard_list|length 2 1 as middle %}{% endif %}
+
+<div class="col-lg-9 col-12">
+  <div class="row">
+    <div class="col-md-6 col-sm-12">
+      {% for app in dashboard_list %}
+      <div class="card mb-3 shadow-sm ma7aly-app-card">
+        <div class="card-header bg-white border-0"><h5 class="m-0 font-weight-bold">{{ app.name }}</h5></div>
+        <div class="card-body pt-0">
+          <table class="table table-sm table-hover mb-0 ma7aly-dash-table">
+            <tbody>
+            {% for model in app.models %}
+              <tr>
+                <td>{% if model.url %}<a href="{{ model.url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}</td>
+                <td>
+                  <div class="btn-group float-end">
+                    {% if model.add_url %}<a href="{{ model.add_url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.success }}">إضافة</a>{% endif %}
+                    {% if model.url %}<a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }}">{% if model.view_only %}عرض{% else %}تعديل{% endif %}</a>{% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if forloop.counter == middle|add:"0" %}</div><div class="col-md-6 col-sm-12">{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="col-lg-3 col-12">
+  <div id="content-related">
+    <div class="card shadow-sm" id="recent-actions-module">
+      <div class="card-header bg-white border-0"><h4 class="mb-0">آخر النشاطات</h4></div>
+      <div class="card-body">
+        {% get_admin_log 6 as admin_log for_user user %}
+        {% if not admin_log %}<p class="text-muted mb-0">لا يوجد نشاط حديث</p>{% else %}
+        <div class="timeline">
+          {% for entry in admin_log %}
+          <div>
+            {% if entry.is_change %}<i class="fas fa-edit bg-gray text-xs"></i>
+            {% elif entry.is_deletion %}<i class="fas fa-trash bg-danger text-xs"></i>
+            {% elif entry.is_addition %}<i class="fas fa-plus-circle bg-success text-xs"></i>{% endif %}
+            <div class="timeline-item">
+              <span class="time"><i class="fas fa-clock"></i> {{ entry.action_time|timesince }}</span>
+              <h3 class="timeline-header no-border">
+                {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr }}{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
+              </h3>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

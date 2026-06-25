@@ -1,0 +1,20 @@
+﻿{% if admin_subscription_alerts %}
+<div class="ma7aly-sub-alerts mb-3">
+  <div class="alert alert-warning mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
+    <div>
+      <strong><i class="fas fa-bell me-1"></i> تنبيهات الاشتراكات</strong>
+      — {{ admin_subscription_summary.total }} منشأة تحتاج متابعة
+      {% if admin_subscription_summary.critical %}
+        <span class="badge bg-danger ms-1">حرج: {{ admin_subscription_summary.critical }}</span>
+      {% endif %}
+      {% if admin_subscription_summary.grace %}
+        <span class="badge bg-warning text-dark ms-1">سماح: {{ admin_subscription_summary.grace }}</span>
+      {% endif %}
+      {% if admin_subscription_summary.frozen %}
+        <span class="badge bg-secondary ms-1">مجمد: {{ admin_subscription_summary.frozen }}</span>
+      {% endif %}
+    </div>
+    <a href="{% url 'admin:index' %}#ma7aly-subscription-alerts" class="btn btn-sm btn-outline-dark">عرض التفاصيل</a>
+  </div>
+</div>
+{% endif %}
