@@ -7,6 +7,7 @@
     "dev": "vite --host=0.0.0.0 --port=8787 --strictPort",
     "build": "vite build",
     "build:netlify": "vite build --mode production",
+    "deploy:netlify": "powershell -ExecutionPolicy Bypass -File scripts/netlify-cli-deploy.ps1",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
