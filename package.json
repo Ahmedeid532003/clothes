@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:netlify": "vite build --mode production",
     "deploy:netlify": "powershell -ExecutionPolicy Bypass -File scripts/netlify-cli-deploy.ps1",
+    "pack:netlify": "powershell -ExecutionPolicy Bypass -File scripts/pack-netlify-upload.ps1",
+    "pack:vps": "powershell -ExecutionPolicy Bypass -File scripts/pack-vps-upload.ps1",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"

@@ -1,0 +1,48 @@
+# ═══════════════════════════════════════════════════════
+#  رفع Ma7alyErp على Netlify فقط
+# ═══════════════════════════════════════════════════════
+
+## الطريقة 1 — من GitHub (الأفضل، تحديث تلقائي)
+
+المستودع جاهز: https://github.com/Ahmedeid532003/clothes
+
+1. افتح: https://app.netlify.com/start
+2. Add new site → Import an existing project → GitHub
+3. اختر المستودع: Ahmedeid532003/clothes
+4. الإعدادات (تُقرأ من netlify.toml تلقائياً):
+   - Build command: npm run build:netlify
+   - Publish directory: dist
+   - VITE_API_URL = /api/v1
+5. Deploy site
+6. في Site settings → Domain management → غيّر الاسم إلى ma7aly أو ما تريد
+
+الباك إند + الداتابيز يبقيان على VPS ويتصل بهم Netlify عبر proxy:
+  /api/* → http://128.140.127.179:8788/api/*
+
+---
+
+## الطريقة 2 — رفع ملف ZIP (Netlify Drop)
+
+الملف الجاهز:
+  release\mahalyerp-netlify-deploy.zip
+
+1. افتح: https://app.netlify.com/drop
+2. اسحب الملف ZIP إلى الصفحة
+3. بعد الرفع: Site settings → Change site name → ma7aly
+
+---
+
+## ملاحظة عن TE Data
+
+إذا ظهر "took too long to respond" من مصر:
+  - الموقع قد يكون شغال من خارج مصر أو VPN
+  - جرّب DNS: 1.1.1.1 أو 8.8.8.8
+  - أو اربط دومين خاص على Netlify
+
+---
+
+## إعادة بناء ملف الرفع
+
+  npm run pack:netlify
+
+الملف يظهر في: release\mahalyerp-netlify-deploy.zip
