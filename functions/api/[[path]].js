@@ -1,11 +1,20 @@
 /**
- * Proxy /api/* → VPS (باك إند + داتابيز)
- * Cloudflare Pages Functions — يعمل من مصر (TE Data) بخلاف Netlify
+ * Cloudflare Pages — proxy /api/* إلى Render (بدون VPS)
+ * عيّن MAHALY_API_URL في Cloudflare Dashboard → Settings → Variables
+ * مثال: https://mahalyerp-api.onrender.com/api
  */
 export async function onRequest(context) {
+  const base = (context.env.MAHALY_API_URL || "").replace(/\/$/, "");
+  if (!base) {
+    return new Response(
+      JSON.stringify({ detail: "MAHALY_API_URL not configured on Cloudflare Pages" }),
+      { status: 503, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   const url = new URL(context.request.url);
   const path = context.params.path ?? "";
-  const upstream = `http://128.140.127.179:8788/api/${path}${url.search}`;
+  const upstream = `${base}/${path}${url.search}`;
 
   const headers = new Headers(context.request.headers);
   headers.delete("host");

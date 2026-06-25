@@ -13,6 +13,7 @@ env = environ.Env(
     DEBUG=(bool, True),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:3000", "http://127.0.0.1:3000"]),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     DEPLOY_GATE_ENABLED=(bool, False),
 )
 
@@ -22,7 +23,10 @@ if env_file.exists():
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-change-in-production")
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+ALLOWED_HOSTS = list(env("ALLOWED_HOSTS"))
+_render_host = env("RENDER_EXTERNAL_HOSTNAME", default="")
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
 
 INSTALLED_APPS = [
     "jazzmin",
@@ -88,6 +92,9 @@ DATABASES = {
         "PORT": env("DB_PORT", default="5432"),
     },
 }
+_database_url = env("DATABASE_URL", default="")
+if _database_url:
+    DATABASES["default"] = env.db("DATABASE_URL", conn_max_age=600)
 
 DATABASE_ROUTERS = ["tenancy.router.TenantRouter"]
 
@@ -125,6 +132,13 @@ AUTH_USER_MODEL = "auth.User"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 CORS_ALLOW_HEADERS = (
     *default_headers,
     "x-tenant-slug",

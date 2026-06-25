@@ -4,16 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  VITE_API_URL = "/api/v1"
+  # بعد نشر Render: ضع هنا رابط API الحقيقي
+  # VITE_API_URL = "https://mahalyerp-api.onrender.com/api/v1"
 
-# API proxy → VPS (الباك إند + قاعدة البيانات على السيرفر)
-[[redirects]]
-  from = "/api/*"
-  to = "http://128.140.127.179:8788/api/:splat"
-  status = 200
-  force = true
-
-# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
