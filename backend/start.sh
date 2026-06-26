@@ -2,9 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-python manage.py migrate --noinput
-if [ "${CLOUD_SHARED_DB:-false}" != "true" ]; then
-  python manage.py migrate_all_tenants || true
+if [ "${SKIP_STARTUP_MIGRATE:-false}" != "true" ]; then
+  python manage.py migrate --noinput
+  if [ "${CLOUD_SHARED_DB:-false}" != "true" ]; then
+    python manage.py migrate_all_tenants || true
+  fi
 fi
 
 exec gunicorn config.wsgi:application \
