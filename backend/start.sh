@@ -3,7 +3,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 python manage.py migrate --noinput
-python manage.py migrate_all_tenants || true
+if [ "${CLOUD_SHARED_DB:-false}" != "true" ]; then
+  python manage.py migrate_all_tenants || true
+fi
 python manage.py collectstatic --noinput
 
 exec gunicorn config.wsgi:application \

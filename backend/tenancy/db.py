@@ -57,6 +57,8 @@ def generate_tenant_db_credentials(tenant: Tenant) -> tuple[str, str]:
 
 
 def tenant_db_config(tenant: Tenant) -> dict:
+    if getattr(settings, "CLOUD_SHARED_DB", False):
+        return _admin_cfg().copy()
     base = _admin_cfg().copy()
     base["NAME"] = tenant.db_name
     if tenant.db_user and tenant.db_password_encrypted:
@@ -143,10 +145,9 @@ def _grant_schema_privileges(db_name: str, db_user: str) -> None:
 
 
 def create_postgres_tenant_database(tenant: Tenant) -> None:
-    """
-    ينشئ دور PostgreSQL بباسورد خاص + قاعدة بيانات مملوكة له.
-    يتطلب أن يكون مستخدم MainClothes (DB_USER) لديه CREATEROLE و CREATEDB.
-    """
+    """ينشئ دور PostgreSQL + قاعدة منفصلة (VPS). على Neon استخدم CLOUD_SHARED_DB=true."""
+    if getattr(settings, "CLOUD_SHARED_DB", False):
+        return
     from psycopg2 import sql
 
     if not tenant.db_user or not tenant.db_password_encrypted:

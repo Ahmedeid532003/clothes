@@ -29,6 +29,8 @@ services:
         value: mahaly_t_
       - key: USE_REDIS
         value: "false"
+      - key: CLOUD_SHARED_DB
+        value: "true"
       - key: DEPLOY_GATE_ENABLED
         value: "false"
       - key: CORS_ALLOWED_ORIGINS

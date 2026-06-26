@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from tenancy.context import get_current_tenant
 
 TENANT_DB_ALIAS = "tenant"
@@ -22,6 +24,8 @@ class TenantRouter:
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
+        if getattr(settings, "CLOUD_SHARED_DB", False):
+            return db == "default"
         if app_label in PLATFORM_APP_LABELS:
             return db == "default"
         if app_label in TENANT_APP_LABELS:
@@ -29,6 +33,8 @@ class TenantRouter:
         return False
 
     def _route(self, model):
+        if getattr(settings, "CLOUD_SHARED_DB", False):
+            return "default"
         if model._meta.app_label in PLATFORM_APP_LABELS:
             return "default"
         if model._meta.app_label in TENANT_APP_LABELS:

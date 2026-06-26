@@ -97,11 +97,14 @@ DATABASES = {
 }
 _database_url = env("DATABASE_URL", default="")
 if _database_url:
-    DATABASES["default"] = env.db("DATABASE_URL", conn_max_age=600)
+    DATABASES["default"] = env.db("DATABASE_URL")
+    DATABASES["default"]["CONN_MAX_AGE"] = 600
 
 DATABASE_ROUTERS = ["tenancy.router.TenantRouter"]
 
 TENANT_DB_PREFIX = env("TENANT_DB_PREFIX", default="mahaly_t_")
+# Neon / managed PostgreSQL: قاعدة واحدة مشتركة (بدون CREATE DATABASE)
+CLOUD_SHARED_DB = env.bool("CLOUD_SHARED_DB", default=False)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

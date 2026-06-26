@@ -7,6 +7,7 @@ from django.utils import timezone
 from erp.models import Branch, Season, User, Warehouse
 from saas.models import GlobalUsername, Plan, Subscription, Tenant
 from tenancy.context import set_current_tenant
+from tenancy.db_alias import erp_database_alias
 from tenancy.services import ensure_tenant_connection, provision_tenant_database
 
 
@@ -50,15 +51,16 @@ class Command(BaseCommand):
 
         ensure_tenant_connection(tenant)
         set_current_tenant(tenant)
+        db = erp_database_alias()
 
         from erp.services import branches as branch_service
 
-        branch, _ = Branch.objects.using("tenant").get_or_create(
+        branch, _ = Branch.objects.using(db).get_or_create(
             code="main",
             defaults={"name_ar": "الفرع الرئيسي", "name_en": "Main Branch"},
         )
         branch_service.ensure_branch_sale_warehouse(branch)
-        Season.objects.using("tenant").get_or_create(
+        Season.objects.using(db).get_or_create(
             code="2026-ss",
             defaults={
                 "name_ar": "صيف 2026",
@@ -69,7 +71,7 @@ class Command(BaseCommand):
         )
 
         if not GlobalUsername.objects.filter(username=username).exists():
-            User._default_manager.db_manager("tenant").create_user(
+            User._default_manager.db_manager(db).create_user(
                 username=username,
                 password=options["password"],
                 full_name="مالك تجريبي",
