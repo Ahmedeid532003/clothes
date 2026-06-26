@@ -18,4 +18,6 @@ RUN chmod +x start.sh
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["bash", "start.sh"]
+# Runsite may pass a broken start command (chmod && ...); ENTRYPOINT still runs start.sh.
+ENTRYPOINT ["/bin/bash", "/app/start.sh"]
+CMD []
