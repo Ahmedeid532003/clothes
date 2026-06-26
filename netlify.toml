@@ -4,8 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # بعد نشر Render: ضع هنا رابط API الحقيقي
-  # VITE_API_URL = "https://mahalyerp-api.onrender.com/api/v1"
+  # عيّن في Netlify Dashboard → Environment variables (Build):
+  # VITE_API_URL = https://YOUR-APP.koyeb.app/api/v1
 
 [[redirects]]
   from = "/*"

@@ -27,6 +27,9 @@ ALLOWED_HOSTS = list(env("ALLOWED_HOSTS"))
 _render_host = env("RENDER_EXTERNAL_HOSTNAME", default="")
 if _render_host:
     ALLOWED_HOSTS.append(_render_host)
+_koyeb_host = env("KOYEB_PUBLIC_DOMAIN", default="")
+if _koyeb_host:
+    ALLOWED_HOSTS.append(_koyeb_host)
 
 INSTALLED_APPS = [
     "jazzmin",
