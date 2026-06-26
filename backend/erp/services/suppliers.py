@@ -18,6 +18,11 @@ from erp.supplier_models import (
     SupplierPayment,
     SupplierType,
 )
+from tenancy.db_alias import erp_database_alias
+
+
+def _erp_db() -> str:
+    return erp_database_alias()
 
 
 DEFAULT_TYPES = [
@@ -114,7 +119,7 @@ DEFAULT_GROUPS = [
 def _tenant_table_exists(model) -> bool:
     from django.db import connections
 
-    return model._meta.db_table in connections["tenant"].introspection.table_names()
+    return model._meta.db_table in connections[_erp_db()].introspection.table_names()
 
 
 def seed_supplier_defaults() -> dict:
@@ -123,7 +128,7 @@ def seed_supplier_defaults() -> dict:
     categories_created = 0
     departments_created = 0
     for code, kind, name_ar, name_en, desc in DEFAULT_TYPES:
-        _, created = SupplierType.objects.using("tenant").get_or_create(
+        _, created = SupplierType.objects.using(_erp_db()).get_or_create(
             code=code,
             defaults={
                 "name_ar": name_ar,
@@ -136,7 +141,7 @@ def seed_supplier_defaults() -> dict:
         if created:
             types_created += 1
     for code, mode, name_ar, name_en, desc in DEFAULT_GROUPS:
-        _, created = SupplierGroup.objects.using("tenant").get_or_create(
+        _, created = SupplierGroup.objects.using(_erp_db()).get_or_create(
             code=code,
             defaults={
                 "name_ar": name_ar,
@@ -150,7 +155,7 @@ def seed_supplier_defaults() -> dict:
             groups_created += 1
     if _tenant_table_exists(SupplierCategory):
         for code, kind, name_ar, name_en, desc in DEFAULT_CATEGORIES:
-            _, created = SupplierCategory.objects.using("tenant").get_or_create(
+            _, created = SupplierCategory.objects.using(_erp_db()).get_or_create(
                 code=code,
                 defaults={
                     "name_ar": name_ar,
@@ -164,7 +169,7 @@ def seed_supplier_defaults() -> dict:
                 categories_created += 1
     if _tenant_table_exists(SupplierDepartment):
         for code, kind, name_ar, name_en, desc in DEFAULT_DEPARTMENTS:
-            _, created = SupplierDepartment.objects.using("tenant").get_or_create(
+            _, created = SupplierDepartment.objects.using(_erp_db()).get_or_create(
                 code=code,
                 defaults={
                     "name_ar": name_ar,

@@ -105,6 +105,8 @@ DATABASE_ROUTERS = ["tenancy.router.TenantRouter"]
 TENANT_DB_PREFIX = env("TENANT_DB_PREFIX", default="mahaly_t_")
 # Neon / managed PostgreSQL: قاعدة واحدة مشتركة (بدون CREATE DATABASE)
 CLOUD_SHARED_DB = env.bool("CLOUD_SHARED_DB", default=False)
+if CLOUD_SHARED_DB:
+    DATABASES["tenant"] = DATABASES["default"].copy()
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
