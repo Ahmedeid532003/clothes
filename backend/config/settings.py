@@ -141,6 +141,11 @@ AUTH_USER_MODEL = "auth.User"
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS") or CORS_ALLOWED_ORIGINS
+if getattr(settings, "CLOUD_SHARED_DB", False):
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^https://.*\.netlify\.app$",
+        r"^https://.*\.pages\.dev$",
+    ]
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
