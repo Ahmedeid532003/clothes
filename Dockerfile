@@ -13,11 +13,11 @@ COPY backend/ .
 
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
 
-RUN chmod +x start.sh
+RUN chmod +x start.sh runsite-chmod-shim.sh \
+    && cp runsite-chmod-shim.sh /app/chmod
 
 ENV PORT=8080
+ENV PATH="/app:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 EXPOSE 8080
 
-# Runsite may pass a broken start command (chmod && ...); ENTRYPOINT still runs start.sh.
-ENTRYPOINT ["/bin/bash", "/app/start.sh"]
-CMD []
+CMD ["/app/start.sh"]
