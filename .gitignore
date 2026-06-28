@@ -12,6 +12,7 @@ coverage/
 *.log
 .env*
 !.env.example
+deploy/fly.local.env
 
 # Local deploy bundles (keep release/*.txt docs, skip binaries)
 release/*.zip

@@ -1,0 +1,33 @@
+Ma7alyErp — Fly.io + Cloudflare (ابدأ من هنا)
+==============================================
+
+الدليل الكامل: docs\DEPLOY-FLY.md
+
+─── 1) Neon (قاعدة بيانات مجانية) ───
+https://neon.tech → New Project → انسخ Connection string
+
+─── 2) Fly secrets ───
+copy deploy\fly.env.example deploy\fly.local.env
+(عدّل DATABASE_URL و SECRET_KEY)
+npm run fly:secrets
+
+─── 3) نشر API ───
+npm run deploy:fly
+اختبر: https://mahalyerp-api.fly.dev/api/v1/health/
+
+─── 4) بذور أول مرة ───
+flyctl ssh console -a mahalyerp-api
+python manage.py seed_platform
+python manage.py seed_demo_tenant
+
+─── 5) فرونت Cloudflare ───
+npm run pack:cloudflare
+ارفع release\MAHALY-CLOUDFLARE-FIXED.zip على Cloudflare Pages
+Variables: MAHALY_API_URL=https://mahalyerp-api.fly.dev/api
+
+─── دخول تجريبي ───
+demo | owner@demo | demo1234
+
+─── ملاحظة ───
+Fly.io يحتاج فيزا بعد التجربة (~3-5$/شهر)
+Neon + Cloudflare مجاني

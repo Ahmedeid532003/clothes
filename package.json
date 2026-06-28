@@ -15,6 +15,8 @@
     "pack:netlify": "powershell -ExecutionPolicy Bypass -File scripts/pack-netlify-upload.ps1",
     "pack:cloudflare": "powershell -ExecutionPolicy Bypass -File scripts/pack-cloudflare-pages.ps1",
     "pack:vps": "powershell -ExecutionPolicy Bypass -File scripts/pack-vps-upload.ps1",
+    "fly:secrets": "powershell -ExecutionPolicy Bypass -File scripts/fly-secrets.ps1",
+    "deploy:fly": "powershell -ExecutionPolicy Bypass -File scripts/fly-deploy.ps1",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"

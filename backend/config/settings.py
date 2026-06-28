@@ -36,6 +36,10 @@ if _render_host:
 _koyeb_host = env("KOYEB_PUBLIC_DOMAIN", default="")
 if _koyeb_host:
     ALLOWED_HOSTS.append(_koyeb_host)
+_fly_app = os.environ.get("FLY_APP_NAME", "").strip()
+if _fly_app:
+    ALLOWED_HOSTS.append(f"{_fly_app}.fly.dev")
+    ALLOWED_HOSTS.append(".fly.dev")
 
 INSTALLED_APPS = [
     "jazzmin",

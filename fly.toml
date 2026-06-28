@@ -1,0 +1,38 @@
+# Fly.io — Ma7alyErp API (Django)
+# Deploy: flyctl deploy --remote-only
+# Secrets: see deploy/fly.env.example
+
+app = "mahalyerp-api"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  WEB_CONCURRENCY = "1"
+  DEBUG = "false"
+  USE_REDIS = "false"
+  DEPLOY_GATE_ENABLED = "false"
+  CLOUD_SHARED_DB = "true"
+  SKIP_STARTUP_MIGRATE = "false"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "90s"
+    method = "GET"
+    path = "/api/v1/health/"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
