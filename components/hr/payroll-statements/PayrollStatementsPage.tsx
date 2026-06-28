@@ -1,25 +1,28 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight,
   Layers3,
   Pencil,
   Printer,
-  Search,
   Trash2,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { fetchBranches, type BranchDto } from '@/lib/api/branches';
 import {
+  payrollApi,
   payrollStatementsApi,
   type PayrollSheetRow,
   type PayrollStatementRow,
 } from '@/lib/api/hr-payroll';
-import { AlertBanner, fmtMoney } from '@/components/accounting/AccountingUi';
+import { entityName } from '@/lib/entity-name';
+import { AlertBanner } from '@/components/accounting/AccountingUi';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import {
   CreatePayrollStatementModal,
   type CreatePayrollStatementForm,
 } from '@/components/hr/payroll-statements/CreatePayrollStatementModal';
+import { PayrollSheetFillView } from '@/components/hr/payroll-statements/PayrollSheetFillView';
+import { PrintEmployeeSalaryModal } from '@/components/hr/payroll-statements/PrintEmployeeSalaryModal';
 import {
   fmtEgp,
   monthLabel,
@@ -29,6 +32,7 @@ type SheetDetail = {
   statement: PayrollStatementRow;
   rows: PayrollSheetRow[];
   totals: Record<string, string>;
+  draftForm?: CreatePayrollStatementForm;
 };
 
 export function PayrollStatementsPage() {
@@ -40,6 +44,8 @@ export function PayrollStatementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printSeed, setPrintSeed] = useState<{ employeeId?: string; year?: number; month?: number }>({});
   const [sheetDetail, setSheetDetail] = useState<SheetDetail | null>(null);
 
   const refresh = useCallback(async () => {
@@ -86,20 +92,53 @@ export function PayrollStatementsPage() {
     }
   };
 
+  const openSheetPreview = async (form: CreatePayrollStatementForm) => {
+    const branch = branches.find((b) => b.id === form.branch_id);
+    const sheet = await payrollApi.sheet(form.period_year, form.period_month, form.branch_id);
+    setSheetDetail({
+      statement: {
+        id: '',
+        code: isRtl ? 'مسودة' : 'DRAFT',
+        period_year: form.period_year,
+        period_month: form.period_month,
+        total_amount: sheet.totals?.net_salary || '0',
+        status: 'draft',
+        branch_id: form.branch_id,
+        branch_name: branch ? entityName(branch) : '',
+        created_by_id: null,
+        created_by_name: null,
+        created_at: null,
+      },
+      rows: sheet.rows || [],
+      totals: sheet.totals || {},
+      draftForm: form,
+    });
+  };
+
   const onCreate = async (form: CreatePayrollStatementForm) => {
     setSaving(true);
     setError(null);
     try {
-      const created = await payrollStatementsApi.create(form);
       setCreateOpen(false);
-      await refresh();
-      setSheetDetail({
-        statement: created,
-        rows: created.sheet?.rows || [],
-        totals: created.sheet?.totals || {},
-      });
+      await openSheetPreview(form);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onSaveDraft = async () => {
+    if (!sheetDetail?.draftForm) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await payrollStatementsApi.create(sheetDetail.draftForm);
+      await refresh();
+      setSheetDetail(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error');
+      throw err;
     } finally {
       setSaving(false);
     }
@@ -117,7 +156,6 @@ export function PayrollStatementsPage() {
   };
 
   if (sheetDetail) {
-    const st = sheetDetail.statement;
     return (
       <div className="pay-stmt-page">
         <header className="pay-stmt-topbar">
@@ -129,55 +167,30 @@ export function PayrollStatementsPage() {
 
         {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
-        <section className="pay-stmt-sheet-card">
-          <header className="pay-stmt-sheet-head">
-            <button type="button" className="pay-stmt-back-btn" onClick={() => setSheetDetail(null)}>
-              <ArrowRight className="h-4 w-4" />
-              {isRtl ? 'رجوع للكشوف' : 'Back to list'}
-            </button>
-            <div>
-              <h2>
-                {st.code} — {monthLabel(st.period_month, isRtl)} {st.period_year}
-              </h2>
-              <p>{st.branch_name}</p>
-            </div>
-            <strong className="pay-stmt-sheet-total">
-              {fmtEgp(st.total_amount)} {isRtl ? 'ج.م' : 'EGP'}
-            </strong>
-          </header>
-          <div className="pay-stmt-sheet-scroll">
-            <table className="pay-stmt-sheet-table">
-              <thead>
-                <tr>
-                  <th>{t('employeeData.colCode')}</th>
-                  <th>{t('employeeData.colName')}</th>
-                  <th>{t('employeeData.basicSalary')}</th>
-                  <th>{t('employeeData.allowances')}</th>
-                  <th>{t('nav.bonuses')}</th>
-                  <th>{t('hrPayroll.commission')}</th>
-                  <th>{t('nav.deductions')}</th>
-                  <th>{t('hrPayroll.advances')}</th>
-                  <th>{t('hrPayroll.sheet.net')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sheetDetail.rows.map((r) => (
-                  <tr key={r.employee_id}>
-                    <td className="pay-stmt-code">{r.employee_code}</td>
-                    <td><strong>{r.employee_name}</strong></td>
-                    <td className="is-money">{fmtMoney(r.current_salary)}</td>
-                    <td className="is-money is-green">{fmtMoney(r.total_allowances)}</td>
-                    <td className="is-money">{fmtMoney(r.total_bonuses)}</td>
-                    <td className="is-money">{fmtMoney(r.total_commissions)}</td>
-                    <td className="is-money is-red">{fmtMoney(r.total_deductions)}</td>
-                    <td className="is-money">{fmtMoney(r.advances_balance)}</td>
-                    <td className="is-money is-green-bold">{fmtMoney(r.net_salary)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <PayrollSheetFillView
+          statement={sheetDetail.statement}
+          rows={sheetDetail.rows}
+          isDraft={Boolean(sheetDetail.draftForm)}
+          saving={saving}
+          onBack={() => setSheetDetail(null)}
+          onSaveDraft={sheetDetail.draftForm ? onSaveDraft : undefined}
+          onPrintEmployee={(employeeId) => {
+            setPrintSeed({
+              employeeId,
+              year: sheetDetail.statement.period_year,
+              month: sheetDetail.statement.period_month,
+            });
+            setPrintOpen(true);
+          }}
+        />
+
+        <PrintEmployeeSalaryModal
+          open={printOpen}
+          onClose={() => setPrintOpen(false)}
+          initialEmployeeId={printSeed.employeeId}
+          initialYear={printSeed.year}
+          initialMonth={printSeed.month}
+        />
       </div>
     );
   }
@@ -201,20 +214,18 @@ export function PayrollStatementsPage() {
             </span>
             <h2>{isRtl ? 'كشوف الرواتب المعتمدة' : 'Approved payroll statements'}</h2>
           </div>
-          <div className="pay-stmt-search-wrap">
-            <Search className="pay-stmt-search-icon" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={isRtl ? 'البحث بكود الكشف، اسم الكشف، الفرع' : 'Search by code, name, branch...'}
-            />
-          </div>
+          <ErpSearchBar
+            className="pay-stmt-search-bar"
+            value={query}
+            onChange={setQuery}
+            placeholder={isRtl ? 'البحث بكود الكشف، اسم الكشف، الفرع' : 'Search by code, name, branch...'}
+            showAdvanced={false}
+          />
           <div className="pay-stmt-action-btns">
             <ErpAddButton onClick={() => setCreateOpen(true)}>
               {isRtl ? 'إنشاء كشف جديد' : 'Create statement'}
             </ErpAddButton>
-            <button type="button" className="pay-stmt-print-emp-btn">
+            <button type="button" className="pay-stmt-print-emp-btn" onClick={() => { setPrintSeed({}); setPrintOpen(true); }}>
               <Printer className="h-4 w-4" />
               {isRtl ? 'طباعة راتب موظف' : 'Print employee salary'}
             </button>
@@ -307,6 +318,14 @@ export function PayrollStatementsPage() {
         saving={saving}
         onClose={() => setCreateOpen(false)}
         onSubmit={onCreate}
+      />
+
+      <PrintEmployeeSalaryModal
+        open={printOpen}
+        onClose={() => setPrintOpen(false)}
+        initialEmployeeId={printSeed.employeeId}
+        initialYear={printSeed.year}
+        initialMonth={printSeed.month}
       />
     </div>
   );

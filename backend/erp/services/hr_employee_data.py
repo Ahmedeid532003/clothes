@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Sum
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
+
+from erp.dates import parse_required_date
 
 from erp.hr_structure_models import (
     EmployeeAllowance,
@@ -17,10 +20,49 @@ from erp.hr_structure_models import (
     JobTitle,
 )
 from erp.models import User
+from erp.permissions import can_access_page
 from erp.services.hr import next_employee_code, seed_hr_org_defaults
 
 _USING = "tenant"
 _QUANT = Decimal("0.01")
+_PHOTO_MAX_BYTES = 3 * 1024 * 1024
+_ID_CARD_MAX_BYTES = 10 * 1024 * 1024
+_ID_CARD_ALLOWED = {".pdf", ".jpg", ".jpeg", ".png", ".webp"}
+
+
+def _can_view_id_card(viewer: User | None) -> bool:
+    if not viewer or not viewer.is_authenticated:
+        return False
+    return viewer.is_owner or can_access_page(viewer, "create-users")
+
+
+def _media_url(request, file_field) -> str:
+    if not file_field:
+        return ""
+    url = file_field.url
+    if request:
+        return request.build_absolute_uri(url)
+    return url
+
+
+def _validate_photo(upload) -> None:
+    if not upload:
+        raise ValidationError("لم يتم اختيار صورة.")
+    if upload.size > _PHOTO_MAX_BYTES:
+        raise ValidationError("حجم الصورة يجب ألا يتجاوز 3 ميجابايت.")
+    content_type = (getattr(upload, "content_type", "") or "").lower()
+    if content_type and not content_type.startswith("image/"):
+        raise ValidationError("يجب أن تكون الصورة بصيغة صورة (JPG, PNG, WEBP).")
+
+
+def _validate_id_card(upload) -> None:
+    if not upload:
+        raise ValidationError("لم يتم اختيار ملف.")
+    if upload.size > _ID_CARD_MAX_BYTES:
+        raise ValidationError("حجم الملف يجب ألا يتجاوز 10 ميجابايت.")
+    ext = os.path.splitext(getattr(upload, "name", "") or "")[1].lower()
+    if ext not in _ID_CARD_ALLOWED:
+        raise ValidationError("الملف المسموح: PDF أو صورة (JPG, PNG, WEBP).")
 
 
 def _dec(val) -> Decimal:
@@ -212,7 +254,7 @@ def _serialize_increase(inc: EmployeeSalaryIncrease) -> dict:
     }
 
 
-def _serialize_profile_row(user: User) -> dict:
+def _serialize_profile_row(user: User, *, request=None, viewer: User | None = None) -> dict:
     profile = getattr(user, "employee_profile", None)
     pay = _pay_totals(user)
     commission_label = ""
@@ -221,7 +263,7 @@ def _serialize_profile_row(user: User) -> dict:
             commission_label = f"{profile.commission_percent}%"
         elif profile.commission_mode == EmployeeProfile.CommissionMode.PER_THOUSAND:
             commission_label = f"{profile.commission_per_1000} / 1000"
-    return {
+    row = {
         "id": str(user.pk),
         "employee_code": user.employee_code or "",
         "username": user.username,
@@ -230,6 +272,7 @@ def _serialize_profile_row(user: User) -> dict:
         "email": user.email,
         "is_active": user.is_active,
         "is_owner": user.is_owner,
+        "photo_url": _media_url(request, profile.photo if profile else None),
         "department_id": str(user.department_id) if user.department_id else None,
         "department_name": user.department.name if user.department_id else "",
         "hr_section_id": str(user.hr_section_id) if user.hr_section_id else None,
@@ -253,9 +296,13 @@ def _serialize_profile_row(user: User) -> dict:
         "extra_data": profile.extra_data if profile else {},
         **pay,
     }
+    if _can_view_id_card(viewer):
+        row["has_id_card"] = bool(profile and profile.id_card_file)
+        row["id_card_filename"] = profile.id_card_filename if profile else ""
+    return row
 
 
-def list_employee_data(*, active_only: bool = True) -> list[dict]:
+def list_employee_data(*, active_only: bool = True, request=None, viewer: User | None = None) -> list[dict]:
     qs = User.objects.using(_USING).select_related(
         "department",
         "hr_section",
@@ -266,10 +313,10 @@ def list_employee_data(*, active_only: bool = True) -> list[dict]:
     )
     if active_only:
         qs = qs.filter(is_active=True)
-    return [_serialize_profile_row(u) for u in qs.order_by("employee_code", "username")]
+    return [_serialize_profile_row(u, request=request, viewer=viewer) for u in qs.order_by("employee_code", "username")]
 
 
-def get_employee_data(user_id) -> dict:
+def get_employee_data(user_id, *, request=None, viewer: User | None = None) -> dict:
     user = (
         User.objects.using(_USING)
         .select_related(
@@ -282,7 +329,7 @@ def get_employee_data(user_id) -> dict:
         )
         .get(pk=user_id)
     )
-    row = _serialize_profile_row(user)
+    row = _serialize_profile_row(user, request=request, viewer=viewer)
     row["allowances"] = [
         _serialize_allowance(a)
         for a in EmployeeAllowance.objects.using(_USING).filter(employee=user)
@@ -295,7 +342,7 @@ def get_employee_data(user_id) -> dict:
 
 
 @transaction.atomic(using="tenant")
-def upsert_employee_data(user_id, data: dict) -> dict:
+def upsert_employee_data(user_id, data: dict, *, request=None, viewer: User | None = None) -> dict:
     user = User.objects.using(_USING).get(pk=user_id)
     if "department_id" in data:
         from erp.models import Department
@@ -372,7 +419,42 @@ def upsert_employee_data(user_id, data: dict) -> dict:
         current.update(incoming)
         profile.extra_data = current
     profile.save(using=_USING)
-    return get_employee_data(user_id)
+    return get_employee_data(user_id, request=request, viewer=viewer)
+
+
+@transaction.atomic(using="tenant")
+def upload_employee_photo(user_id, upload, *, request=None, viewer: User | None = None) -> dict:
+    _validate_photo(upload)
+    user = User.objects.using(_USING).get(pk=user_id)
+    profile, _ = EmployeeProfile.objects.using(_USING).get_or_create(user=user)
+    if profile.photo:
+        profile.photo.delete(save=False)
+    profile.photo = upload
+    profile.save(using=_USING)
+    return get_employee_data(user_id, request=request, viewer=viewer)
+
+
+@transaction.atomic(using="tenant")
+def upload_employee_id_card(user_id, upload, *, request=None, viewer: User | None = None) -> dict:
+    _validate_id_card(upload)
+    user = User.objects.using(_USING).get(pk=user_id)
+    profile, _ = EmployeeProfile.objects.using(_USING).get_or_create(user=user)
+    if profile.id_card_file:
+        profile.id_card_file.delete(save=False)
+    profile.id_card_file = upload
+    profile.id_card_filename = os.path.basename(getattr(upload, "name", "") or "id-card.pdf")
+    profile.save(using=_USING)
+    return get_employee_data(user_id, request=request, viewer=viewer)
+
+
+def get_employee_id_card_file(user_id, *, viewer: User):
+    if not _can_view_id_card(viewer):
+        raise PermissionDenied("عرض بطاقة الهوية متاح للمدير فقط.")
+    user = User.objects.using(_USING).select_related("employee_profile").get(pk=user_id)
+    profile = getattr(user, "employee_profile", None)
+    if not profile or not profile.id_card_file:
+        raise ValidationError("لا يوجد ملف بطاقة هوية لهذا الموظف.")
+    return profile
 
 
 @transaction.atomic(using="tenant")
@@ -398,7 +480,7 @@ def add_salary_increase(user_id, *, amount, effective_date: str, notes: str = ""
     inc = EmployeeSalaryIncrease.objects.using(_USING).create(
         employee=user,
         amount=_dec(amount),
-        effective_date=date.fromisoformat(effective_date),
+        effective_date=parse_required_date(effective_date),
         notes=notes.strip(),
     )
     return _serialize_increase(inc)

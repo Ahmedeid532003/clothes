@@ -5,7 +5,10 @@ export function buildEmptyPermissions(
   features: Record<string, { key: string }[]>,
 ): UserPermissions {
   const perms: UserPermissions = { pages: {}, features: {}, actions: {} };
+  const seen = new Set<string>();
   for (const p of pages) {
+    if (seen.has(p.key)) continue;
+    seen.add(p.key);
     perms.pages[p.key] = false;
     perms.features[p.key] = {};
     perms.actions[p.key] = { view: false, update: false, delete: false };

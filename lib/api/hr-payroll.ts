@@ -8,14 +8,17 @@ export type CatalogRow = {
   default_amount?: string;
 };
 
-const catalogApi = (base: string) => ({
-  list: () => apiFetch<CatalogRow[]>(base),
-  create: (body: { name: string; code?: string; default_amount?: string | number }) =>
-    apiFetch<CatalogRow>(base, { method: 'POST', body: JSON.stringify(body) }),
-  update: (id: string, body: { name: string; default_amount?: string | number }) =>
-    apiFetch<CatalogRow>(`${base}/${id}/`, { method: 'PATCH', body: JSON.stringify(body) }),
-  remove: (id: string) => apiFetch<void>(`${base}/${id}/`, { method: 'DELETE' }),
-});
+const catalogApi = (base: string) => {
+  const root = base.endsWith('/') ? base : `${base}/`;
+  return {
+    list: () => apiFetch<CatalogRow[]>(root),
+    create: (body: { name: string; code?: string; default_amount?: string | number }) =>
+      apiFetch<CatalogRow>(root, { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: { name: string; default_amount?: string | number }) =>
+      apiFetch<CatalogRow>(`${root}${id}/`, { method: 'PATCH', body: JSON.stringify(body) }),
+    remove: (id: string) => apiFetch<void>(`${root}${id}/`, { method: 'DELETE' }),
+  };
+};
 
 export const bonusItemsApi = catalogApi('/hr/bonus-items');
 export const deductionItemsApi = catalogApi('/hr/deduction-items');
@@ -26,7 +29,7 @@ export const paymentTypesApi = catalogApi('/hr/payment-types');
 export type OfficialHolidayRow = {
   id: string;
   name: string;
-  holiday_date: string;
+  holiday_date?: string | null;
   is_recurring: boolean;
   notes: string;
   is_active: boolean;
@@ -34,7 +37,12 @@ export type OfficialHolidayRow = {
 
 export const officialHolidaysApi = {
   list: () => apiFetch<OfficialHolidayRow[]>('/hr/official-holidays/'),
-  create: (body: { name: string; holiday_date: string; is_recurring?: boolean; notes?: string }) =>
+  create: (body: {
+    name: string;
+    holiday_date?: string | null;
+    is_recurring?: boolean;
+    notes?: string;
+  }) =>
     apiFetch<OfficialHolidayRow>('/hr/official-holidays/', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -93,11 +101,17 @@ export type LeaveRow = EmployeeBrief & {
   notes: string;
 };
 
+export type AttendancePeriod = {
+  check_in: string | null;
+  check_out: string | null;
+};
+
 export type AttendanceRow = EmployeeBrief & {
   id: string;
   work_date: string;
   check_in: string | null;
   check_out: string | null;
+  periods?: AttendancePeriod[];
   late_minutes: number;
   overtime_minutes: number;
   source: string;
@@ -220,6 +234,7 @@ export const attendanceApi = {
   },
   upsert: (body: Record<string, unknown>) =>
     apiFetch<AttendanceRow>('/hr/attendance/', { method: 'POST', body: JSON.stringify(body) }),
+  remove: (id: string) => apiFetch<void>(`/hr/attendance/${id}/`, { method: 'DELETE' }),
   importRows: (rows: Record<string, unknown>[], file_name?: string) =>
     apiFetch<{ imported_count: number; errors: string[] }>('/hr/attendance/import/', {
       method: 'POST',

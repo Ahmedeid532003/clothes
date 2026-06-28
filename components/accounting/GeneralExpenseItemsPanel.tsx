@@ -5,7 +5,6 @@ import {
   FolderTree,
   Pencil,
   Plus,
-  Search,
   Sparkles,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -17,6 +16,7 @@ import {
   type ExpenseTypePayload,
 } from '@/lib/api/accounting';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { EXPENSE_ITEM_PRESETS, suggestGlAccountId } from '@/components/accounting/expensePresets';
 import { AlertBanner, PageToolbar } from '@/components/accounting/AccountingUi';
 import { Button } from '@/components/ui/button';
@@ -307,16 +307,13 @@ export function GeneralExpenseItemsPanel({
       ) : null}
 
       <div className="erp-smart-filter-bar rounded-2xl border border-slate-200/80 bg-white p-3 flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 start-3" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('accounting.searchExpenseItems')}
-            className="w-full h-10 rounded-xl border ps-9 pe-3 text-sm"
-          />
-        </div>
+        <ErpSearchBar
+          className="min-w-[200px] flex-1"
+          value={search}
+          onChange={setSearch}
+          placeholder={t('accounting.searchExpenseItems')}
+          showAdvanced={false}
+        />
         <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1 gap-1">
           {[
             { value: '', label: t('accounting.filterAllCategories') },

@@ -59,19 +59,24 @@ export function CrmPageHeader({
   title,
   description,
   actions,
+  badge,
 }: {
   title: string;
   description?: string;
   actions?: React.ReactNode;
+  badge?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-        {description ? <p className="text-sm text-slate-500 mt-0.5 max-w-2xl">{description}</p> : null}
+    <header className="crm-page-header erp-module-topbar">
+      {badge ? <span className="erp-module-topbar-badge">{badge}</span> : null}
+      <div className="relative z-[1] flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1>{title}</h1>
+          {description ? <p>{description}</p> : null}
+        </div>
+        {actions}
       </div>
-      {actions}
-    </div>
+    </header>
   );
 }
 

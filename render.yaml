@@ -1,0 +1,45 @@
+# Render.com — باك إند + PostgreSQL (بدون VPS)
+# https://dashboard.render.com/blueprints → New Blueprint Instance → هذا المستودع
+
+services:
+  - type: web
+    name: mahalyerp-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: bash start.sh
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mahalyerp-db
+          property: connectionString
+      - key: SAAS_DB_NAME
+        value: mainclothes
+      - key: TENANT_DB_PREFIX
+        value: mahaly_t_
+      - key: USE_REDIS
+        value: "false"
+      - key: CLOUD_SHARED_DB
+        value: "true"
+      - key: DEPLOY_GATE_ENABLED
+        value: "false"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+
+databases:
+  - name: mahalyerp-db
+    plan: free
+    databaseName: mainclothes
+    user: mahaly

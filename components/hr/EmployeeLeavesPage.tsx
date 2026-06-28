@@ -49,7 +49,7 @@ export function EmployeeLeavesPage() {
   }, [refresh]);
 
   const onSave = async () => {
-    if (!form.employee_id || !form.leave_type_id || !form.start_date) return;
+    if (!form.employee_id || !form.leave_type_id) return;
     await leavesApi.create(form);
     setOpen(false);
     refresh();
@@ -164,7 +164,7 @@ export function EmployeeLeavesPage() {
         </div>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="erp-side-drawer hr-premium-drawer w-full border-s-0 p-0 sm:max-w-[62vw]">
+        <SheetContent side="center" className="erp-form-modal erp-form-modal--full erp-side-drawer hr-premium-drawer w-full border-0 p-0 flex flex-col">
           <SheetHeader className="erp-side-drawer-header">
             <SheetTitle>{t('hrPayroll.leaves.add')}</SheetTitle>
             <p className="text-sm font-bold text-blue-100/90">تسجيل إجازة جديدة مرتبطة بموظف ونوع إجازة وفترة محددة.</p>

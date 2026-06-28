@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from erp.accounting_models import FixedAsset, GlAccount
+from erp.serializer_fields import DefaultTodayDateField
 
 
 class ChartAccountWriteSerializer(serializers.Serializer):
@@ -32,7 +33,7 @@ class FixedAssetWriteSerializer(serializers.Serializer):
     name_ar = serializers.CharField()
     name_en = serializers.CharField(required=False, allow_blank=True)
     category = serializers.ChoiceField(choices=FixedAsset.Category.choices, required=False)
-    acquisition_date = serializers.DateField()
+    acquisition_date = DefaultTodayDateField()
     cost = serializers.DecimalField(max_digits=14, decimal_places=2)
     currency = serializers.UUIDField(required=False, allow_null=True)
     useful_life_months = serializers.IntegerField(min_value=1, required=False)

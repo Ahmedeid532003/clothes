@@ -177,7 +177,7 @@ export function MasterDataPage({ titleKey, api, extraFields = [] }: MasterDataPa
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="erp-side-drawer w-full border-s-0 p-0 sm:max-w-[58vw]">
+        <SheetContent side="center" className="erp-form-modal erp-form-modal--wide erp-side-drawer w-full border-0 p-0 flex flex-col">
           <SheetHeader className="erp-side-drawer-header">
             <SheetTitle>
               {editing ? t('inventory.edit') : t('inventory.add')} — {t(titleKey)}

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from erp.accounting_models import TreasuryMovement
+from erp.serializer_fields import DefaultTodayDateField
 
 
 class ShiftHandoverCreateSerializer(serializers.Serializer):
@@ -15,7 +16,7 @@ class ShiftHandoverReceiveSerializer(serializers.Serializer):
 
 
 class TreasuryMovementWriteSerializer(serializers.Serializer):
-    movement_date = serializers.DateField()
+    movement_date = DefaultTodayDateField()
     movement_type = serializers.ChoiceField(choices=TreasuryMovement.MovementType.choices)
     treasury = serializers.UUIDField()
     counter_treasury = serializers.UUIDField(required=False, allow_null=True)

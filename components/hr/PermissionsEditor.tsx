@@ -8,6 +8,7 @@ type Props = {
   value: UserPermissions;
   onChange: (next: UserPermissions) => void;
   disabled?: boolean;
+  variant?: 'default' | 'registration';
 };
 
 export const PermissionsEditor: React.FC<Props> = ({
@@ -15,6 +16,7 @@ export const PermissionsEditor: React.FC<Props> = ({
   value,
   onChange,
   disabled,
+  variant = 'default',
 }) => {
   const { isRtl } = useLanguage();
   const label = (en: string, ar: string) => (isRtl ? ar : en);
@@ -48,7 +50,7 @@ export const PermissionsEditor: React.FC<Props> = ({
   };
 
   return (
-    <div className="hr-permissions-editor space-y-4">
+    <div className={cn('hr-permissions-editor space-y-4', variant === 'registration' && 'hr-permissions-editor--reg')}>
       {schema.pages.map((page) => {
         const pageFeatures = schema.features[page.key] ?? [];
         const pageOpen = !!value.pages[page.key];
@@ -57,10 +59,16 @@ export const PermissionsEditor: React.FC<Props> = ({
             key={page.key}
             className={cn(
               'hr-permission-card border border-slate-200 rounded-xl overflow-hidden',
+              variant === 'registration' && 'hr-permission-card--reg',
               !pageOpen && 'opacity-80',
             )}
           >
-            <label className="hr-permission-card-head flex items-center gap-3 px-4 py-3 bg-slate-50 cursor-pointer">
+            <label
+              className={cn(
+                'hr-permission-card-head flex items-center gap-3 px-4 py-3 bg-slate-50 cursor-pointer',
+                variant === 'registration' && 'hr-permission-card-head--reg',
+              )}
+            >
               <input
                 type="checkbox"
                 checked={pageOpen}

@@ -1,0 +1,23 @@
+﻿Ø±ÙØ¹ Ma7alyErp Ø¹Ù„Ù‰ VPS
+=====================
+
+1) Ø§ÙØªØ­ RDP Ø¹Ù„Ù‰ Ø§Ù„Ø³ÙŠØ±ÙØ±: 128.140.127.179
+2) Ø§Ù†Ø³Ø® Ø§Ù„Ù…Ù„Ù: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-VPS-FULL-20260628-1501.zip
+3) ÙÙƒ Ø§Ù„Ø¶ØºØ· ÙÙŠ: C:\Users\Administrator\Downloads\Clothes
+   (Ø£Ùˆ Ø§Ø³ØªØ¨Ø¯Ù„ Ø§Ù„Ù…Ø¬Ù„Ø¯ Ø§Ù„Ù‚Ø¯ÙŠÙ… Ø¨Ø¹Ø¯ Ù†Ø³Ø® Ø§Ø­ØªÙŠØ§Ø·ÙŠ)
+4) Ø¹Ù„Ù‰ Ø§Ù„Ø³ÙŠØ±ÙØ± â€” PowerShell ÙƒÙ…Ø³Ø¤ÙˆÙ„:
+
+   cd C:\Users\Administrator\Downloads\Clothes
+   .\scripts\setup-mahaly-vps.ps1    # Ø£ÙˆÙ„ Ù…Ø±Ø© ÙÙ‚Ø· Ø£Ùˆ Ø¨Ø¹Ø¯ ØªØºÙŠÙŠØ± env
+   .\scripts\deploy-update.ps1       # migrate + build + ØªØ´ØºÙŠÙ„
+
+5) Ø§ÙØªØ­:
+   http://128.140.127.179:8787
+   API: http://128.140.127.179:8788/api/v1
+
+Ø£Ùˆ Ù„Ù„ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø³Ø±ÙŠØ¹ (Ø¨Ø¯ÙˆÙ† Ø¥Ø¹Ø§Ø¯Ø© venv):
+   cd backend
+   .\.venv\Scripts\python.exe manage.py migrate
+   .\.venv\Scripts\python.exe manage.py migrate_all_tenants
+   cd ..
+   .\scripts\start-mahaly-vps.ps1

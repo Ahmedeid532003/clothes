@@ -1,22 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, KeyRound, ShieldCheck, UserCog, Wallet } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import { fetchDepartments, type DepartmentDto } from '@/lib/api/departments';
 import { fetchHrSections, type HrSectionDto } from '@/lib/api/hr-sections';
-import { fetchWorkShifts, type WorkShiftDto } from '@/lib/api/work-shifts';
-import { jobTitlesApi } from '@/lib/api/job-titles';
-import { employeeGroupsApi } from '@/lib/api/employee-groups';
-import { fetchBranches, type BranchDto } from '@/lib/api/branches';
+import { type BranchDto } from '@/lib/api/branches';
+import { type DepartmentDto } from '@/lib/api/departments';
+import { type WorkShiftDto } from '@/lib/api/work-shifts';
 import {
   createEmployee,
+  fetchEmployeeRegistrationMeta,
   fetchEmployeeLimits,
-  fetchPermissionsSchema,
   type PermissionsSchemaDto,
   type UserPermissions,
 } from '@/lib/api/employees';
 import { employeeDataApi } from '@/lib/api/employee-data';
 import { buildEmptyPermissions } from '@/lib/permissions/defaults';
 import { PermissionsEditor } from '@/components/hr/PermissionsEditor';
+import {
+  EmployeeIdCardPicker,
+  EmployeePhotoPicker,
+} from '@/components/hr/employee-data/EmployeeMediaPanel';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { fmtMoney } from '@/components/accounting/AccountingUi';
 import { entityName } from '@/lib/entity-name';
@@ -131,6 +133,22 @@ function inputProps(className = 'emp-reg-input') {
   return { className };
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function suggestUsername(fullName: string) {
+  const tenant = (localStorage.getItem('tenant_slug') ?? 'shop').toLowerCase();
+  const base =
+    fullName
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '')
+      .slice(0, 20) || 'emp';
+  return `${base}@${tenant}`;
+}
+
 export function EmployeeRegistrationModal({
   open,
   onClose,
@@ -152,7 +170,13 @@ export function EmployeeRegistrationModal({
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [branches, setBranches] = useState<BranchDto[]>([]);
   const [schema, setSchema] = useState<PermissionsSchemaDto | null>(null);
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [metaError, setMetaError] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<UserPermissions>({ pages: {}, features: {}, actions: {} });
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [idCardName, setIdCardName] = useState<string | null>(null);
 
   const steps: { id: StepId; label: string }[] = useMemo(
     () => [
@@ -167,21 +191,25 @@ export function EmployeeRegistrationModal({
   const patch = (partial: Partial<RegistrationForm>) => setForm((f) => ({ ...f, ...partial }));
 
   const loadMeta = useCallback(async () => {
-    const [d, sh, ti, gr, br, sch] = await Promise.all([
-      fetchDepartments(),
-      fetchWorkShifts(),
-      jobTitlesApi.list(),
-      employeeGroupsApi.list(),
-      fetchBranches(),
-      fetchPermissionsSchema(),
-    ]);
-    setDepts(d);
-    setShifts(sh);
-    setTitles(ti);
-    setGroups(gr);
-    setBranches(br.filter((b) => b.is_active));
-    setSchema(sch);
-    setPermissions(buildEmptyPermissions(sch.pages, sch.features));
+    setMetaLoading(true);
+    setMetaError(null);
+    try {
+      const meta = await fetchEmployeeRegistrationMeta();
+      setDepts(meta.departments as DepartmentDto[]);
+      setShifts(meta.work_shifts as WorkShiftDto[]);
+      setTitles(meta.job_titles);
+      setGroups(meta.employee_groups);
+      setBranches((meta.branches as BranchDto[]).filter((b) => b.is_active));
+      setSchema(meta.permissions_schema);
+      setPermissions(
+        buildEmptyPermissions(meta.permissions_schema.pages, meta.permissions_schema.features),
+      );
+    } catch (e) {
+      setMetaError(e instanceof Error ? e.message : 'Error');
+      setSchema(null);
+    } finally {
+      setMetaLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -189,6 +217,10 @@ export function EmployeeRegistrationModal({
     setStep('job');
     setForm(EMPTY_FORM());
     setError(null);
+    setPhotoPreview(null);
+    setPhotoFile(null);
+    setIdCardFile(null);
+    setIdCardName(null);
     loadMeta().catch(() => undefined);
   }, [open, loadMeta]);
 
@@ -232,7 +264,17 @@ export function EmployeeRegistrationModal({
       setStep('job');
       return;
     }
-    if (form.uses_system && (!form.username.trim() || !form.password.trim())) {
+    const workEmail = form.work_email.trim();
+    if (workEmail && !isValidEmail(workEmail)) {
+      setError(isRtl ? 'البريد الوظيفي غير صالح.' : 'Work email format is invalid.');
+      setStep('job');
+      return;
+    }
+    let username = form.username.trim().toLowerCase();
+    if (form.uses_system && !username) {
+      username = suggestUsername(name);
+    }
+    if (form.uses_system && (!username || !form.password.trim())) {
       setError(isRtl ? 'اسم المستخدم وكلمة المرور مطلوبان.' : 'Username and password are required.');
       setStep('system');
       return;
@@ -245,21 +287,22 @@ export function EmployeeRegistrationModal({
         setError(isRtl ? 'تم الوصول لحد المستخدمين في الاشتراك.' : 'User limit reached.');
         return;
       }
+      const branchId = form.branch_id || null;
       const created = await createEmployee({
         uses_system: form.uses_system,
-        username: form.uses_system ? form.username.trim() : undefined,
+        username: form.uses_system ? username : undefined,
         password: form.uses_system ? form.password : undefined,
         hire_date: form.hire_date || null,
         full_name: name,
-        email: form.work_email.trim(),
+        email: workEmail,
         department_id: form.department_id || null,
         hr_section_id: form.hr_section_id || null,
         work_shift_id: form.work_shift_id || null,
         permissions: form.uses_system && !form.grant_all_permissions ? permissions : undefined,
         grant_all_permissions: form.uses_system && form.grant_all_permissions,
-        default_branch_id: form.branch_id || null,
-        branch_access_mode: form.branch_id ? 'selected' : 'all',
-        allowed_branch_ids: form.branch_id ? [form.branch_id] : [],
+        default_branch_id: branchId,
+        branch_access_mode: branchId ? 'selected' : 'all',
+        allowed_branch_ids: branchId ? [branchId] : [],
       });
 
       await employeeDataApi.update(created.id, {
@@ -315,10 +358,21 @@ export function EmployeeRegistrationModal({
         }
       }
 
+      if (photoFile) {
+        await employeeDataApi.uploadPhoto(created.id, photoFile);
+      }
+      if (idCardFile) {
+        await employeeDataApi.uploadIdCard(created.id, idCardFile);
+      }
+
       onCreated();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
+      const msg = e instanceof Error ? e.message : 'Error';
+      setError(msg);
+      if (/username|password|مستخدم|كلمة|فرع|بريد|email/i.test(msg)) {
+        setStep(/email|بريد/i.test(msg) ? 'job' : 'system');
+      }
     } finally {
       setSaving(false);
     }
@@ -362,6 +416,14 @@ export function EmployeeRegistrationModal({
           {step === 'job' ? (
             <div className="emp-reg-panel">
               <h3>{isRtl ? 'البيانات الشخصية والتعيين الأساسي' : 'Personal & appointment data'}</h3>
+              <EmployeePhotoPicker
+                preview={photoPreview}
+                disabled={saving}
+                onPick={(file) => {
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }}
+              />
               <div className="emp-reg-grid emp-reg-grid-3">
                 <Field label={isRtl ? 'الاسم الكامل' : 'Full name'}>
                   <input {...inputProps()} value={form.full_name} onChange={(e) => patch({ full_name: e.target.value })} />
@@ -517,6 +579,16 @@ export function EmployeeRegistrationModal({
                 </Field>
               </div>
 
+              <h3 className="emp-reg-divider-title">{isRtl ? 'بطاقة الهوية الوطنية' : 'National ID card'}</h3>
+              <EmployeeIdCardPicker
+                fileName={idCardName}
+                disabled={saving}
+                onPick={(file) => {
+                  setIdCardFile(file);
+                  setIdCardName(file.name);
+                }}
+              />
+
               <h3 className="emp-reg-divider-title">{isRtl ? 'بيانات البنك والحساب التفصيلية للتحويل' : 'Bank account details'}</h3>
               <div className="emp-reg-grid emp-reg-grid-3">
                 <Field label={isRtl ? 'اسم البنك' : 'Bank name'}>
@@ -542,40 +614,124 @@ export function EmployeeRegistrationModal({
           ) : null}
 
           {step === 'system' ? (
-            <div className="emp-reg-panel">
-              <h3>{isRtl ? 'تهيئة صلاحيات واستخدام النظام للموظف' : 'System access & permissions'}</h3>
-              <label className="emp-reg-check-card">
-                <input type="checkbox" checked={form.uses_system} onChange={(e) => patch({ uses_system: e.target.checked })} />
-                <span>{isRtl ? 'تمكين الموظف كمستخدم نشط للسيستم' : 'Enable as active system user'}</span>
-              </label>
+            <div className="emp-reg-panel emp-reg-system-panel">
+              <div className="emp-reg-system-hero">
+                <div className="emp-reg-system-hero-icon">
+                  <UserCog className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3>{isRtl ? 'استخدام النظام والصلاحيات' : 'System access & permissions'}</h3>
+                  <p>
+                    {isRtl
+                      ? 'فعّل حساب الدخول للموظف وحدد صلاحيات الشاشات والإجراءات.'
+                      : 'Enable login and configure screen permissions and actions.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={`emp-reg-system-toggle ${form.uses_system ? 'is-on' : ''}`}
+                onClick={() => patch({ uses_system: !form.uses_system })}
+              >
+                <span className="emp-reg-system-toggle-track" aria-hidden>
+                  <i />
+                </span>
+                <span>
+                  <strong>{isRtl ? 'تمكين الموظف كمستخدم نشط للنظام' : 'Enable as active system user'}</strong>
+                  <small>
+                    {isRtl
+                      ? 'يستطيع تسجيل الدخول حسب عدد المستخدمين في الاشتراك'
+                      : 'Can sign in within subscription user limit'}
+                  </small>
+                </span>
+              </button>
+
               {form.uses_system ? (
-                <>
-                  <div className="emp-reg-grid emp-reg-grid-2">
-                    <Field label={isRtl ? 'اسم المستخدم' : 'Username'}>
-                      <input {...inputProps()} value={form.username} onChange={(e) => patch({ username: e.target.value })} dir="ltr" placeholder="eg. sara_mahod" />
-                    </Field>
-                    <Field label={isRtl ? 'كلمة المرور المؤقتة' : 'Temporary password'}>
-                      <input {...inputProps()} type="password" value={form.password} onChange={(e) => patch({ password: e.target.value })} />
-                    </Field>
+                <div className="emp-reg-system-body">
+                  <div className="emp-reg-system-card">
+                    <div className="emp-reg-system-card-head">
+                      <KeyRound className="h-4 w-4" />
+                      <strong>{isRtl ? 'بيانات الدخول' : 'Login credentials'}</strong>
+                    </div>
+                    <div className="emp-reg-grid emp-reg-grid-2">
+                      <Field label={isRtl ? 'اسم المستخدم' : 'Username'}>
+                        <input
+                          {...inputProps()}
+                          value={form.username}
+                          onChange={(e) => patch({ username: e.target.value })}
+                          dir="ltr"
+                          placeholder={isRtl ? 'مثال: sara@ahmedeid (يُولَّد تلقائياً من الاسم)' : 'eg. sara@ahmedeid (auto from name)'}
+                        />
+                      </Field>
+                      <Field label={isRtl ? 'كلمة المرور المؤقتة' : 'Temporary password'}>
+                        <input
+                          {...inputProps()}
+                          type="password"
+                          value={form.password}
+                          onChange={(e) => patch({ password: e.target.value })}
+                        />
+                      </Field>
+                    </div>
                   </div>
-                  <label className="emp-reg-check-inline">
-                    <input type="checkbox" checked={form.grant_all_permissions} onChange={(e) => patch({ grant_all_permissions: e.target.checked })} />
-                    <span>{isRtl ? 'مجموعة الصلاحيات: المدير العام (أدمن)' : 'Grant admin permissions'}</span>
-                  </label>
-                  <label className="emp-reg-check-inline">
-                    <input type="checkbox" checked={form.create_treasury} onChange={(e) => patch({ create_treasury: e.target.checked })} />
-                    <span>{isRtl ? 'إنشاء وتخصيص خزينة/صندوق فرعي للموظف باسمه' : 'Create sub-treasury for employee'}</span>
-                  </label>
-                  {!form.grant_all_permissions && schema ? (
-                    <div className="emp-reg-permissions">
-                      <div className="emp-reg-permissions-head">
-                        <strong>{isRtl ? 'جدول الصلاحيات المخصصة لشاشات النظام' : 'Screen permissions'}</strong>
+
+                  <div className="emp-reg-system-options">
+                    <button
+                      type="button"
+                      className={`emp-reg-system-option ${form.grant_all_permissions ? 'is-active' : ''}`}
+                      onClick={() => patch({ grant_all_permissions: !form.grant_all_permissions })}
+                    >
+                      <ShieldCheck className="h-5 w-5" />
+                      <span>
+                        <strong>{isRtl ? 'صلاحيات المدير العام' : 'Full admin access'}</strong>
+                        <small>{isRtl ? 'جميع الشاشات والإجراءات' : 'All screens and actions'}</small>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`emp-reg-system-option ${form.create_treasury ? 'is-active' : ''}`}
+                      onClick={() => patch({ create_treasury: !form.create_treasury })}
+                    >
+                      <Wallet className="h-5 w-5" />
+                      <span>
+                        <strong>{isRtl ? 'خزينة فرعية باسم الموظف' : 'Employee sub-treasury'}</strong>
+                        <small>{isRtl ? 'إنشاء صندوق/خزينة مخصص' : 'Create dedicated cash drawer'}</small>
+                      </span>
+                    </button>
+                  </div>
+
+                  {!form.grant_all_permissions ? (
+                    <div className="emp-reg-system-permissions">
+                      <div className="emp-reg-system-permissions-head">
+                        <strong>{isRtl ? 'جدول الصلاحيات المخصصة' : 'Custom permissions matrix'}</strong>
+                        <span>{isRtl ? 'فعّل الصفحة ثم حدّد ما يظهر والإجراءات' : 'Enable page, then features & actions'}</span>
                       </div>
-                      <PermissionsEditor schema={schema} value={permissions} onChange={setPermissions} />
+                      {metaLoading ? (
+                        <p className="emp-reg-system-schema-loading">
+                          {isRtl ? 'جاري تحميل الصلاحيات...' : 'Loading permissions...'}
+                        </p>
+                      ) : schema ? (
+                        <div className="emp-reg-system-permissions-scroll">
+                          <PermissionsEditor schema={schema} value={permissions} onChange={setPermissions} variant="registration" />
+                        </div>
+                      ) : (
+                        <div className="emp-reg-system-schema-error">
+                          <p>{metaError || (isRtl ? 'تعذّر تحميل الصلاحيات.' : 'Could not load permissions.')}</p>
+                          <button type="button" className="emp-reg-photo-btn is-outline" onClick={() => void loadMeta()}>
+                            {isRtl ? 'إعادة المحاولة' : 'Retry'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : null}
-                </>
-              ) : null}
+                </div>
+              ) : (
+                <p className="emp-reg-system-off-note">
+                  {isRtl
+                    ? 'يمكنك تسجيل الموظف بدون حساب نظام — لاحقاً يمكن إضافة المستخدم من شاشة إنشاء المستخدمين.'
+                    : 'Register without system login — add a user account later from Create Users.'}
+                </p>
+              )}
             </div>
           ) : null}
         </div>

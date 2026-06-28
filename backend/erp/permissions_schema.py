@@ -73,7 +73,6 @@ SYSTEM_PAGES: list[dict[str, str]] = [
     {"key": "supplier-categories", "label_en": "Supplier Categories", "label_ar": "مجموعات تصنيف الموردين"},
     {"key": "supplier-departments", "label_en": "Supplier Departments", "label_ar": "أقسام الموردين"},
     {"key": "suppliers", "label_en": "Suppliers", "label_ar": "الموردين"},
-    {"key": "supplier-departments", "label_en": "Supplier Departments", "label_ar": "أقسام الموردين"},
     {"key": "supplier-data", "label_en": "Supplier Data", "label_ar": "بيانات الموردين"},
     {
         "key": "supplier-inventories",

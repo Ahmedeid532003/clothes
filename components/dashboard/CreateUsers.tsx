@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Search, ChevronRight, X, MoreVertical, Eye, Edit, Trash2, ShieldCheck, UserPlus, UsersRound } from 'lucide-react';
+import { Plus, ChevronRight, X, MoreVertical, Eye, Edit, Trash2, ShieldCheck, UserPlus, UsersRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { fetchDepartments, type DepartmentDto } from '@/lib/api/departments';
 import { fetchHrSections, type HrSectionDto } from '@/lib/api/hr-sections';
@@ -388,16 +389,13 @@ export const CreateUsersPage: React.FC = () => {
             <ErpAddButton onClick={openAdd} disabled={!!limits && !limits.can_add}>
               {t('createUsers.addNew')}
             </ErpAddButton>
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('createUsers.searchPlaceholder')}
-                className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-50"
-              />
-            </div>
+            <ErpSearchBar
+              className="max-w-md flex-1"
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder={t('createUsers.searchPlaceholder')}
+              showAdvanced={false}
+            />
           </div>
         </div>
       </div>
@@ -488,7 +486,7 @@ export const CreateUsersPage: React.FC = () => {
       )}
 
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent side={isRtl ? 'left' : 'right'} className="erp-side-drawer hr-premium-drawer sm:max-w-[68vw] w-full flex flex-col p-0">
+        <SheetContent side="center" className="erp-form-modal erp-side-drawer hr-premium-drawer erp-form-modal--full w-full flex flex-col p-0">
           <SheetHeader className="erp-side-drawer-header">
             <SheetTitle>
               {drawerMode === 'add' && t('createUsers.addTitle')}

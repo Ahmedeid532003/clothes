@@ -13,7 +13,6 @@ import {
   Landmark,
   Plus,
   Printer,
-  Search,
   SlidersHorizontal,
   Smartphone,
   Sparkles,
@@ -41,6 +40,7 @@ import {
 } from '@/components/suppliers/SupplierPaymentVoucherPrint';
 import { OptionCardGrid } from '@/components/suppliers/OptionCardGrid';
 import { ErpCrudPage } from '@/components/erp/ErpCrudPage';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
 import { PaymentAmountHero } from '@/components/accounting/PaymentAmountHero';
@@ -620,16 +620,13 @@ export function SupplierPaymentsPage() {
 
       <div className="erp-smart-filter-bar rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 shadow-sm overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 p-3 border-b border-slate-100/80">
-          <div className="relative flex-1 min-w-[min(100%,280px)]">
-            <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 start-3 pointer-events-none" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('suppliers.searchPayments')}
-              className="w-full h-10 rounded-xl border border-slate-200 bg-white ps-9 pe-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
+          <ErpSearchBar
+            className="min-w-[min(100%,280px)] flex-1"
+            value={search}
+            onChange={setSearch}
+            placeholder={t('suppliers.searchPayments')}
+            showAdvanced={false}
+          />
 
           <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-slate-100/70 p-1">
             {statusQuickFilters.map((item) => (

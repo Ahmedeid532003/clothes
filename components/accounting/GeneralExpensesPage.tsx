@@ -5,7 +5,6 @@ import {
   FolderTree,
   Plus,
   Receipt,
-  Search,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -24,6 +23,7 @@ import { EXPENSE_ITEM_PRESETS } from '@/components/accounting/expensePresets';
 import { GeneralExpenseItemsPanel } from '@/components/accounting/GeneralExpenseItemsPanel';
 import { PaymentAmountHero } from '@/components/accounting/PaymentAmountHero';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import {
   AlertBanner,
   DataCard,
@@ -337,16 +337,13 @@ export function GeneralExpensesPage({
           </div>
 
           <div className="erp-smart-filter-bar rounded-2xl border border-slate-200/80 bg-white p-3 flex flex-wrap gap-2 items-center">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 start-3" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('accounting.searchExpenses')}
-                className="w-full h-10 rounded-xl border ps-9 pe-3 text-sm"
-              />
-            </div>
+            <ErpSearchBar
+              className="min-w-[200px] flex-1"
+              value={search}
+              onChange={setSearch}
+              placeholder={t('accounting.searchExpenses')}
+              showAdvanced={false}
+            />
             <select
               className={filterSelectClass}
               value={statusFilter}

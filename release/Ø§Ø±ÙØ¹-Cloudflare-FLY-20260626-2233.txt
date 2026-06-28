@@ -1,0 +1,13 @@
+﻿Ø§Ø±ÙØ¹ Ù‡Ø°Ø§ Ø§Ù„Ù…Ù„Ù Ø¹Ù„Ù‰ Cloudflare Pages (Ø´ØºØ§Ù„ Ù…Ù† Ù…ØµØ±)
+================================================
+Ø§Ù„Ù…Ù„Ù: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-CLOUDFLARE-FLY-20260626-2233.zip
+Ø§Ù„Ø¨Ø§ÙƒÙ†Ø¯: https://mahalyerp-api.fly.dev
+ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„: demo | owner@demo | demo1234
+
+1) https://dash.cloudflare.com/ -> Workers & Pages -> Create -> Pages
+2) Upload assets -> Ø§Ø³Ø­Ø¨ Ø§Ù„Ù€ ZIP
+3) Ø¨Ø¹Ø¯ Ø§Ù„Ù†Ø´Ø± Ø¬Ø±Ø¨: https://Ù…ÙˆÙ‚Ø¹Ùƒ.pages.dev/api/v1/health/
+
+Ù„Ù…Ø§Ø°Ø§ Ù„ÙŠØ³ NetlifyØŸ
+TE Data ÙŠØ­Ø¸Ø± *.netlify.app (ERR_CONNECTION_TIMED_OUT)
+Cloudflare Pages ÙŠØ¹Ù…Ù„ Ù…Ù† Ù…ØµØ±.

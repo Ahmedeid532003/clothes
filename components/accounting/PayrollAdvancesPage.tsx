@@ -3,7 +3,6 @@ import {
   BadgeDollarSign,
   Clock,
   Plus,
-  Search,
   ShieldCheck,
   UserCircle2,
   WalletCards,
@@ -20,6 +19,7 @@ import {
 } from '@/lib/api/hr-payroll';
 import { canViewPage } from '@/lib/permissions/access';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { PaymentAmountHero } from '@/components/accounting/PaymentAmountHero';
 import {
@@ -266,16 +266,13 @@ export function PayrollAdvancesPage() {
             </button>
           ))}
         </div>
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 start-3" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('payrollExpenses.search')}
-            className="w-full h-10 rounded-xl border ps-9 pe-3 text-sm"
-          />
-        </div>
+        <ErpSearchBar
+          className="min-w-[200px] flex-1"
+          value={search}
+          onChange={setSearch}
+          placeholder={t('payrollExpenses.search')}
+          showAdvanced={false}
+        />
       </div>
 
       {tab === 'movements' ? (

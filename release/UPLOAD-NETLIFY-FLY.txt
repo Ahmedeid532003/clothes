@@ -1,0 +1,4 @@
+﻿UPLOAD TO NETLIFY
+Backend: https://mahalyerp-api.fly.dev
+File: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-NETLIFY-FLY-20260626-1941.zip
+Login: demo | owner@demo | demo1234

@@ -5,10 +5,10 @@ import type { EmployeeDataRow } from '@/lib/api/employee-data';
 import {
   branchLabel,
   employmentType,
-  initials,
   jobSubtitle,
   salaryNumber,
 } from '@/components/hr/employee-data/employee-data-shared';
+import { EmployeeAvatar } from '@/components/hr/employee-data/EmployeeAvatar';
 
 function EmployeeCard({
   row,
@@ -42,10 +42,11 @@ function EmployeeCard({
             {present ? (isRtl ? 'حاضر' : 'Present') : isRtl ? 'غائب' : 'Absent'}
           </span>
         </div>
-        <span className="emp-data-avatar-square emp-data-card-avatar">
-          {initials(row.full_name)}
-          <i className="emp-data-avatar-dot" aria-hidden />
-        </span>
+        <EmployeeAvatar
+          fullName={row.full_name}
+          photoUrl={row.photo_url}
+          className="emp-data-card-avatar"
+        />
       </header>
 
       <div className="emp-data-card-grid">

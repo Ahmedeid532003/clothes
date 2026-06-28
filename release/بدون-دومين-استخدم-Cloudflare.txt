@@ -1,0 +1,72 @@
+═══════════════════════════════════════════════════════
+  بدون دومين — الحل المجاني اللي يشتغل من مصر
+═══════════════════════════════════════════════════════
+
+Netlify (*.netlify.app) = محظور على TE Data ❌
+Cloudflare Pages (*.pages.dev) = شغال من مصر ✓
+
+نفس الواجهة + نفس الباك إند على السيرفر.
+
+───────────────────────────────────────────────────────
+الخطوات (10 دقائق)
+───────────────────────────────────────────────────────
+
+1) سجّل مجاناً:
+   https://dash.cloudflare.com/sign-up
+
+2) من القائمة: Workers & Pages
+
+3) Create application → Pages → Connect to Git
+
+4) اختر GitHub واسمح بالوصول
+
+5) اختر المستودع:
+   Ahmedeid532003/clothes
+
+6) إعدادات البناء (مهم):
+
+   Project name:        ma7aly
+   (هتاخد رابط: https://ma7aly.pages.dev)
+
+   Framework preset:    None
+   Build command:       npm run build:netlify
+   Build output dir:    dist
+
+7) Environment variables → Add:
+   Name:  VITE_API_URL
+   Value: /api/v1
+
+8) Save and Deploy — انتظر 2-3 دقائق
+
+9) افتح:
+   https://ma7aly.pages.dev
+
+10) جرّب API:
+    https://ma7aly.pages.dev/api/v1/health/
+    لازم: status ok + database connected
+
+11) دخول:
+    منشأة: ahmedeid
+    مستخدم: eidahmed
+    كلمة المرور: 123456789
+
+───────────────────────────────────────────────────────
+بعد ما يشتغل — أوقف فرونت VPS :8787
+───────────────────────────────────────────────────────
+
+على السيرفر (RDP):
+   .\scripts\stop-vps-frontend-only.ps1
+
+الباك إند يفضل على 8788 (مش تلغي السيرفر كله).
+
+───────────────────────────────────────────────────────
+لو عايز Netlify بالذات
+───────────────────────────────────────────────────────
+
+لازم تشتري دومين (~150 جنيه/سنة) من:
+  • https://www.cloudflare.com/products/registrar/
+  • أو Namecheap / GoDaddy
+
+بدون دومين Netlify مش هيفتح من مصر.
+
+═══════════════════════════════════════════════════════

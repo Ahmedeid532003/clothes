@@ -179,7 +179,7 @@ export function PayrollPaymentsPage() {
         </div>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="erp-side-drawer hr-premium-drawer w-full border-s-0 p-0 sm:max-w-[62vw]">
+        <SheetContent side="center" className="erp-form-modal erp-form-modal--full erp-side-drawer hr-premium-drawer w-full border-0 p-0 flex flex-col">
           <SheetHeader className="erp-side-drawer-header">
             <SheetTitle>{t('hrPayroll.payments.add')}</SheetTitle>
             <p className="text-sm font-bold text-blue-100/90">إضافة إذن صرف أو تسجيل سلفة من نفس الشاشة.</p>

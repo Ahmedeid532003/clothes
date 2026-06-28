@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from erp.services.inventory_extended import _variant_unit_price
+from erp.serializer_fields import DefaultTodayDateField
 from erp.catalog_models import (
     Brand,
     ProductClassification,
@@ -270,7 +271,7 @@ class SupplierPaymentSerializer(serializers.ModelSerializer):
 class SupplierPaymentWriteSerializer(serializers.Serializer):
     supplier = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=14, decimal_places=2)
-    payment_date = serializers.DateField()
+    payment_date = DefaultTodayDateField()
     payment_method = serializers.ChoiceField(
         choices=SupplierPayment.PaymentMethod.choices,
         required=False,

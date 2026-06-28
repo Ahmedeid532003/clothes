@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host=0.0.0.0 --port=8787 --strictPort",
+    "dev:all": "powershell -ExecutionPolicy Bypass -File scripts/run-local.ps1",
+    "dev:local": "cmd /c scripts\\start-local-api.cmd",
+    "dev:cloud": "powershell -ExecutionPolicy Bypass -File scripts/run-local.ps1 -Cloud",
+    "dev:online": "powershell -ExecutionPolicy Bypass -File scripts/run-online.ps1",
     "build": "vite build",
     "build:netlify": "vite build --mode production",
     "deploy:netlify": "powershell -ExecutionPolicy Bypass -File scripts/netlify-cli-deploy.ps1",

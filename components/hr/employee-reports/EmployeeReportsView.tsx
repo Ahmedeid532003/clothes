@@ -3,7 +3,6 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   CircleDollarSign,
   Download,
   LayoutGrid,
@@ -19,6 +18,10 @@ import { AlertBanner } from '@/components/accounting/AccountingUi';
 import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { ErpTablePagination } from '@/components/erp/ErpTablePagination';
 import { useTablePagination } from '@/components/erp/useTablePagination';
+import { EmployeeReportTypePicker } from '@/components/hr/employee-reports/EmployeeReportTypePicker';
+import { AttendanceReportPanel } from '@/components/hr/employee-reports/AttendanceReportPanel';
+import { RewardsDeductionsReportPanel } from '@/components/hr/employee-reports/RewardsDeductionsReportPanel';
+import { EmployeeCommissionsReportView } from '@/components/hr/commissions/EmployeeCommissionsReportView';
 import { EmployeeReportsColumnPicker } from '@/components/hr/employee-reports/EmployeeReportsColumnPicker';
 import {
   DEFAULT_EMP_REP_COLUMNS,
@@ -126,6 +129,7 @@ export function EmployeeReportsView() {
   const columnsBtnRef = useRef<HTMLButtonElement>(null);
 
   const refresh = useCallback(async () => {
+    if (reportType !== 'staff-data') return;
     setLoading(true);
     setError(null);
     try {
@@ -138,7 +142,7 @@ export function EmployeeReportsView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reportType]);
 
   useEffect(() => {
     refresh();
@@ -213,28 +217,7 @@ export function EmployeeReportsView() {
               : 'Select the report to view smart analytics for your workforce'}
           </p>
         </div>
-        <div className="emp-rep-report-picker">
-          <span className="emp-rep-report-picker-label">
-            {isRtl ? 'اختر التقرير المراد عرضه' : 'Select report to display'}
-          </span>
-          <div className="emp-rep-report-select">
-            <select
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value as ReportTypeId)}
-              aria-label={isRtl ? 'نوع التقرير' : 'Report type'}
-            >
-              {REPORT_TYPES.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {isRtl ? r.labelAr : r.labelEn}
-                </option>
-              ))}
-            </select>
-            <span className="emp-rep-report-select-badge">
-              {isRtl ? currentReport.labelAr : currentReport.labelEn}
-            </span>
-            <ChevronDown className="emp-rep-report-select-chevron" aria-hidden />
-          </div>
-        </div>
+        <EmployeeReportTypePicker value={reportType} onChange={setReportType} />
       </header>
 
       {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
@@ -243,11 +226,19 @@ export function EmployeeReportsView() {
         <div className="emp-rep-report-head">
           <h2>{isRtl ? currentReport.titleAr : currentReport.titleEn}</h2>
           <span className="emp-rep-count-badge">
-            <Users className="h-3.5 w-3.5" />
-            {stats.total} {isRtl ? 'موظف' : 'employees'}
+            {reportType === 'staff-data' ? (
+              <>
+                <Users className="h-3.5 w-3.5" />
+                {stats.total} {isRtl ? 'موظف' : 'employees'}
+              </>
+            ) : (
+              isRtl ? currentReport.labelAr : currentReport.labelEn
+            )}
           </span>
         </div>
 
+        {reportType === 'staff-data' ? (
+          <>
         <div className="emp-rep-filters-panel">
           <div className="emp-rep-filters-row">
             <div className="emp-rep-date-group">
@@ -438,6 +429,20 @@ export function EmployeeReportsView() {
           onPageChange={pagination.setPage}
           onPageSizeChange={pagination.setPageSize}
         />
+          </>
+        ) : reportType === 'commissions' ? (
+          <div className="emp-rep-report-body">
+            <EmployeeCommissionsReportView embedded />
+          </div>
+        ) : reportType === 'attendance' ? (
+          <div className="emp-rep-report-body">
+            <AttendanceReportPanel />
+          </div>
+        ) : (
+          <div className="emp-rep-report-body">
+            <RewardsDeductionsReportPanel />
+          </div>
+        )}
       </section>
     </div>
   );

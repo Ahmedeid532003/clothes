@@ -1,0 +1,12 @@
+﻿UPLOAD TO NETLIFY
+=================
+File: MAHALY-NETLIFY-RUNSITE.zip
+Path: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-NETLIFY-RUNSITE-20260626-1917.zip
+
+1. https://app.netlify.com/drop
+2. Drag the ZIP
+3. Test: https://YOUR-SITE.netlify.app/api/v1/health/
+
+Backend: https://mahalyerp-api.runsite.app
+Database: Neon
+Login: demo | owner@demo | demo1234

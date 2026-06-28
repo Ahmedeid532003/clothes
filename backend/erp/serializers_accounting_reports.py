@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from erp.serializer_fields import DefaultTodayDateField
+
 
 class JournalLineWriteSerializer(serializers.Serializer):
     gl_account = serializers.UUIDField()
@@ -10,7 +12,7 @@ class JournalLineWriteSerializer(serializers.Serializer):
 
 
 class JournalEntryWriteSerializer(serializers.Serializer):
-    entry_date = serializers.DateField()
+    entry_date = DefaultTodayDateField()
     description = serializers.CharField(required=False, allow_blank=True)
     branch = serializers.UUIDField(required=False, allow_null=True)
     cost_center = serializers.UUIDField(required=False, allow_null=True)

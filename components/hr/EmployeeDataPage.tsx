@@ -15,6 +15,9 @@ import { HrModuleLayout } from '@/components/hr/HrModuleLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
+import { EmployeeMediaPanel } from '@/components/hr/employee-data/EmployeeMediaPanel';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { canViewPage } from '@/lib/permissions/access';
 
 type FormState = {
   full_name: string;
@@ -92,7 +95,6 @@ const EMPLOYEE_EXTRA_SECTIONS: Array<{ title: string; fields: ExtraField[] }> = 
       { key: 'external_employee_code', label: 'كود الموظف الخارجي' },
       { key: 'employee_name_ar', label: 'اسم الموظف', required: true },
       { key: 'nick_name', label: 'اسم الشهرة' },
-      { key: 'photo_url', label: 'صورة الموظف', type: 'url' },
       { key: 'employee_status', label: 'الحالة', type: 'select', options: EMPLOYEE_STATUS_OPTIONS },
       { key: 'work_start_date', label: 'تاريخ مباشرة العمل', type: 'date' },
       { key: 'contract_end_date', label: 'تاريخ انتهاء العقد', type: 'date' },
@@ -219,6 +221,8 @@ function calcAge(birthDate: string | number | boolean | undefined) {
 
 export function EmployeeDataPage() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const isAdmin = !!user && (user.is_owner || canViewPage(user, 'create-users'));
   const [rows, setRows] = useState<EmployeeDataRow[]>([]);
   const [depts, setDepts] = useState<DepartmentDto[]>([]);
   const [sections, setSections] = useState<HrSectionDto[]>([]);
@@ -350,7 +354,7 @@ export function EmployeeDataPage() {
   };
 
   const addIncrease = async () => {
-    if (!detail || !newIncrease.effective_date) return;
+    if (!detail) return;
     await employeeDataApi.addIncrease(detail.id, newIncrease);
     setNewIncrease({ amount: '', effective_date: '', notes: '' });
     const refreshed = await employeeDataApi.get(detail.id);
@@ -463,6 +467,11 @@ export function EmployeeDataPage() {
   );
 
 
+  const handleMediaUpdated = (row: EmployeeDataRow) => {
+    setDetail(row);
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...row } : r)));
+  };
+
   const handleDelete = async (row: EmployeeDataRow) => {
     if (!confirm(t('departments.delete') + '?')) return;
     try {
@@ -533,6 +542,16 @@ export function EmployeeDataPage() {
                   </div>
                 </div>
               </section>
+
+              <EmployeeMediaPanel
+                employeeId={detail.id}
+                fullName={detail.full_name}
+                photoUrl={detail.photo_url}
+                hasIdCard={detail.has_id_card}
+                idCardFilename={detail.id_card_filename}
+                isAdmin={isAdmin}
+                onUpdated={handleMediaUpdated}
+              />
 
               {renderedEmployeeSections}
 

@@ -1,4 +1,4 @@
-import { apiFetch } from '@/lib/api/client';
+import { apiFetch, apiFetchBlob, apiFetchFormData } from '@/lib/api/client';
 
 export type EmployeeAllowanceRow = {
   id: string;
@@ -23,6 +23,9 @@ export type EmployeeDataRow = {
   email: string;
   is_active: boolean;
   is_owner: boolean;
+  photo_url?: string;
+  has_id_card?: boolean;
+  id_card_filename?: string;
   department_id: string | null;
   department_name: string;
   hr_section_id: string | null;
@@ -74,4 +77,25 @@ export const employeeDataApi = {
     apiFetch<void>(`/hr/employee-data/${id}/salary-increases/${increaseId}/`, {
       method: 'DELETE',
     }),
+  uploadPhoto: (id: string, file: File) => {
+    const fd = new FormData();
+    fd.append('photo', file);
+    return apiFetchFormData<EmployeeDataRow>(`/hr/employee-data/${id}/photo/`, fd, 'POST');
+  },
+  uploadIdCard: (id: string, file: File) => {
+    const fd = new FormData();
+    fd.append('id_card', file);
+    return apiFetchFormData<EmployeeDataRow>(`/hr/employee-data/${id}/id-card/`, fd, 'POST');
+  },
+  downloadIdCard: async (id: string, fallbackName = 'id-card.pdf') => {
+    const { blob, filename } = await apiFetchBlob(`/hr/employee-data/${id}/id-card/`);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || fallbackName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };

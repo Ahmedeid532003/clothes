@@ -4,6 +4,29 @@ from rest_framework.permissions import BasePermission
 
 from erp.branch_access import effective_permissions
 
+PAGE_ALIASES: dict[str, list[str]] = {
+    "leave-types": ["official-holidays", "hr-job-structure"],
+    "official-holidays": ["leave-types", "hr-job-structure"],
+    "payroll-payments": ["bonuses"],
+    "payment-auth-types": ["bonuses", "payroll-payments"],
+    "attendance-import": ["attendance"],
+    "employee-data": ["employee-reports", "create-users"],
+    "create-users": ["employee-data", "employee-reports"],
+    "employee-commissions": ["employee-reports"],
+    "attendance": ["employee-reports", "attendance-import"],
+    "bonuses": ["employee-reports", "deductions"],
+    "deductions": ["employee-reports", "bonuses"],
+}
+
+
+def _page_allowed(perms: dict, page_key: str) -> bool:
+    if perms.get("pages", {}).get(page_key):
+        return True
+    for alias in PAGE_ALIASES.get(page_key, []):
+        if perms.get("pages", {}).get(alias):
+            return True
+    return False
+
 
 def can_access_page(user, page_key: str) -> bool:
     if not user or not user.is_authenticated:
@@ -11,7 +34,7 @@ def can_access_page(user, page_key: str) -> bool:
     if getattr(user, "is_owner", False):
         return True
     perms = effective_permissions(user)
-    return bool(perms.get("pages", {}).get(page_key))
+    return _page_allowed(perms, page_key)
 
 
 def can_perform_action(user, page_key: str, action: str) -> bool:
@@ -19,8 +42,15 @@ def can_perform_action(user, page_key: str, action: str) -> bool:
         return False
     if getattr(user, "is_owner", False):
         return True
+    if not can_access_page(user, page_key):
+        return False
     perms = effective_permissions(user)
-    return bool(perms.get("actions", {}).get(page_key, {}).get(action))
+    if perms.get("actions", {}).get(page_key, {}).get(action):
+        return True
+    for alias in PAGE_ALIASES.get(page_key, []):
+        if perms.get("actions", {}).get(alias, {}).get(action):
+            return True
+    return False
 
 
 def can_use_feature(user, page_key: str, feature_key: str) -> bool:
@@ -77,7 +107,7 @@ class HasPageAction(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if user.is_owner:
+        if getattr(user, "is_owner", False):
             return True
         page_key = getattr(view, "required_page", None)
         action = getattr(view, "required_action", "view")
@@ -89,6 +119,18 @@ class HasPageAction(BasePermission):
         if page_key:
             return can_perform_action(user, page_key, action)
         return True
+
+
+class HasHrRegistrationAccess(BasePermission):
+    """تسجيل موظف / صلاحيات — employee-data أو create-users."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_owner:
+            return True
+        return can_access_page(user, "employee-data") or can_access_page(user, "create-users")
 
 
 CUSTOMER_MODULE_PAGES = (

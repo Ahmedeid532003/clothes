@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from erp.purchase_models import PurchaseInvoice, PurchaseInvoiceLine
+from erp.serializer_fields import DefaultTodayDateField
 
 
 class PurchaseInvoiceLineSerializer(serializers.ModelSerializer):
@@ -165,7 +166,7 @@ class PurchaseInvoiceWriteSerializer(serializers.Serializer):
     brand = serializers.UUIDField(required=False, allow_null=True)
     warehouse = serializers.UUIDField()
     branch = serializers.UUIDField(required=False, allow_null=True)
-    invoice_date = serializers.DateField(required=False)
+    invoice_date = DefaultTodayDateField()
     notes = serializers.CharField(required=False, allow_blank=True)
     discount_amount = serializers.DecimalField(
         max_digits=14, decimal_places=2, required=False, default=Decimal("0")

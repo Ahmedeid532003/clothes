@@ -1,0 +1,18 @@
+﻿Netlify - Ø±ÙØ¹ Ù…Ø¨Ø§Ø´Ø± (ZIP Ø¬Ø§Ù‡Ø²)
+==============================
+Ø§Ù„Ù…Ù„Ù: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-NETLIFY-UPLOAD-20260626-2348.zip
+Ø§Ù„Ø¨Ø§ÙƒÙ†Ø¯ (proxy): https://mahalyerp-api.fly.dev
+ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„: demo | owner@demo | demo1234
+
+1) https://app.netlify.com/drop
+2) Ø§Ø³Ø­Ø¨ Ø§Ù„Ù€ ZIP
+3) Ø¨Ø¹Ø¯ Ø§Ù„Ù†Ø´Ø± Ø¬Ø±Ø¨:
+   https://Ù…ÙˆÙ‚Ø¹Ùƒ.netlify.app/api/v1/health/
+
+Ù…Ø­ØªÙˆÙŠØ§Øª Ø§Ù„Ù€ ZIP (ØµØ­ÙŠØ­Ø©):
+- index.html + assets/
+- _redirects (proxy /api/* -> Fly.io)
+- Ø¨Ø¯ÙˆÙ† wrangler / Ø¨Ø¯ÙˆÙ† build / Ø¨Ø¯ÙˆÙ† functions
+
+Ù…Ù„Ø§Ø­Ø¸Ø© Ù…ØµØ±: TE Data Ù‚Ø¯ ÙŠØ­Ø¸Ø± *.netlify.app
+Ù„Ùˆ Ø¸Ù‡Ø± timeout Ø§Ø³ØªØ®Ø¯Ù… Cloudflare: npm run pack:cloudflare

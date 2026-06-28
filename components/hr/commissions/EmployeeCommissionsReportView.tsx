@@ -99,7 +99,7 @@ function CommissionCard({ row, isRtl }: { row: EmployeeCommissionReportRow; isRt
   );
 }
 
-export function EmployeeCommissionsReportView() {
+export function EmployeeCommissionsReportView({ embedded = false }: { embedded?: boolean }) {
   const { t, isRtl } = useLanguage();
   const [report, setReport] = useState<EmployeeCommissionReport | null>(null);
   const [branches, setBranches] = useState<BranchDto[]>([]);
@@ -172,18 +172,11 @@ export function EmployeeCommissionsReportView() {
     setPickerOpen(false);
   };
 
-  return (
-    <div className="emp-comm-page">
-      <header className="emp-comm-topbar">
-        <span className="emp-comm-topbar-badge">
-          {isRtl ? 'بوابة الموارد البشرية والرواتب الذكية' : 'Smart HR & payroll portal'}
-        </span>
-        <h1>{isRtl ? 'منظومة إدارة الموظفين والهيكل الإداري' : 'Employee management system'}</h1>
-      </header>
-
+  const inner = (
+    <>
       {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
-      <section className="emp-comm-main-card">
+      {!embedded ? (
         <div className="emp-comm-title-bar">
           <div className="emp-comm-title-main">
             <span className="emp-comm-title-icon">
@@ -197,6 +190,7 @@ export function EmployeeCommissionsReportView() {
             </h2>
           </div>
         </div>
+      ) : null}
 
         <div className="emp-comm-filters-row">
           <div className="emp-comm-date-group">
@@ -378,7 +372,20 @@ export function EmployeeCommissionsReportView() {
           onPageChange={pagination.setPage}
           onPageSizeChange={pagination.setPageSize}
         />
-      </section>
+    </>
+  );
+
+  if (embedded) return inner;
+
+  return (
+    <div className="emp-comm-page">
+      <header className="emp-comm-topbar">
+        <span className="emp-comm-topbar-badge">
+          {isRtl ? 'بوابة الموارد البشرية والرواتب الذكية' : 'Smart HR & payroll portal'}
+        </span>
+        <h1>{isRtl ? 'منظومة إدارة الموظفين والهيكل الإداري' : 'Employee management system'}</h1>
+      </header>
+      <section className="emp-comm-main-card">{inner}</section>
     </div>
   );
 }

@@ -1,15 +1,52 @@
 import type { EmployeeDataRow } from '@/lib/api/employee-data';
 import { branchLabel, salaryNumber } from '@/components/hr/employee-data/employee-data-shared';
 
-export type ReportTypeId = 'staff-data';
+export type ReportTypeId = 'staff-data' | 'commissions' | 'attendance' | 'rewards-deductions';
 
-export const REPORT_TYPES: { id: ReportTypeId; labelAr: string; labelEn: string; titleAr: string; titleEn: string }[] = [
+export const REPORT_TYPES: {
+  id: ReportTypeId;
+  labelAr: string;
+  labelEn: string;
+  menuLabelAr: string;
+  menuLabelEn: string;
+  titleAr: string;
+  titleEn: string;
+}[] = [
   {
     id: 'staff-data',
     labelAr: 'بيانات الموظفين',
     labelEn: 'Employee data',
+    menuLabelAr: 'تقرير بيانات الموظفين',
+    menuLabelEn: 'Employee data report',
     titleAr: 'تقرير بيانات ومظاهر طاقم العمل',
     titleEn: 'Staff data & workforce report',
+  },
+  {
+    id: 'commissions',
+    labelAr: 'عمولات الموظفين',
+    labelEn: 'Commissions',
+    menuLabelAr: 'تقرير عمولات الموظفين',
+    menuLabelEn: 'Employee commissions report',
+    titleAr: 'تقرير عمولات ومبيعات طاقم العمل',
+    titleEn: 'Staff commissions & sales report',
+  },
+  {
+    id: 'attendance',
+    labelAr: 'حضور وانصراف',
+    labelEn: 'Attendance',
+    menuLabelAr: 'تقرير حضور وانصراف',
+    menuLabelEn: 'Attendance report',
+    titleAr: 'تقرير حضور وانصراف الموظفين',
+    titleEn: 'Employee attendance report',
+  },
+  {
+    id: 'rewards-deductions',
+    labelAr: 'مكافآت + خصومات',
+    labelEn: 'Bonuses & deductions',
+    menuLabelAr: 'تقرير مكافآت + خصومات',
+    menuLabelEn: 'Bonuses & deductions report',
+    titleAr: 'تقرير المكافآت والخصومات',
+    titleEn: 'Bonuses & deductions report',
   },
 ];
 

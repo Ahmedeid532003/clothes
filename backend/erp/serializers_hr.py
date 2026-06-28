@@ -237,8 +237,16 @@ class PermissionsSchemaSerializer(serializers.Serializer):
 
     @staticmethod
     def build():
+        seen: set[str] = set()
+        pages: list[dict] = []
+        for page in SYSTEM_PAGES:
+            key = page["key"]
+            if key in seen:
+                continue
+            seen.add(key)
+            pages.append(page)
         return {
-            "pages": SYSTEM_PAGES,
+            "pages": pages,
             "features": PAGE_FEATURES,
             "actions": ["view", "update", "delete"],
         }

@@ -5,21 +5,18 @@ import type { EmployeeDataRow } from '@/lib/api/employee-data';
 import {
   branchLabel,
   EMP_COLUMNS,
-  initials,
   jobSubtitle,
   salaryNumber,
   type ColumnFilters,
   type EmpColumnId,
 } from '@/components/hr/employee-data/employee-data-shared';
+import { EmployeeAvatar } from '@/components/hr/employee-data/EmployeeAvatar';
 
 function EmployeeCell({ row, isRtl }: { row: EmployeeDataRow; isRtl: boolean }) {
   const email = row.email || row.username || '—';
   return (
     <div className="emp-data-employee-cell">
-      <span className="emp-data-avatar-square">
-        {initials(row.full_name)}
-        <i className="emp-data-avatar-dot" aria-hidden />
-      </span>
+      <EmployeeAvatar fullName={row.full_name} photoUrl={row.photo_url} />
       <div className="emp-data-employee-meta">
         <strong>{row.full_name}</strong>
         <div className="emp-data-code-line">

@@ -7,8 +7,12 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
+  Gift,
+  Palmtree,
   Pencil,
   Trash2,
+  TrendingDown,
+  UserRoundCheck,
 } from 'lucide-react';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -30,9 +34,14 @@ import {
 } from '@/lib/api/hr-sections';
 import { jobTitlesApi, type JobTitleDto } from '@/lib/api/job-titles';
 import { employeeGroupsApi, type EmployeeGroupDto } from '@/lib/api/employee-groups';
+import { fetchEmployees, type EmployeeDto } from '@/lib/api/employees';
 import {
   allowanceItemsApi,
+  allowancesApi,
   deductionItemsApi,
+  deductionsApi,
+  leaveTypesApi,
+  leavesApi,
   officialHolidaysApi,
   type OfficialHolidayRow,
 } from '@/lib/api/hr-payroll';
@@ -42,6 +51,7 @@ import { HrStructureField, HrStructureModal } from '@/components/hr/HrStructureM
 import { exportJobStructureSectionPdf } from '@/lib/hr/job-structure-pdf';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 type FinancialItem = {
   id: string;
@@ -125,8 +135,11 @@ function StructureCard({
   count,
   description,
   onAdd,
+  onSecondaryAdd,
+  secondaryAddLabel,
   onDownload,
   canAdd,
+  canSecondaryAdd,
   isFocused,
   isHidden,
   onToggleFocus,
@@ -137,8 +150,11 @@ function StructureCard({
   count: number;
   description?: string;
   onAdd: () => void;
+  onSecondaryAdd?: () => void;
+  secondaryAddLabel?: string;
   onDownload?: () => void | Promise<void>;
   canAdd?: boolean;
+  canSecondaryAdd?: boolean;
   isFocused: boolean;
   isHidden: boolean;
   onToggleFocus: (id: StructureSectionId) => void;
@@ -216,7 +232,14 @@ function StructureCard({
             </button>
           ) : null}
           {canAdd ? (
-            <ErpAddButton onClick={onAdd}>{t('hrJobStructure.add')}</ErpAddButton>
+            <div className="hr-structure-action-stack">
+              <ErpAddButton onClick={onAdd}>{t('hrJobStructure.add')}</ErpAddButton>
+              {canSecondaryAdd && onSecondaryAdd ? (
+                <ErpAddButton icon={UserRoundCheck} onClick={onSecondaryAdd}>
+                  {secondaryAddLabel || t('hrJobStructure.assignLeave')}
+                </ErpAddButton>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </header>
@@ -248,11 +271,24 @@ export function HrJobStructurePage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [drawerError, setDrawerError] = useState<string | null>(null);
+  const [assignLeaveError, setAssignLeaveError] = useState<string | null>(null);
+  const [assignFinancialOpen, setAssignFinancialOpen] = useState(false);
+  const [assignFinancialKind, setAssignFinancialKind] = useState<'allowance' | 'deduction'>('allowance');
+  const [assignFinancialError, setAssignFinancialError] = useState<string | null>(null);
+  const [assignFinancialForm, setAssignFinancialForm] = useState({
+    employee_id: '',
+    item_id: '',
+    amount: '',
+    deduction_date: new Date().toISOString().slice(0, 10),
+  });
   const [departments, setDepartments] = useState<DepartmentDto[]>([]);
   const [sections, setSections] = useState<HrSectionDto[]>([]);
   const [groups, setGroups] = useState<EmployeeGroupDto[]>([]);
   const [titles, setTitles] = useState<JobTitleDto[]>([]);
   const [holidays, setHolidays] = useState<OfficialHolidayRow[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<{ id: string; code: string; name: string }[]>([]);
+  const [employees, setEmployees] = useState<EmployeeDto[]>([]);
   const [financialItems, setFinancialItems] = useState<FinancialItem[]>([]);
 
   const [drawer, setDrawer] = useState<DrawerKind | null>(null);
@@ -261,7 +297,23 @@ export function HrJobStructurePage() {
   const [sectionForm, setSectionForm] = useState({ name: '', code: '', department_id: '' });
   const [groupForm, setGroupForm] = useState({ name: '', description: '', color: 'blue' });
   const [titleForm, setTitleForm] = useState({ name: '', job_level: 'B', code: '' });
-  const [holidayForm, setHolidayForm] = useState({ name: '', holiday_date: '', is_recurring: false });
+  const [holidayForm, setHolidayForm] = useState({
+    name: '',
+    holiday_date: '',
+    is_recurring: false,
+    noFixedDate: true,
+  });
+  const [editingHolidayKind, setEditingHolidayKind] = useState<'leave_type' | 'holiday' | null>(null);
+  const [assignLeaveOpen, setAssignLeaveOpen] = useState(false);
+  const [assignLeaveForm, setAssignLeaveForm] = useState({
+    employee_id: '',
+    leave_type_id: '',
+    start_date: '',
+    end_date: '',
+    unit: 'days' as 'days' | 'hours',
+    quantity: '1',
+    notes: '',
+  });
   const [financialForm, setFinancialForm] = useState({ name: '', default_amount: '' });
   const [financialKind, setFinancialKind] = useState<'allowance' | 'deduction'>('allowance');
 
@@ -271,7 +323,11 @@ export function HrJobStructurePage() {
       sections: canViewPage(user, 'hr-sections'),
       groups: canViewPage(user, 'employee-groups'),
       titles: canViewPage(user, 'job-titles'),
-      holidays: canViewPage(user, 'official-holidays'),
+      holidays: canViewPage(user, 'official-holidays') || canViewPage(user, 'leave-types'),
+      assignLeaves: canViewPage(user, 'leaves'),
+      assignFinancial: canViewPage(user, 'allowances') || canViewPage(user, 'deductions'),
+      assignAllowances: canViewPage(user, 'allowances'),
+      assignDeductions: canViewPage(user, 'deductions'),
       allowances: canViewPage(user, 'allowance-items'),
       deductions: canViewPage(user, 'deduction-items'),
     }),
@@ -282,12 +338,14 @@ export function HrJobStructurePage() {
     setLoading(true);
     setError(null);
     try {
-      const [depts, sects, gr, ti, hol, al, ded] = await Promise.all([
+      const [depts, sects, gr, ti, hol, lt, em, al, ded] = await Promise.all([
         perms.departments ? fetchDepartments().catch(() => []) : Promise.resolve([]),
         perms.sections ? fetchHrSections().catch(() => []) : Promise.resolve([]),
         perms.groups ? employeeGroupsApi.list().catch(() => []) : Promise.resolve([]),
         perms.titles ? jobTitlesApi.list().catch(() => []) : Promise.resolve([]),
         perms.holidays ? officialHolidaysApi.list().catch(() => []) : Promise.resolve([]),
+        perms.holidays ? leaveTypesApi.list().catch(() => []) : Promise.resolve([]),
+        perms.assignLeaves || perms.assignFinancial ? fetchEmployees().catch(() => []) : Promise.resolve([]),
         perms.allowances ? allowanceItemsApi.list().catch(() => []) : Promise.resolve([]),
         perms.deductions ? deductionItemsApi.list().catch(() => []) : Promise.resolve([]),
       ]);
@@ -296,6 +354,8 @@ export function HrJobStructurePage() {
       setGroups(gr);
       setTitles(ti);
       setHolidays(hol);
+      setLeaveTypes(lt);
+      setEmployees(em.filter((x) => x.is_active));
       setFinancialItems([
         ...al.map((row) => ({
           id: row.id,
@@ -321,9 +381,10 @@ export function HrJobStructurePage() {
     load();
   }, [load]);
 
-  const openDrawer = (kind: DrawerKind, id?: string) => {
+  const openDrawer = (kind: DrawerKind, id?: string, holidayKind?: 'leave_type' | 'holiday') => {
     setEditingId(id || null);
     setDrawer(kind);
+    setDrawerError(null);
     if (kind === 'department' && id) {
       const row = departments.find((d) => d.id === id);
       if (row) setDeptForm({ name: row.name, manager_name: row.manager_name || '', code: row.code });
@@ -345,10 +406,27 @@ export function HrJobStructurePage() {
     } else if (kind === 'jobTitle') {
       setTitleForm({ name: '', job_level: 'B', code: '' });
     } else if (kind === 'holiday' && id) {
-      const row = holidays.find((h) => h.id === id);
-      if (row) setHolidayForm({ name: row.name, holiday_date: row.holiday_date, is_recurring: row.is_recurring });
+      if (holidayKind === 'leave_type') {
+        const row = leaveTypes.find((h) => h.id === id);
+        if (row) {
+          setEditingHolidayKind('leave_type');
+          setHolidayForm({ name: row.name, holiday_date: '', is_recurring: false, noFixedDate: true });
+        }
+      } else {
+        const row = holidays.find((h) => h.id === id);
+        if (row) {
+          setEditingHolidayKind('holiday');
+          setHolidayForm({
+            name: row.name,
+            holiday_date: row.holiday_date || '',
+            is_recurring: row.is_recurring,
+            noFixedDate: false,
+          });
+        }
+      }
     } else if (kind === 'holiday') {
-      setHolidayForm({ name: '', holiday_date: '', is_recurring: false });
+      setEditingHolidayKind(null);
+      setHolidayForm({ name: '', holiday_date: '', is_recurring: false, noFixedDate: true });
     } else if (kind === 'financial') {
       setFinancialKind('allowance');
       setFinancialForm({ name: '', default_amount: '' });
@@ -366,9 +444,13 @@ export function HrJobStructurePage() {
   };
 
   const saveDrawer = async () => {
+    setDrawerError(null);
     try {
       if (drawer === 'department') {
-        if (!deptForm.name.trim()) return;
+        if (!deptForm.name.trim()) {
+          setDrawerError(t('hrJobStructure.errNameRequired'));
+          return;
+        }
         if (editingId) {
           await updateDepartment(editingId, {
             name: deptForm.name.trim(),
@@ -408,11 +490,42 @@ export function HrJobStructurePage() {
           });
         }
       } else if (drawer === 'holiday') {
-        if (!holidayForm.name.trim() || !holidayForm.holiday_date) return;
-        if (editingId) {
-          await officialHolidaysApi.update(editingId, holidayForm);
+        const name = holidayForm.name.trim();
+        if (!name) {
+          setDrawerError(t('hrJobStructure.errNameRequired'));
+          return;
+        }
+        let saved = false;
+        if (holidayForm.noFixedDate) {
+          const body = { name };
+          if (editingId && editingHolidayKind === 'leave_type') {
+            await leaveTypesApi.update(editingId, body);
+            saved = true;
+          } else if (!editingId) {
+            await leaveTypesApi.create(body);
+            saved = true;
+          }
         } else {
-          await officialHolidaysApi.create(holidayForm);
+          if (!holidayForm.holiday_date) {
+            setDrawerError(t('hrJobStructure.errHolidayDateRequired'));
+            return;
+          }
+          const body = {
+            name,
+            holiday_date: holidayForm.holiday_date,
+            is_recurring: holidayForm.is_recurring,
+          };
+          if (editingId && editingHolidayKind === 'holiday') {
+            await officialHolidaysApi.update(editingId, body);
+            saved = true;
+          } else if (!editingId) {
+            await officialHolidaysApi.create(body);
+            saved = true;
+          }
+        }
+        if (!saved) {
+          setDrawerError(t('hrJobStructure.errSaveFailed'));
+          return;
         }
       } else if (drawer === 'financial' || drawer === 'allowance' || drawer === 'deduction') {
         if (!financialForm.name.trim()) return;
@@ -430,7 +543,9 @@ export function HrJobStructurePage() {
       setDrawer(null);
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
+      const message = e instanceof Error ? e.message : 'Error';
+      setDrawerError(message);
+      setError(message);
     }
   };
 
@@ -536,6 +651,103 @@ export function HrJobStructurePage() {
     });
   };
 
+  const holidayCatalog = useMemo(
+    () => [
+      ...leaveTypes.map((row) => ({ kind: 'leave_type' as const, ...row })),
+      ...holidays.map((row) => ({ kind: 'holiday' as const, ...row })),
+    ],
+    [holidays, leaveTypes],
+  );
+
+  const openAssignLeave = () => {
+    setAssignLeaveForm({
+      employee_id: '',
+      leave_type_id: '',
+      start_date: '',
+      end_date: '',
+      unit: 'days',
+      quantity: '1',
+      notes: '',
+    });
+    setAssignLeaveError(null);
+    setAssignLeaveOpen(true);
+  };
+
+  const saveAssignLeave = async () => {
+    setAssignLeaveError(null);
+    if (!assignLeaveForm.employee_id || !assignLeaveForm.leave_type_id) {
+      setAssignLeaveError(t('hrJobStructure.errAssignLeaveRequired'));
+      return;
+    }
+    try {
+      await leavesApi.create(assignLeaveForm);
+      setAssignLeaveOpen(false);
+      load();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Error';
+      setAssignLeaveError(message);
+      setError(message);
+    }
+  };
+
+  const allowanceAssignItems = useMemo(
+    () => financialItems.filter((row) => row.kind === 'allowance'),
+    [financialItems],
+  );
+  const deductionAssignItems = useMemo(
+    () => financialItems.filter((row) => row.kind === 'deduction'),
+    [financialItems],
+  );
+  const assignFinancialItems =
+    assignFinancialKind === 'allowance' ? allowanceAssignItems : deductionAssignItems;
+
+  const openAssignFinancial = () => {
+    const defaultKind = perms.assignAllowances
+      ? 'allowance'
+      : perms.assignDeductions
+        ? 'deduction'
+        : 'allowance';
+    setAssignFinancialKind(defaultKind);
+    setAssignFinancialForm({
+      employee_id: '',
+      item_id: '',
+      amount: '',
+      deduction_date: new Date().toISOString().slice(0, 10),
+    });
+    setAssignFinancialError(null);
+    setAssignFinancialOpen(true);
+  };
+
+  const saveAssignFinancial = async () => {
+    setAssignFinancialError(null);
+    if (!assignFinancialForm.employee_id || !assignFinancialForm.item_id || !assignFinancialForm.amount) {
+      setAssignFinancialError(t('hrJobStructure.errAssignFinancialRequired'));
+      return;
+    }
+    try {
+      if (assignFinancialKind === 'allowance') {
+        await allowancesApi.create({
+          employee_id: assignFinancialForm.employee_id,
+          allowance_item_id: assignFinancialForm.item_id,
+          amount: assignFinancialForm.amount,
+        });
+      } else {
+        await deductionsApi.create({
+          employee_id: assignFinancialForm.employee_id,
+          deduction_item_id: assignFinancialForm.item_id,
+          amount: assignFinancialForm.amount,
+          deduction_date: assignFinancialForm.deduction_date,
+        });
+      }
+      setAssignFinancialOpen(false);
+      load();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Error';
+      setAssignFinancialError(message);
+      setError(message);
+    }
+  };
+
   const downloadHolidaysPdf = () => {
     exportJobStructureSectionPdf({
       ...pdfCommon(),
@@ -546,10 +758,10 @@ export function HrJobStructurePage() {
         { key: 'name', label: t('hrJobStructure.fieldName') },
         { key: 'date', label: t('hrJobStructure.fieldHolidayDay') },
       ],
-      rows: holidays.map((row) => ({
-        name: row.name,
-        date: row.holiday_date,
-      })),
+      rows: [
+        ...leaveTypes.map((row) => ({ name: row.name, date: t('hrJobStructure.leaveTypeBadge') })),
+        ...holidays.map((row) => ({ name: row.name, date: row.holiday_date })),
+      ],
     });
   };
 
@@ -796,36 +1008,42 @@ export function HrJobStructurePage() {
               <StructureCard
                 {...sectionFocusProps('holidays')}
                 title={t('hrJobStructure.holidays')}
-                count={holidays.length}
+                count={holidayCatalog.length}
                 description={t('hrJobStructure.holidaysDesc')}
                 onAdd={() => openDrawer('holiday')}
+                onSecondaryAdd={openAssignLeave}
+                secondaryAddLabel={t('hrJobStructure.assignLeave')}
+                canSecondaryAdd={perms.assignLeaves}
                 onDownload={downloadHolidaysPdf}
                 canAdd
               >
                 {loading ? (
                   <p className="hr-structure-empty">{t('inventory.loading')}</p>
-                ) : holidays.length === 0 ? (
+                ) : holidayCatalog.length === 0 ? (
                   <p className="hr-structure-empty">{t('hrJobStructure.noHolidays')}</p>
                 ) : (
-                  holidays.map((row) => (
-                    <div key={row.id} className="hr-structure-item">
+                  holidayCatalog.map((row) => (
+                    <div key={`${row.kind}-${row.id}`} className="hr-structure-item">
                       <div className="hr-structure-item-body">
                         <span className="hr-structure-dot bg-emerald-500" />
                         <div>
                           <strong>{row.name}</strong>
                           <span>
-                            {row.holiday_date}
-                            {row.is_recurring ? (
+                            {row.kind === 'leave_type'
+                              ? t('hrJobStructure.leaveTypeBadge')
+                              : row.holiday_date}
+                            {row.kind === 'holiday' && row.is_recurring ? (
                               <em className="hr-structure-recurring-badge">{t('hrJobStructure.recurringYearly')}</em>
                             ) : null}
                           </span>
                         </div>
                       </div>
                       <ItemActions
-                        onEdit={() => openDrawer('holiday', row.id)}
+                        onEdit={() => openDrawer('holiday', row.id, row.kind)}
                         onDelete={async () => {
                           if (!confirm(t('departments.delete') + '?')) return;
-                          await officialHolidaysApi.remove(row.id);
+                          if (row.kind === 'leave_type') await leaveTypesApi.remove(row.id);
+                          else await officialHolidaysApi.remove(row.id);
                           load();
                         }}
                       />
@@ -842,6 +1060,9 @@ export function HrJobStructurePage() {
                 count={financialItems.length}
                 description={t('hrJobStructure.financialItemsDesc')}
                 onAdd={() => openDrawer('financial')}
+                onSecondaryAdd={openAssignFinancial}
+                secondaryAddLabel={t('hrJobStructure.assignLeave')}
+                canSecondaryAdd={perms.assignFinancial}
                 onDownload={downloadFinancialPdf}
                 canAdd={perms.allowances || perms.deductions}
               >
@@ -904,6 +1125,7 @@ export function HrJobStructurePage() {
         saveLabel={saveLabel()}
         cancelLabel={t('hrJobStructure.cancel')}
       >
+        {drawerError ? <p className="hr-structure-drawer-error">{drawerError}</p> : null}
         {drawer === 'department' ? (
           <>
             <HrStructureField label={t('hrJobStructure.fieldName')}>
@@ -1010,27 +1232,50 @@ export function HrJobStructurePage() {
                 value={holidayForm.name}
                 onChange={(e) => setHolidayForm((f) => ({ ...f, name: e.target.value }))}
                 className="hr-structure-input"
-              />
-            </HrStructureField>
-            <HrStructureField label={t('hrJobStructure.fieldHolidayDay')}>
-              <Input
-                type="date"
-                value={holidayForm.holiday_date}
-                onChange={(e) => setHolidayForm((f) => ({ ...f, holiday_date: e.target.value }))}
-                className="hr-structure-input"
+                placeholder={isRtl ? 'مثال: مرضى أو اعتيادي' : 'e.g. sick or annual'}
               />
             </HrStructureField>
             <label className="hr-structure-checkbox">
               <input
                 type="checkbox"
-                checked={holidayForm.is_recurring}
-                onChange={(e) => setHolidayForm((f) => ({ ...f, is_recurring: e.target.checked }))}
+                checked={holidayForm.noFixedDate}
+                onChange={(e) =>
+                  setHolidayForm((f) => ({
+                    ...f,
+                    noFixedDate: e.target.checked,
+                    holiday_date: e.target.checked ? '' : f.holiday_date,
+                    is_recurring: e.target.checked ? false : f.is_recurring,
+                  }))
+                }
               />
               <span>
-                <strong>{t('hrJobStructure.recurringYearly')}</strong>
-                <small>{t('hrJobStructure.recurringYearlyHint')}</small>
+                <strong>{t('hrJobStructure.noFixedDate')}</strong>
+                <small>{t('hrJobStructure.noFixedDateHint')}</small>
               </span>
             </label>
+            {!holidayForm.noFixedDate ? (
+              <>
+                <HrStructureField label={t('hrJobStructure.fieldHolidayDay')}>
+                  <Input
+                    type="date"
+                    value={holidayForm.holiday_date}
+                    onChange={(e) => setHolidayForm((f) => ({ ...f, holiday_date: e.target.value }))}
+                    className="hr-structure-input"
+                  />
+                </HrStructureField>
+                <label className="hr-structure-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={holidayForm.is_recurring}
+                    onChange={(e) => setHolidayForm((f) => ({ ...f, is_recurring: e.target.checked }))}
+                  />
+                  <span>
+                    <strong>{t('hrJobStructure.recurringYearly')}</strong>
+                    <small>{t('hrJobStructure.recurringYearlyHint')}</small>
+                  </span>
+                </label>
+              </>
+            ) : null}
           </>
         ) : null}
 
@@ -1079,6 +1324,250 @@ export function HrJobStructurePage() {
           </>
         ) : null}
       </HrStructureModal>
+
+      <Sheet open={assignLeaveOpen} onOpenChange={setAssignLeaveOpen}>
+        <SheetContent
+          side="center"
+          className="erp-form-modal erp-form-modal--full erp-side-drawer hr-premium-drawer w-full border-0 p-0 flex flex-col"
+        >
+          <SheetHeader className="erp-side-drawer-header">
+            <SheetTitle>{t('hrJobStructure.assignLeaveTitle')}</SheetTitle>
+            <p className="text-sm font-bold text-blue-100/90">{t('hrJobStructure.assignLeaveDesc')}</p>
+          </SheetHeader>
+          <div className="erp-side-drawer-body">
+            <div className="hr-premium-form-intro">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-violet-50 text-violet-700">
+                <Palmtree className="h-6 w-6" />
+              </span>
+              <div>
+                <h3>{t('hrJobStructure.assignLeaveTitle')}</h3>
+                <p>{t('hrJobStructure.assignLeaveHint')}</p>
+              </div>
+            </div>
+            {assignLeaveError ? <p className="hr-structure-drawer-error">{assignLeaveError}</p> : null}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <label className="block space-y-1 md:col-span-2">
+                <span>{t('employeeData.colName')}</span>
+                <select
+                  className="hr-structure-input hr-structure-select w-full"
+                  value={assignLeaveForm.employee_id}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, employee_id: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {employees.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.employee_code} — {e.full_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrPayroll.colItem')}</span>
+                <select
+                  className="hr-structure-input hr-structure-select w-full"
+                  value={assignLeaveForm.leave_type_id}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, leave_type_id: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {leaveTypes.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.code} — {x.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrPayroll.colDate')}</span>
+                <Input
+                  type="date"
+                  className="hr-structure-input"
+                  value={assignLeaveForm.start_date}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrJobStructure.fieldEndDate')}</span>
+                <Input
+                  type="date"
+                  className="hr-structure-input"
+                  value={assignLeaveForm.end_date}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, end_date: e.target.value }))}
+                />
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrJobStructure.fieldCount')}</span>
+                <Input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  className="hr-structure-input"
+                  value={assignLeaveForm.quantity}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, quantity: e.target.value }))}
+                />
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrJobStructure.fieldCalcUnit')}</span>
+                <select
+                  className="hr-structure-input hr-structure-select w-full"
+                  value={assignLeaveForm.unit}
+                  onChange={(e) => setAssignLeaveForm((f) => ({ ...f, unit: e.target.value as 'days' | 'hours' }))}
+                >
+                  <option value="days">{t('hrPayroll.days')}</option>
+                  <option value="hours">{t('hrPayroll.hours')}</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <SheetFooter className="erp-side-drawer-footer">
+            <Button variant="outline" onClick={() => setAssignLeaveOpen(false)}>
+              {t('inventory.cancel')}
+            </Button>
+            <Button onClick={() => void saveAssignLeave()} className="erp-add-save-action">
+              {t('hrJobStructure.assignLeave')}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={assignFinancialOpen} onOpenChange={setAssignFinancialOpen}>
+        <SheetContent
+          side="center"
+          className="erp-form-modal erp-form-modal--full erp-side-drawer hr-premium-drawer w-full border-0 p-0 flex flex-col"
+        >
+          <SheetHeader className="erp-side-drawer-header">
+            <SheetTitle>
+              {assignFinancialKind === 'allowance'
+                ? t('hrJobStructure.assignAllowanceTitle')
+                : t('hrJobStructure.assignDeductionTitle')}
+            </SheetTitle>
+            <p className="text-sm font-bold text-blue-100/90">
+              {assignFinancialKind === 'allowance'
+                ? t('hrJobStructure.assignAllowanceDesc')
+                : t('hrJobStructure.assignDeductionDesc')}
+            </p>
+          </SheetHeader>
+          <div className="erp-side-drawer-body">
+            <div className="hr-premium-form-intro">
+              <span
+                className={`grid h-12 w-12 place-items-center rounded-2xl ${
+                  assignFinancialKind === 'allowance' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                }`}
+              >
+                {assignFinancialKind === 'allowance' ? (
+                  <Gift className="h-6 w-6" />
+                ) : (
+                  <TrendingDown className="h-6 w-6" />
+                )}
+              </span>
+              <div>
+                <h3>
+                  {assignFinancialKind === 'allowance'
+                    ? t('hrJobStructure.assignAllowanceTitle')
+                    : t('hrJobStructure.assignDeductionTitle')}
+                </h3>
+                <p>
+                  {assignFinancialKind === 'allowance'
+                    ? t('hrJobStructure.assignAllowanceHint')
+                    : t('hrJobStructure.assignDeductionHint')}
+                </p>
+              </div>
+            </div>
+            {assignFinancialError ? <p className="hr-structure-drawer-error">{assignFinancialError}</p> : null}
+            {perms.assignAllowances && perms.assignDeductions ? (
+              <div className="hr-structure-field mb-5">
+                <span>{t('hrJobStructure.assignFinancialType')}</span>
+                <div className="hr-structure-type-grid">
+                  <button
+                    type="button"
+                    className={`hr-structure-type-card is-allowance ${assignFinancialKind === 'allowance' ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setAssignFinancialKind('allowance');
+                      setAssignFinancialForm((f) => ({ ...f, item_id: '' }));
+                    }}
+                  >
+                    <strong>{t('hrJobStructure.allowanceCardTitle')}</strong>
+                    <small>{t('hrJobStructure.assignAllowanceTitle')}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={`hr-structure-type-card is-deduction ${assignFinancialKind === 'deduction' ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setAssignFinancialKind('deduction');
+                      setAssignFinancialForm((f) => ({ ...f, item_id: '' }));
+                    }}
+                  >
+                    <strong>{t('hrJobStructure.deductionCardTitle')}</strong>
+                    <small>{t('hrJobStructure.assignDeductionTitle')}</small>
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <label className="block space-y-1 md:col-span-2">
+                <span>{t('employeeData.colName')}</span>
+                <select
+                  className="hr-structure-input hr-structure-select w-full"
+                  value={assignFinancialForm.employee_id}
+                  onChange={(e) => setAssignFinancialForm((f) => ({ ...f, employee_id: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {employees.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.employee_code} — {e.full_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span>{t('hrPayroll.colItem')}</span>
+                <select
+                  className="hr-structure-input hr-structure-select w-full"
+                  value={assignFinancialForm.item_id}
+                  onChange={(e) => setAssignFinancialForm((f) => ({ ...f, item_id: e.target.value }))}
+                >
+                  <option value="">—</option>
+                  {assignFinancialItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1">
+                <span>{t('employeeData.amount')}</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="hr-structure-input"
+                  placeholder={t('employeeData.amount')}
+                  value={assignFinancialForm.amount}
+                  onChange={(e) => setAssignFinancialForm((f) => ({ ...f, amount: e.target.value }))}
+                />
+              </label>
+              {assignFinancialKind === 'deduction' ? (
+                <label className="block space-y-1 md:col-span-2">
+                  <span>{t('hrPayroll.colDate')}</span>
+                  <Input
+                    type="date"
+                    className="hr-structure-input"
+                    value={assignFinancialForm.deduction_date}
+                    onChange={(e) => setAssignFinancialForm((f) => ({ ...f, deduction_date: e.target.value }))}
+                  />
+                </label>
+              ) : null}
+            </div>
+          </div>
+          <SheetFooter className="erp-side-drawer-footer">
+            <Button variant="outline" onClick={() => setAssignFinancialOpen(false)}>
+              {t('inventory.cancel')}
+            </Button>
+            <Button onClick={() => void saveAssignFinancial()} className="erp-add-save-action">
+              {t('departments.save')}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </HrModuleLayout>
   );
 }

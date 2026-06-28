@@ -11,28 +11,20 @@ import { WorkShiftsPage } from "@/components/hr/WorkShiftsPage";
 import { JobTitlesPage } from "@/components/hr/JobTitlesPage";
 import { EmployeeGroupsPage } from "@/components/hr/EmployeeGroupsPage";
 import { EmployeeDataPage } from "@/components/hr/EmployeeDataPage";
-import { BonusItemsPage } from "@/components/hr/BonusItemsPage";
 import { DeductionItemsPage } from "@/components/hr/DeductionItemsPage";
 import { RewardsDeductionsPage } from "@/components/hr/rewards-deductions/RewardsDeductionsPage";
 import { AllowanceItemsPage } from "@/components/hr/AllowanceItemsPage";
-import { AllowancesPage } from "@/components/hr/AllowancesPage";
-import { LeaveTypesPage } from "@/components/hr/LeaveTypesPage";
-import { EmployeeLeavesPage } from "@/components/hr/EmployeeLeavesPage";
 import { OfficialHolidaysPage } from "@/components/hr/OfficialHolidaysPage";
 import { AttendancePage } from "@/components/hr/AttendancePage";
-import { AttendanceImportPage } from "@/components/hr/AttendanceImportPage";
 import { CommissionsPage } from "@/components/hr/CommissionsPage";
 import { EmployeeReportsPage } from "@/components/hr/EmployeeReportsPage";
 import { PayrollSheetPage } from "@/components/hr/PayrollSheetPage";
-import { PaymentAuthTypesPage } from "@/components/hr/PaymentAuthTypesPage";
-import { PayrollPaymentsPage } from "@/components/hr/PayrollPaymentsPage";
 import { PurchaseInvoicesPage } from "@/components/purchases/PurchaseInvoicesPage";
 import { PosGalleryPage } from "@/components/pos/PosGalleryPage";
 import { PosBarcodePage } from "@/components/pos/PosBarcodePage";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { FullscreenToggle } from "@/components/fullscreen-toggle";
 import { ThemeModeControls } from "@/components/theme-mode-controls";
-import { SmartPeriodSelector } from "@/components/smart-period-selector";
 import { TenantAppLayout } from "@/components/layout/TenantAppLayout";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -201,8 +193,8 @@ function moduleKeyForTab(tab: string): ModuleKey {
   if (tab === 'profile') return 'settings';
   if (tab === 'dashboard' || tab === 'home') return 'dashboard';
   if (['hr-job-structure', 'departments', 'hr-sections', 'work-shifts', 'job-titles', 'employee-groups', 'employee-data', 'employee-reports', 'create-users'].includes(tab)) return 'employees';
-  if (['attendance', 'attendance-import', 'leaves', 'leave-types', 'official-holidays'].includes(tab)) return 'attendance';
-  if (['bonus-items', 'bonuses', 'deduction-items', 'deductions', 'allowance-items', 'allowances', 'employee-commissions', 'payroll', 'payment-auth-types', 'payroll-payments'].includes(tab)) return 'payroll';
+  if (['attendance', 'attendance-import', 'official-holidays'].includes(tab)) return 'attendance';
+  if (['bonuses', 'deduction-items', 'deductions', 'allowance-items', 'employee-commissions', 'payroll', 'payment-auth-types', 'payroll-payments'].includes(tab)) return 'payroll';
   if (tab.startsWith('customer-') || tab === 'customers' || tab === 'installment-collection') return 'crm';
   if (['sales-invoices', 'sales-returns', 'tax-invoices', 'sales-quotations', 'customer-reservations', 'seller-performance', 'pos', 'pos-barcode', 'scan-orders'].includes(tab)) return 'sales';
   if (['purchase-invoices', 'purchase-return-invoices', 'reorder-alerts', 'purchase-orders', 'supplier-payments'].includes(tab)) return 'purchases';
@@ -454,8 +446,6 @@ export default function App() {
         return <EmployeeDataPage />;
       case 'employee-reports':
         return <EmployeeReportsPage />;
-      case 'bonus-items':
-        return <BonusItemsPage />;
       case 'bonuses':
       case 'deductions':
         return <RewardsDeductionsPage />;
@@ -463,26 +453,19 @@ export default function App() {
         return <DeductionItemsPage />;
       case 'allowance-items':
         return <AllowanceItemsPage />;
-      case 'allowances':
-        return <AllowancesPage />;
-      case 'leave-types':
-        return <LeaveTypesPage />;
-      case 'leaves':
-        return <EmployeeLeavesPage />;
       case 'official-holidays':
         return <OfficialHolidaysPage />;
       case 'attendance':
         return <AttendancePage />;
       case 'attendance-import':
-        return <AttendanceImportPage />;
+        return <AttendancePage defaultImportOpen />;
       case 'employee-commissions':
         return <CommissionsPage />;
       case 'payroll':
         return <PayrollSheetPage />;
       case 'payment-auth-types':
-        return <PaymentAuthTypesPage />;
       case 'payroll-payments':
-        return <PayrollPaymentsPage />;
+        return <RewardsDeductionsPage />;
       case 'reorder-alerts':
       case 'purchase-orders':
       case 'purchase-invoices':
@@ -695,7 +678,6 @@ export default function App() {
 
           <div className="app-header-center">
             <ThemeModeControls />
-            <SmartPeriodSelector />
 
             <DropdownMenu>
               <DropdownMenuTrigger render={<button type="button" className="app-icon-button app-notification-trigger" />}>

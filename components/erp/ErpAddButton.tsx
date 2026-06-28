@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { LucideIcon, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ErpAddButtonProps = {
@@ -8,6 +8,7 @@ type ErpAddButtonProps = {
   onClick?: () => void;
   disabled?: boolean;
   type?: 'button' | 'submit';
+  icon?: LucideIcon;
 };
 
 export function ErpAddButton({
@@ -16,6 +17,7 @@ export function ErpAddButton({
   onClick,
   disabled,
   type = 'button',
+  icon: Icon = Plus,
 }: ErpAddButtonProps) {
   return (
     <button
@@ -28,7 +30,7 @@ export function ErpAddButton({
       <span className="hr-structure-add-btn-shine" aria-hidden />
       <span className="hr-structure-add-btn-core">
         <span className="hr-structure-add-btn-icon">
-          <Plus className="h-4 w-4" strokeWidth={3} />
+          <Icon className="h-4 w-4" strokeWidth={3} />
         </span>
         <span className="hr-structure-add-btn-label">{children}</span>
       </span>

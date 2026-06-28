@@ -4,6 +4,8 @@ Ma7alyErp — Django settings (local Postgres + Redis, no Docker).
 from datetime import timedelta
 from pathlib import Path
 
+import os
+
 import environ
 from corsheaders.defaults import default_headers
 
@@ -19,7 +21,11 @@ env = environ.Env(
 
 env_file = BASE_DIR / ".env"
 if env_file.exists():
-    environ.Env.read_env(env_file)
+    # Local dev: .env overrides stale shell exports (Runsite/Neon) when DATABASE_URL unset
+    if not os.environ.get("DATABASE_URL", "").strip():
+        environ.Env.read_env(env_file, overwrite=True)
+    else:
+        environ.Env.read_env(env_file)
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-change-in-production")
 DEBUG = env("DEBUG")
@@ -95,7 +101,7 @@ DATABASES = {
         "PORT": env("DB_PORT", default="5432"),
     },
 }
-_database_url = env("DATABASE_URL", default="")
+_database_url = os.environ.get("DATABASE_URL", "").strip()
 if _database_url:
     DATABASES["default"] = env.db("DATABASE_URL")
     DATABASES["default"]["CONN_MAX_AGE"] = 600
@@ -103,8 +109,8 @@ if _database_url:
 DATABASE_ROUTERS = ["tenancy.router.TenantRouter"]
 
 TENANT_DB_PREFIX = env("TENANT_DB_PREFIX", default="mahaly_t_")
-# Neon / managed PostgreSQL: قاعدة واحدة مشتركة (بدون CREATE DATABASE)
-CLOUD_SHARED_DB = env.bool("CLOUD_SHARED_DB", default=False)
+# Neon / managed PostgreSQL: shared DB only when DATABASE_URL is set
+CLOUD_SHARED_DB = env.bool("CLOUD_SHARED_DB", default=False) and bool(_database_url)
 if CLOUD_SHARED_DB:
     DATABASES["tenant"] = DATABASES["default"].copy()
 

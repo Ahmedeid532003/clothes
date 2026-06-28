@@ -19,7 +19,7 @@ type Props = {
 export function ErpCrudPage({ title, description, breadcrumbs = [], actions, stats, children, className }: Props) {
   return (
     <section className={cn('erp-crud-page', className)}>
-      <header className="erp-crud-header">
+      <header className="erp-crud-header erp-module-topbar">
         <div className="erp-crud-title-block">
           <h1>{title}</h1>
           {breadcrumbs.length > 0 ? (

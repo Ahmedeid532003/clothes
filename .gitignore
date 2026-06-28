@@ -12,3 +12,18 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local deploy bundles (keep release/*.txt docs, skip binaries)
+release/*.zip
+release/vps-full-*/
+release/cloudflare-deploy/
+release/cloudflare-fly-*/
+release/cloudflare-upload-*/
+release/netlify-fly/
+release/netlify-fly-*/
+release/netlify-runsite/
+release/netlify-runsite-*/
+release/netlify-site/
+release/netlify-site-*/
+release/netlify-upload-*/
+release/mahalyerp-*.zip

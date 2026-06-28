@@ -1,0 +1,12 @@
+﻿Cloudflare Pages - Ø±ÙØ¹ Ù…Ø¨Ø§Ø´Ø± (ZIP)
+==================================
+Ø§Ù„Ù…Ù„Ù: C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-CLOUDFLARE-UPLOAD-20260627-0317.zip
+API: https://mahalyerp-api.fly.dev/api/v1
+Login: demo | owner@demo | demo1234
+
+1) https://dash.cloudflare.com
+2) Workers & Pages -> Create -> Pages -> Upload assets
+3) Ø§Ø³Ø­Ø¨ Ø§Ù„Ù€ ZIP (Ø¨Ø¯ÙˆÙ† wrangler - static ÙÙ‚Ø·)
+4) Ø¬Ø±Ø¨: https://Ù…ÙˆÙ‚Ø¹Ùƒ.pages.dev
+
+Ù…Ù„Ø§Ø­Ø¸Ø©: Netlify Ù…Ø­Ø¸ÙˆØ± Ø¹Ù„Ù‰ TE Data - Ø§Ø³ØªØ®Ø¯Ù… Cloudflare.

@@ -76,7 +76,7 @@ class OfficialHoliday(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
-    holiday_date = models.DateField()
+    holiday_date = models.DateField(null=True, blank=True)
     is_recurring = models.BooleanField(
         default=False,
         help_text="يتكرر سنوياً في نفس اليوم/الشهر",
@@ -210,6 +210,7 @@ class AttendanceRecord(models.Model):
     overtime_minutes = models.PositiveIntegerField(default=0)
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.MANUAL)
     notes = models.CharField(max_length=255, blank=True)
+    periods = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

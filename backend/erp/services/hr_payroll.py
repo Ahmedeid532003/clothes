@@ -7,9 +7,10 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from rest_framework.exceptions import ValidationError
 
+from erp.dates import parse_optional_date, parse_required_date
 from erp.hr_payroll_models import (
     AllowanceItem,
     AttendanceImportBatch,
@@ -31,7 +32,7 @@ from erp.hr_payroll_models import (
     PayrollStatement,
 )
 from erp.hr_structure_models import EmployeeProfile, EmployeeSalaryIncrease, WorkShift
-from erp.models import User
+from erp.models import Branch, User
 from erp.services.hr_employee_data import _dec, _pay_totals
 
 _USING = "tenant"
@@ -134,7 +135,7 @@ def list_official_holidays() -> list[dict]:
         {
             "id": str(h.pk),
             "name": h.name,
-            "holiday_date": h.holiday_date.isoformat(),
+            "holiday_date": h.holiday_date.isoformat() if h.holiday_date else None,
             "is_recurring": h.is_recurring,
             "notes": h.notes,
             "is_active": h.is_active,
@@ -144,17 +145,18 @@ def list_official_holidays() -> list[dict]:
 
 
 @transaction.atomic(using="tenant")
-def create_official_holiday(*, name: str, holiday_date: str, is_recurring: bool = False, notes: str = "") -> dict:
+def create_official_holiday(*, name: str, holiday_date: str | None = None, is_recurring: bool = False, notes: str = "") -> dict:
+    parsed = date.fromisoformat(holiday_date) if holiday_date else None
     h = OfficialHoliday.objects.using(_USING).create(
         name=name.strip(),
-        holiday_date=date.fromisoformat(holiday_date),
+        holiday_date=parsed,
         is_recurring=is_recurring,
         notes=notes.strip(),
     )
     return {
         "id": str(h.pk),
         "name": h.name,
-        "holiday_date": h.holiday_date.isoformat(),
+        "holiday_date": h.holiday_date.isoformat() if h.holiday_date else None,
         "is_recurring": h.is_recurring,
         "notes": h.notes,
         "is_active": True,
@@ -167,7 +169,8 @@ def update_official_holiday(pk, data: dict) -> dict:
     if "name" in data:
         h.name = (data["name"] or "").strip()
     if "holiday_date" in data:
-        h.holiday_date = date.fromisoformat(data["holiday_date"])
+        raw = data["holiday_date"]
+        h.holiday_date = date.fromisoformat(raw) if raw else None
     if "is_recurring" in data:
         h.is_recurring = bool(data["is_recurring"])
     if "notes" in data:
@@ -176,7 +179,7 @@ def update_official_holiday(pk, data: dict) -> dict:
     return list_official_holidays()[0] if False else {
         "id": str(h.pk),
         "name": h.name,
-        "holiday_date": h.holiday_date.isoformat(),
+        "holiday_date": h.holiday_date.isoformat() if h.holiday_date else None,
         "is_recurring": h.is_recurring,
         "notes": h.notes,
         "is_active": h.is_active,
@@ -323,7 +326,7 @@ def create_bonus(data: dict) -> dict:
         bonus_item=item,
         description=(data.get("description") or "").strip(),
         amount=_dec(data.get("amount", 0)),
-        bonus_date=date.fromisoformat(data["bonus_date"]),
+        bonus_date=parse_required_date(data.get("bonus_date")),
         notes=(data.get("notes") or "").strip(),
     )
     return list_bonuses()[0] if False else {
@@ -368,7 +371,7 @@ def create_deduction(data: dict) -> dict:
         deduction_item=item,
         description=(data.get("description") or "").strip(),
         amount=_dec(data.get("amount", 0)),
-        deduction_date=date.fromisoformat(data["deduction_date"]),
+        deduction_date=parse_required_date(data.get("deduction_date")),
         notes=(data.get("notes") or "").strip(),
     )
     return {
@@ -452,8 +455,8 @@ def create_leave(data: dict) -> dict:
     lv = EmployeeLeave.objects.using(_USING).create(
         employee=emp,
         leave_type=lt,
-        start_date=date.fromisoformat(data["start_date"]),
-        end_date=date.fromisoformat(end) if end else None,
+        start_date=parse_required_date(data.get("start_date")),
+        end_date=parse_optional_date(end),
         unit=data.get("unit") or EmployeeLeave.Unit.DAYS,
         quantity=Decimal(str(data.get("quantity", 1))),
         notes=(data.get("notes") or "").strip(),
@@ -520,13 +523,55 @@ def _calc_late_overtime(user: User, work_date: date, check_in: time | None, chec
     return late, overtime
 
 
+def _empty_periods() -> list[dict]:
+    return [{"check_in": None, "check_out": None} for _ in range(3)]
+
+
+def _time_label(value: time | None) -> str | None:
+    if not value:
+        return None
+    return value.strftime("%H:%M")
+
+
+def _sanitize_periods(raw) -> list[dict]:
+    periods = _empty_periods()
+    if not isinstance(raw, list):
+        return periods
+    for i, item in enumerate(raw[:3]):
+        if not isinstance(item, dict):
+            continue
+        cin = item.get("check_in")
+        cout = item.get("check_out")
+        periods[i] = {
+            "check_in": (str(cin).strip()[:5] if cin else None) or None,
+            "check_out": (str(cout).strip()[:5] if cout else None) or None,
+        }
+    return periods
+
+
+def _periods_from_record(rec: AttendanceRecord) -> list[dict]:
+    stored = getattr(rec, "periods", None) or []
+    if isinstance(stored, list) and any(
+        (p or {}).get("check_in") or (p or {}).get("check_out") for p in stored if isinstance(p, dict)
+    ):
+        return _sanitize_periods(stored)
+    periods = _empty_periods()
+    periods[0] = {
+        "check_in": _time_label(rec.check_in),
+        "check_out": _time_label(rec.check_out),
+    }
+    return periods
+
+
 def _serialize_attendance(rec: AttendanceRecord) -> dict:
+    periods = _periods_from_record(rec)
     return {
         "id": str(rec.pk),
         **_emp_brief(rec.employee),
         "work_date": rec.work_date.isoformat(),
         "check_in": rec.check_in.isoformat() if rec.check_in else None,
         "check_out": rec.check_out.isoformat() if rec.check_out else None,
+        "periods": periods,
         "late_minutes": rec.late_minutes,
         "overtime_minutes": rec.overtime_minutes,
         "source": rec.source,
@@ -548,9 +593,19 @@ def list_attendance(*, from_date: str | None = None, to_date: str | None = None,
 @transaction.atomic(using="tenant")
 def upsert_attendance(data: dict) -> dict:
     emp = User.objects.using(_USING).get(pk=data["employee_id"], is_active=True)
-    work_date = date.fromisoformat(data["work_date"])
+    work_date = parse_required_date(data.get("work_date"))
+    periods = _sanitize_periods(data["periods"]) if "periods" in data else None
     check_in = _parse_time(data.get("check_in"))
     check_out = _parse_time(data.get("check_out"))
+    if periods is None:
+        periods = _empty_periods()
+        periods[0] = {
+            "check_in": _time_label(check_in),
+            "check_out": _time_label(check_out),
+        }
+    else:
+        check_in = _parse_time(periods[0].get("check_in"))
+        check_out = _parse_time(periods[0].get("check_out"))
     late, overtime = _calc_late_overtime(emp, work_date, check_in, check_out)
     if "late_minutes" in data:
         late = int(data["late_minutes"])
@@ -563,6 +618,7 @@ def upsert_attendance(data: dict) -> dict:
         defaults={
             "check_in": check_in,
             "check_out": check_out,
+            "periods": periods,
             "late_minutes": late,
             "overtime_minutes": overtime,
             "source": source,
@@ -570,6 +626,13 @@ def upsert_attendance(data: dict) -> dict:
         },
     )
     return _serialize_attendance(rec)
+
+
+@transaction.atomic(using="tenant")
+def delete_attendance(record_id) -> None:
+    deleted, _ = AttendanceRecord.objects.using(_USING).filter(pk=record_id).delete()
+    if not deleted:
+        raise ValidationError("السجل غير موجود.")
 
 
 @transaction.atomic(using="tenant")
@@ -594,6 +657,7 @@ def import_attendance_rows(actor, rows: list[dict], *, file_name: str = "") -> d
                     "work_date": row["work_date"],
                     "check_in": row.get("check_in"),
                     "check_out": row.get("check_out"),
+                    "periods": row.get("periods"),
                     "source": AttendanceRecord.Source.FINGERPRINT,
                     "notes": row.get("notes") or "",
                 }
@@ -643,7 +707,7 @@ def create_commission_record(data: dict) -> dict:
     c = EmployeeCommissionRecord.objects.using(_USING).create(
         employee=emp,
         period_type=data.get("period_type") or EmployeeCommissionRecord.PeriodType.MONTHLY,
-        period_date=date.fromisoformat(data["period_date"]),
+        period_date=parse_required_date(data.get("period_date")),
         sales_amount=_dec(data.get("sales_amount", 0)),
         commission_amount=_dec(data.get("commission_amount", 0)),
         notes=(data.get("notes") or "").strip(),
@@ -856,7 +920,11 @@ def compute_employee_payroll(user: User, year: int, month: int) -> dict:
 def get_payroll_sheet(year: int, month: int, *, branch_id: str | None = None) -> dict:
     users = User.objects.using(_USING).filter(is_active=True, is_owner=False)
     if branch_id:
-        users = users.filter(default_branch_id=branch_id)
+        branch_q = Q(default_branch_id=branch_id)
+        # Employees created without branch assignment still belong to payroll when only one branch exists.
+        if Branch.objects.using(_USING).filter(is_active=True).count() <= 1:
+            branch_q |= Q(default_branch_id__isnull=True)
+        users = users.filter(branch_q)
     users = users.order_by("employee_code", "username")
     rows = [compute_employee_payroll(u, year, month) for u in users]
 
@@ -1002,7 +1070,7 @@ def create_payroll_payment(actor, data: dict) -> dict:
         employee=emp,
         payment_type=pt,
         amount=amount,
-        payment_date=date.fromisoformat(data["payment_date"]),
+        payment_date=parse_required_date(data.get("payment_date")),
         period_year=period_year,
         period_month=period_month,
         advance=advance,
@@ -1020,7 +1088,7 @@ def create_advance(actor, data: dict) -> dict:
     amount = _dec(data.get("amount", 0))
     if amount <= 0:
         raise ValidationError("مبلغ السلفة يجب أن يكون أكبر من صفر.")
-    advance_date = date.fromisoformat(data["advance_date"])
+    advance_date = parse_required_date(data.get("advance_date"))
     is_scheduled = bool(data.get("is_scheduled") or data.get("schedule_installments"))
     months = int(data.get("installment_months") or 0)
     if is_scheduled and months < 1:

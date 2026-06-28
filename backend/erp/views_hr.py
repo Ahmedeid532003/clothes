@@ -1,11 +1,16 @@
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.http import FileResponse
+
+from erp.branch_access import branches_for_user
 from erp.hr_structure_models import HrSection, WorkShift
 from erp.models import Department, User
-from erp.permissions import HasPageAction, can_access_page
+from erp.permissions import HasHrRegistrationAccess, HasPageAction, can_access_page
+from erp.serializers import BranchSerializer
 from erp.serializers_hr import (
     DepartmentSerializer,
     DepartmentWriteSerializer,
@@ -26,12 +31,51 @@ def _actor(request) -> User:
 
 
 class PermissionsSchemaView(APIView):
-    permission_classes = [HasPageAction]
-    required_page = "create-users"
-    required_action = "view"
+    permission_classes = [HasHrRegistrationAccess]
 
     def get(self, request):
         return Response(PermissionsSchemaSerializer.build())
+
+
+class EmployeeRegistrationMetaView(APIView):
+    """قوائم تسجيل موظف + مخطط الصلاحيات — صلاحية employee-data أو create-users."""
+
+    permission_classes = [HasHrRegistrationAccess]
+
+    def get(self, request):
+        emp_data_service.ensure_hr_catalogs_seeded()
+        actor = _actor(request)
+        if Department.objects.using("tenant").filter(is_active=True).count() == 0:
+            hr_service.seed_hr_org_defaults(actor=actor)
+        if WorkShift.objects.using("tenant").filter(is_active=True).count() == 0:
+            hr_service.seed_hr_org_defaults(actor=actor)
+
+        tenant = get_current_tenant()
+        current_users = User.objects.using("tenant").filter(is_active=True).count()
+        max_users = tenant.plan.max_users if tenant else 0
+
+        depts = Department.objects.using("tenant").filter(is_active=True)
+        shifts = WorkShift.objects.using("tenant").filter(is_active=True)
+        branches = branches_for_user(request.user)
+
+        return Response(
+            {
+                "departments": DepartmentSerializer(depts, many=True).data,
+                "work_shifts": [hr_service.serialize_work_shift(s) for s in shifts],
+                "job_titles": emp_data_service.list_job_titles(),
+                "employee_groups": emp_data_service.list_employee_groups(),
+                "branches": BranchSerializer(
+                    branches, many=True, context={"request": request}
+                ).data,
+                "permissions_schema": PermissionsSchemaSerializer.build(),
+                "limits": {
+                    "current_users": current_users,
+                    "max_users": max_users,
+                    "can_add": current_users < max_users,
+                    "plan_name": tenant.plan.name if tenant else "",
+                },
+            }
+        )
 
 
 class DepartmentListCreateView(APIView):
@@ -228,13 +272,17 @@ class WorkShiftDetailView(APIView):
 
 
 class EmployeeListCreateView(APIView):
-    permission_classes = [HasPageAction]
     required_page = "create-users"
     required_action = "view"
 
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [HasHrRegistrationAccess()]
+        return [HasPageAction()]
+
     def get(self, request):
         user = _actor(request)
-        if not user.is_owner and not can_access_page(user, "create-users"):
+        if not user.is_owner and not can_access_page(user, "create-users") and not can_access_page(user, "employee-reports"):
             raise PermissionDenied("ليس لديك صلاحية عرض الموظفين.")
         qs = (
             User.objects.using("tenant")
@@ -252,8 +300,6 @@ class EmployeeListCreateView(APIView):
         return Response(EmployeeSerializer(qs, many=True).data)
 
     def post(self, request):
-        if not _actor(request).is_owner and not can_access_page(_actor(request), "create-users"):
-            raise PermissionDenied("ليس لديك صلاحية إضافة موظف.")
         ser = EmployeeWriteSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         data = ser.validated_data
@@ -262,7 +308,10 @@ class EmployeeListCreateView(APIView):
                 {"detail": "كلمة المرور مطلوبة عند إنشاء موظف."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        user = hr_service.create_employee(actor=_actor(request), data=data)
+        try:
+            user = hr_service.create_employee(actor=_actor(request), data=data)
+        except ValidationError as exc:
+            return Response({"detail": exc.detail}, status=status.HTTP_400_BAD_REQUEST)
         return Response(
             EmployeeSerializer(user).data,
             status=status.HTTP_201_CREATED,
@@ -320,9 +369,7 @@ class EmployeeDetailView(APIView):
 
 
 class EmployeeLimitsView(APIView):
-    permission_classes = [HasPageAction]
-    required_page = "create-users"
-    required_action = "view"
+    permission_classes = [HasHrRegistrationAccess]
 
     def get(self, request):
         tenant = get_current_tenant()
@@ -454,7 +501,9 @@ class EmployeeDataListView(APIView):
 
     def get(self, request):
         emp_data_service.ensure_hr_catalogs_seeded()
-        return Response(emp_data_service.list_employee_data())
+        return Response(
+            emp_data_service.list_employee_data(request=request, viewer=_actor(request))
+        )
 
 
 class EmployeeDataDetailView(APIView):
@@ -464,16 +513,77 @@ class EmployeeDataDetailView(APIView):
 
     def get(self, request, pk):
         try:
-            return Response(emp_data_service.get_employee_data(pk))
+            return Response(
+                emp_data_service.get_employee_data(pk, request=request, viewer=_actor(request))
+            )
         except User.DoesNotExist:
             return Response({"detail": "الموظف غير موجود."}, status=status.HTTP_404_NOT_FOUND)
 
     def patch(self, request, pk):
         self.required_action = "update"
         try:
-            return Response(emp_data_service.upsert_employee_data(pk, request.data))
+            return Response(
+                emp_data_service.upsert_employee_data(
+                    pk, request.data, request=request, viewer=_actor(request)
+                )
+            )
         except User.DoesNotExist:
             return Response({"detail": "الموظف غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EmployeeDataPhotoView(APIView):
+    permission_classes = [HasPageAction]
+    required_page = "employee-data"
+    required_action = "update"
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk):
+        upload = request.FILES.get("photo")
+        try:
+            row = emp_data_service.upload_employee_photo(
+                pk, upload, request=request, viewer=_actor(request)
+            )
+            return Response(row)
+        except User.DoesNotExist:
+            return Response({"detail": "الموظف غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as exc:
+            return Response({"detail": exc.detail}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EmployeeDataIdCardView(APIView):
+    permission_classes = [HasPageAction]
+    required_page = "employee-data"
+    required_action = "update"
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, pk):
+        upload = request.FILES.get("id_card")
+        try:
+            row = emp_data_service.upload_employee_id_card(
+                pk, upload, request=request, viewer=_actor(request)
+            )
+            return Response(row)
+        except User.DoesNotExist:
+            return Response({"detail": "الموظف غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as exc:
+            return Response({"detail": exc.detail}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, pk):
+        self.required_action = "view"
+        try:
+            profile = emp_data_service.get_employee_id_card_file(pk, viewer=_actor(request))
+            filename = profile.id_card_filename or "id-card.pdf"
+            return FileResponse(
+                profile.id_card_file.open("rb"),
+                as_attachment=True,
+                filename=filename,
+            )
+        except User.DoesNotExist:
+            return Response({"detail": "الموظف غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied as exc:
+            return Response({"detail": str(exc.detail)}, status=status.HTTP_403_FORBIDDEN)
+        except ValidationError as exc:
+            return Response({"detail": exc.detail}, status=status.HTTP_404_NOT_FOUND)
 
 
 class EmployeeAllowanceCreateView(APIView):

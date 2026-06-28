@@ -2,7 +2,9 @@
 
 from datetime import date
 
+from django.utils.connection import ConnectionDoesNotExist
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,22 +26,33 @@ def _catalog_list_create(model, prefix, page_key):
         required_action = "view"
 
         def get(self, request):
-            payroll_service.ensure_payroll_seeded()
-            return Response(payroll_service.list_catalog(model))
+            try:
+                payroll_service.ensure_payroll_seeded()
+                return Response(payroll_service.list_catalog(model))
+            except ConnectionDoesNotExist:
+                return Response(
+                    {"detail": "تعذر الاتصال بقاعدة بيانات المنشأة. أعد تسجيل الدخول أو حدّث الصفحة."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+            except Exception as exc:
+                return Response({"detail": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         def post(self, request):
             self.required_action = "update"
-            extra = {}
-            if hasattr(model, "default_amount"):
-                extra["default_amount"] = request.data.get("default_amount")
-            row = payroll_service.create_catalog(
-                model,
-                name=request.data.get("name", ""),
-                code=request.data.get("code") or None,
-                prefix=prefix,
-                **extra,
-            )
-            return Response(row, status=status.HTTP_201_CREATED)
+            try:
+                extra = {}
+                if hasattr(model, "default_amount"):
+                    extra["default_amount"] = request.data.get("default_amount")
+                row = payroll_service.create_catalog(
+                    model,
+                    name=request.data.get("name", ""),
+                    code=request.data.get("code") or None,
+                    prefix=prefix,
+                    **extra,
+                )
+                return Response(row, status=status.HTTP_201_CREATED)
+            except ValidationError as exc:
+                return Response({"detail": exc.detail}, status=status.HTTP_400_BAD_REQUEST)
 
     return ListCreate
 
@@ -96,9 +109,10 @@ class OfficialHolidayListCreateView(APIView):
 
     def post(self, request):
         self.required_action = "update"
+        raw_date = request.data.get("holiday_date")
         row = payroll_service.create_official_holiday(
             name=request.data.get("name", ""),
-            holiday_date=request.data.get("holiday_date", ""),
+            holiday_date=raw_date if raw_date else None,
             is_recurring=bool(request.data.get("is_recurring")),
             notes=request.data.get("notes") or "",
         )
@@ -214,6 +228,17 @@ class AttendanceListCreateView(APIView):
     def post(self, request):
         self.required_action = "update"
         return Response(payroll_service.upsert_attendance(request.data), status=status.HTTP_201_CREATED)
+
+
+class AttendanceDetailView(APIView):
+    permission_classes = [HasPageAction]
+    required_page = "attendance"
+    required_action = "update"
+
+    def delete(self, request, pk):
+        self.required_action = "delete"
+        payroll_service.delete_attendance(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AttendanceImportView(APIView):

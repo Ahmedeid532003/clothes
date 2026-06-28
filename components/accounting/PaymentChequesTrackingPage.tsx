@@ -7,7 +7,6 @@ import {
   FileCheck,
   Plus,
   RotateCcw,
-  Search,
   Truck,
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -23,6 +22,7 @@ import {
 } from '@/lib/api/banking';
 import { canViewPage } from '@/lib/permissions/access';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
+import { ErpSearchBar } from '@/components/erp/ErpSearchBar';
 import { PaymentAmountHero } from '@/components/accounting/PaymentAmountHero';
 import {
   AlertBanner,
@@ -293,16 +293,13 @@ export function PaymentChequesTrackingPage() {
       </div>
 
       <div className="erp-smart-filter-bar rounded-2xl border bg-white p-3 flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 start-3" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('paymentCheques.search')}
-            className="w-full h-10 rounded-xl border ps-9 pe-3 text-sm"
-          />
-        </div>
+        <ErpSearchBar
+          className="min-w-[180px] flex-1"
+          value={search}
+          onChange={setSearch}
+          placeholder={t('paymentCheques.search')}
+          showAdvanced={false}
+        />
         <div className="inline-flex rounded-xl border bg-slate-50 p-1 gap-1 flex-wrap">
           <FilterChip active={!paperFilter} label={t('paymentCheques.allPapers')} onClick={() => setPaperFilter('')} />
           {PAPER_TYPES.map((p) => (

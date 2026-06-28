@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
 from erp.accounting_models import GeneralExpenseVoucher
+from erp.serializer_fields import DefaultTodayDateField
 
 
 class ExpenseVoucherWriteSerializer(serializers.Serializer):
-    voucher_date = serializers.DateField()
+    voucher_date = DefaultTodayDateField()
     expense_type = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=14, decimal_places=2)
     tax_amount = serializers.DecimalField(

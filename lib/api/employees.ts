@@ -62,6 +62,20 @@ export async function fetchPermissionsSchema(): Promise<PermissionsSchemaDto> {
   return apiFetch<PermissionsSchemaDto>('/hr/permissions-schema/');
 }
 
+export type EmployeeRegistrationMetaDto = {
+  departments: Array<{ id: string; code: string; name: string }>;
+  work_shifts: Array<{ id: string; code: string; name: string }>;
+  job_titles: Array<{ id: string; code: string; name: string }>;
+  employee_groups: Array<{ id: string; code: string; name: string }>;
+  branches: Array<{ id: string; name_ar: string; name_en: string; is_active: boolean }>;
+  permissions_schema: PermissionsSchemaDto;
+  limits: EmployeeLimitsDto;
+};
+
+export async function fetchEmployeeRegistrationMeta(): Promise<EmployeeRegistrationMetaDto> {
+  return apiFetch<EmployeeRegistrationMetaDto>('/hr/employee-registration-meta/');
+}
+
 export type CreateEmployeePayload = {
   username?: string;
   password?: string;

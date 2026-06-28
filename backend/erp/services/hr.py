@@ -106,9 +106,41 @@ def _validate_branch_access(data: dict) -> None:
 def assert_username_available(username: str) -> None:
     username = username.strip().lower()
     if User.objects.using("tenant").filter(username=username).exists():
-        raise ValidationError(f"اسم المستخدم '{username}' مستخدم داخل المنشأة.")
+        raise ValidationError(
+            f"اسم المستخدم '{username}' مستخدم بالفعل داخل هذه المنشأة. "
+            "اختر اسماً آخر، مثل: sara@shop أو cashier2@shop"
+        )
     if GlobalUsername.objects.filter(username=username).exists():
-        raise ValidationError(f"اسم المستخدم '{username}' مستخدم في منشأة أخرى.")
+        raise ValidationError(
+            f"اسم المستخدم '{username}' محجوز على المنصة لمنشأة أخرى. "
+            "اختر اسماً فريداً، مثل: sara@shop أو emp02@shop"
+        )
+
+
+def _allocate_employee_username(*, code: str, tenant) -> str:
+    """اسم افتراضي: emp-02@slug — فريد عالمياً ومتوافق مع owner@slug."""
+    slug = (tenant.slug if tenant else "shop").strip().lower()
+    base = code.strip().lower()
+    if not base.startswith("emp-"):
+        base = f"emp-{base}"
+    candidate = f"{base}@{slug}"
+    n = 1
+    while (
+        GlobalUsername.objects.filter(username=candidate).exists()
+        or User.objects.using("tenant").filter(username=candidate).exists()
+    ):
+        candidate = f"{base}-{n}@{slug}"
+        n += 1
+    return candidate
+
+
+def _normalize_new_username(raw: str, *, code: str, tenant) -> str:
+    username = (raw or "").strip().lower()
+    if not username:
+        return _allocate_employee_username(code=code, tenant=tenant)
+    if "@" not in username and tenant:
+        username = f"{username}@{tenant.slug.strip().lower()}"
+    return username
 
 
 @transaction.atomic(using="tenant")
@@ -116,12 +148,10 @@ def create_employee(*, actor: User, data: dict) -> User:
     assert_can_add_user()
     uses_system = data.get("uses_system", True)
     code = data.get("employee_code") or next_employee_code()
-    username = (data.get("username") or "").strip().lower()
-    if not username:
-        username = f"emp-{code}".strip().lower()
+    tenant = get_current_tenant()
+    username = _normalize_new_username(data.get("username") or "", code=code, tenant=tenant)
     assert_username_available(username)
 
-    tenant = get_current_tenant()
     department = None
     hr_section = None
     work_shift = None

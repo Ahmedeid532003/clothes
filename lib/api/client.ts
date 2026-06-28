@@ -3,6 +3,10 @@ import {
   emitTenantFrozen,
 } from './errors';
 import { getDeployAccessKey } from '@/lib/deploy-gate';
+import {
+  applyDefaultDatesToFormData,
+  applyDefaultDatesToPayload,
+} from '@/lib/dates';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api/v1';
 
@@ -50,12 +54,32 @@ export function clearAuthTokens() {
   localStorage.removeItem('refresh_token');
 }
 
+function normalizeWriteOptions(options: RequestInit): RequestInit {
+  const method = (options.method || 'GET').toUpperCase();
+  if (!['POST', 'PUT', 'PATCH'].includes(method) || !options.body) {
+    return options;
+  }
+  if (typeof options.body === 'string') {
+    try {
+      const parsed = JSON.parse(options.body);
+      return {
+        ...options,
+        body: JSON.stringify(applyDefaultDatesToPayload(parsed)),
+      };
+    } catch {
+      return options;
+    }
+  }
+  return options;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const normalized = normalizeWriteOptions(options);
   const { access, tenant } = getStored();
-  const headers = new Headers(options.headers);
+  const headers = new Headers(normalized.headers);
   headers.set('Content-Type', 'application/json');
   headers.set('X-Tenant-Slug', tenant);
   applyDeployGateHeader(headers);
@@ -64,7 +88,7 @@ export async function apiFetch<T>(
   if (branchId) headers.set('X-Branch-Id', branchId);
 
   const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
+    ...normalized,
     headers,
     credentials: 'include',
   });
@@ -93,6 +117,7 @@ export async function apiFetchFormData<T>(
   formData: FormData,
   method: 'PATCH' | 'POST' = 'PATCH',
 ): Promise<T> {
+  const body = applyDefaultDatesToFormData(formData);
   const { access, tenant } = getStored();
   const headers = new Headers();
   headers.set('X-Tenant-Slug', tenant);
@@ -104,7 +129,7 @@ export async function apiFetchFormData<T>(
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    body: formData,
+    body,
     credentials: 'include',
   });
 
@@ -125,6 +150,41 @@ export async function apiFetchFormData<T>(
     throw new ApiRequestError(detail || res.statusText, res.status, code);
   }
   return data as T;
+}
+
+export async function apiFetchBlob(path: string): Promise<{ blob: Blob; filename: string }> {
+  const { access, tenant } = getStored();
+  const headers = new Headers();
+  headers.set('X-Tenant-Slug', tenant);
+  applyDeployGateHeader(headers);
+  if (access) headers.set('Authorization', `Bearer ${access}`);
+  const branchId = localStorage.getItem('active_branch_id');
+  if (branchId) headers.set('X-Branch-Id', branchId);
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers,
+    credentials: 'include',
+  });
+
+  if (res.status === 401) {
+    const refreshed = await tryRefresh();
+    if (refreshed) return apiFetchBlob(path);
+    clearAuthTokens();
+    window.dispatchEvent(new Event('auth:logout'));
+  }
+
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as ApiError;
+    const detail = flattenApiErrorDetail(data.detail ?? data);
+    throw new ApiRequestError(detail || res.statusText, res.status);
+  }
+
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = /filename\*?=(?:UTF-8''|"?)([^";]+)/i.exec(disposition);
+  const filename = match ? decodeURIComponent(match[1].replace(/"/g, '')) : 'download';
+  return { blob, filename };
 }
 
 async function tryRefresh(): Promise<boolean> {
