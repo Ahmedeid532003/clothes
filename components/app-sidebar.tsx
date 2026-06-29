@@ -154,6 +154,7 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   shiftHandovers: <ArrowLeftRight className="h-4 w-4 shrink-0" />,
   treasuryMovements: <BanknoteIcon className="h-4 w-4 shrink-0" />,
   pendingShifts: <ShieldAlert className="h-4 w-4 shrink-0" />,
+  enterpriseCashBalances: <Coins className="h-4 w-4 shrink-0" />,
   banks: <LandmarkIcon className="h-4 w-4 shrink-0" />,
   bankAccounts: <LandmarkIcon className="h-4 w-4 shrink-0" />,
   cheques: <FileTextIcon className="h-4 w-4 shrink-0" />,
