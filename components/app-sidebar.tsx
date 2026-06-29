@@ -82,6 +82,7 @@ import {
 } from "lucide-react"
 
 const SUB_ICONS: Record<string, React.ReactNode> = {
+  hrJobStructure: <GitBranch className="h-4 w-4 shrink-0" />,
   createUsers: <UserPlusIcon className="h-4 w-4 shrink-0" />,
   departments: <Building2Icon className="h-4 w-4 shrink-0" />,
   sections: <LayersIcon className="h-4 w-4 shrink-0" />,
@@ -121,6 +122,7 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   taxInvoices: <BadgePercentIcon className="h-4 w-4 shrink-0" />,
   salesQuotations: <FileTextIcon className="h-4 w-4 shrink-0" />,
   customerReservations: <ClipboardListIcon className="h-4 w-4 shrink-0" />,
+  sellerPerformance: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   purchasesWorkspace: <TruckIcon className="h-4 w-4 shrink-0" />,
   purchaseInvoices: <FileTextIcon className="h-4 w-4 shrink-0" />,
   purchaseReturnInvoices: <Undo2Icon className="h-4 w-4 shrink-0" />,
@@ -171,9 +173,11 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   customerTypes: <CustomerTagsIcon className="h-4 w-4 shrink-0" />,
   customerGroups: <UsersIcon className="h-4 w-4 shrink-0" />,
   customersList: <UserCircleIcon className="h-4 w-4 shrink-0" />,
+  customerAccounts: <FileSpreadsheet className="h-4 w-4 shrink-0" />,
   customerArrears: <ShieldAlert className="h-4 w-4 shrink-0" />,
   customerInstallments: <BanknoteIcon className="h-4 w-4 shrink-0" />,
   installmentCollection: <BanknoteIcon className="h-4 w-4 shrink-0" />,
+  installmentFollowUp: <ClipboardCheckIcon className="h-4 w-4 shrink-0" />,
   customerConsignment: <PackageIcon className="h-4 w-4 shrink-0" />,
   customerStockCount: <ClipboardListIcon className="h-4 w-4 shrink-0" />,
   hrSections: <LayersIcon className="h-4 w-4 shrink-0" />,

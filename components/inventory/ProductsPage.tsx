@@ -277,7 +277,7 @@ export function ProductsPage() {
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-      <ErpPaginatedTableSection rows={rows} className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <ErpPaginatedTableSection rows={rows}>
         {(pagedRows) => (
         <table className="w-full text-sm">
           <thead className="bg-slate-50">

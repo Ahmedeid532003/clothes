@@ -129,7 +129,7 @@ export function WarehousesPage() {
 
       {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
-      <ErpPaginatedTableSection rows={rows} className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+      <ErpPaginatedTableSection rows={rows}>
         {(pagedRows) => (
         <table className="w-full text-sm">
           <thead className="bg-slate-50">

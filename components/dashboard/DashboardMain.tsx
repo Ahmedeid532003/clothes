@@ -1,6 +1,6 @@
 import React from 'react';
-import { ExecutiveDashboard } from './ExecutiveDashboard';
+import { ControlPanelDashboard } from './ControlPanelDashboard';
 
 export const DashboardMain: React.FC = () => {
-  return <ExecutiveDashboard />;
+  return <ControlPanelDashboard />;
 };

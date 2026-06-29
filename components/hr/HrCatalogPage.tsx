@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BriefcaseBusiness, ClipboardList, Hash, Sparkles } from 'lucide-react';
+import { BriefcaseBusiness, ClipboardList, Hash, Sparkles, Table2 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { AlertBanner, PageToolbar } from '@/components/accounting/AccountingUi';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
@@ -160,30 +160,48 @@ export function HrCatalogPage({
 
         {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
 
-        <div className="hr-premium-table-card">
-          <div className="hr-premium-table-header">
-            <div>
-              <h2>{t(titleKey)}</h2>
-              <p>عرض منظم بنفس نمط الإدارات مع إجراءات احترافية.</p>
+        <section className="emp-data-main-card mahaly-unified-table">
+          <div className="emp-data-action-bar">
+            <div className="emp-data-action-title">
+              <div className="emp-data-action-icon" aria-hidden="true">
+                <Table2 className="h-5 w-5" />
+              </div>
+              <div className="emp-data-action-heading">
+                <h2>
+                  {t(titleKey)}
+                  <span className="emp-data-count-pill">{rows.length} سجل</span>
+                </h2>
+                <p>عرض منظم بنفس نمط بيانات الموظفين مع إجراءات احترافية.</p>
+              </div>
             </div>
-            <span>{rows.length} سجل</span>
+            <div className="emp-data-action-buttons">
+              <ErpAddButton
+                onClick={() => {
+                  setEditing(null);
+                  setForm({ code: '', name: '', description: '' });
+                  setOpen(true);
+                }}
+              >
+                {t(addKey)}
+              </ErpAddButton>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="hr-premium-table w-full min-w-[720px] text-sm">
+          <div className="emp-data-table-scroll">
+            <table className="emp-data-table w-full min-w-[720px] text-sm">
               <thead>
                 <tr>
-                  <th className="px-6 py-4 text-start font-black text-slate-600">{t('departments.columns.id')}</th>
-                  <th className="px-6 py-4 text-start font-black text-slate-600">{t('departments.columns.name')}</th>
+                  <th className="text-start">{t('departments.columns.id')}</th>
+                  <th className="text-start">{t('departments.columns.name')}</th>
                   {showDescription ? (
-                    <th className="px-6 py-4 text-start font-black text-slate-600">{t('employeeGroups.description')}</th>
+                    <th className="text-start">{t('employeeGroups.description')}</th>
                   ) : null}
-                  <th className="px-6 py-4 text-end font-black text-slate-600">{t('erpTable.actions')}</th>
+                  <th className="emp-data-th-actions text-end">{t('erpTable.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={showDescription ? 4 : 3} className="p-10">
+                    <td colSpan={showDescription ? 4 : 3} className="emp-data-empty">
                       <div className="hr-premium-empty-state">
                         <span className="erp-skeleton-line mx-auto h-3 w-48" />
                         <span className="erp-skeleton-line mx-auto h-3 w-64" />
@@ -192,28 +210,28 @@ export function HrCatalogPage({
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={showDescription ? 4 : 3} className="p-10">
+                    <td colSpan={showDescription ? 4 : 3} className="emp-data-empty">
                       <div className="hr-premium-empty-state">{t(emptyKey)}</div>
                     </td>
                   </tr>
                 ) : (
                   pagination.pagedRows.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-6 py-4">
+                      <td>
                         <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">{r.code}</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-700">
+                      <td>
+                        <div className="emp-data-employee-cell">
+                          <span className="emp-data-avatar">
                             <BriefcaseBusiness className="h-4 w-4" />
                           </span>
                           <span className="font-extrabold text-slate-900">{r.name}</span>
                         </div>
                       </td>
                       {showDescription ? (
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-600">{r.description || '—'}</td>
+                        <td className="text-sm font-semibold text-slate-600">{r.description || '—'}</td>
                       ) : null}
-                      <td className="px-6 py-4 text-end">
+                      <td className="text-end">
                         <ErpRowActions
                           onEdit={() => {
                             setEditing(r);
@@ -242,7 +260,7 @@ export function HrCatalogPage({
             onPageChange={pagination.setPage}
             onPageSizeChange={pagination.setPageSize}
           />
-        </div>
+        </section>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>

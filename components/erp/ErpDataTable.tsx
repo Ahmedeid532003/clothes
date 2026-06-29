@@ -8,14 +8,13 @@ import {
   Copy,
   FileDown,
   FileSpreadsheet,
-  FileText,
   Import,
   Maximize2,
   Minimize2,
-  Plus,
   Printer,
   Search,
   Settings,
+  Table2,
   X,
 } from 'lucide-react';
 import { ErpAddButton } from '@/components/erp/ErpAddButton';
@@ -294,60 +293,73 @@ export function ErpDataTable<T>({
 
   return (
     <section
-      className={cn('erp-table-shell erp-premium-table-card erp-enterprise-grid', isFullscreen && 'erp-grid-fullscreen')}
+      className={cn('emp-data-main-card erp-table-shell erp-enterprise-grid mahaly-unified-table', isFullscreen && 'erp-grid-fullscreen')}
       dir={dir}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
       aria-busy={loading}
     >
-      <div className="erp-table-header">
-        <div>
-          <span className="erp-grid-eyebrow">
-            {isRtl ? `${sortedRows.length} سجل` : `${sortedRows.length} records`}
-          </span>
-          <h2 id={titleId}>{title}</h2>
-          {description ? <p id={descriptionId}>{description}</p> : null}
+      <div className="emp-data-action-bar">
+        <div className="emp-data-action-title">
+          <div className="emp-data-action-icon" aria-hidden="true">
+            <Table2 className="h-5 w-5" />
+          </div>
+          <div className="emp-data-action-heading">
+            <h2 id={titleId}>
+              {title}
+              <span className="emp-data-count-pill">
+                {isRtl ? `${sortedRows.length} سجل` : `${sortedRows.length} records`}
+              </span>
+            </h2>
+            {description ? <p id={descriptionId}>{description}</p> : null}
+          </div>
         </div>
-        <div className="erp-table-primary-actions">
-          {onAdd ? (
-            <ErpAddButton onClick={onAdd}>{addLabel}</ErpAddButton>
-          ) : null}
+        <div className="emp-data-action-buttons">
+          <div className="relative">
+            <button type="button" className="emp-data-export-btn" onClick={() => setShowExport((value) => !value)} aria-expanded={showExport}>
+              <FileDown className="h-4 w-4" />
+              <span>{isRtl ? 'تصدير' : 'Export'}</span>
+            </button>
+            {showExport ? (
+              <div className="erp-export-popover" role="menu" aria-label={isRtl ? 'تصدير الجدول' : 'Export table'}>
+                <button type="button" role="menuitem" onClick={() => { void copyVisible(sortedRows); setShowExport(false); }}>
+                  <Copy className="h-4 w-4" />
+                  <span>{isRtl ? 'نسخ' : 'Copy'}</span>
+                </button>
+                <button type="button" role="menuitem" onClick={() => { exportCsv(sortedRows); setShowExport(false); }}>
+                  <FileSpreadsheet className="h-4 w-4" />
+                  <span>CSV</span>
+                </button>
+                <button type="button" role="menuitem" onClick={() => { exportExcel(sortedRows, '-excel'); setShowExport(false); }}>
+                  <FileDown className="h-4 w-4" />
+                  <span>Excel</span>
+                </button>
+                <button type="button" role="menuitem" onClick={() => { printVisible(sortedRows); setShowExport(false); }}>
+                  <Printer className="h-4 w-4" />
+                  <span>{isRtl ? 'طباعة' : 'Print'}</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
           {onImport ? (
-            <Button size="sm" variant="outline" onClick={onImport}>
+            <Button size="sm" variant="outline" className="emp-data-export-btn" onClick={onImport}>
               <Import className="h-4 w-4" />
               {importLabel}
             </Button>
+          ) : null}
+          {onAdd ? (
+            <ErpAddButton onClick={onAdd}>{addLabel}</ErpAddButton>
           ) : null}
         </div>
       </div>
 
-      <div className="erp-table-toolbar">
-        <div className="erp-table-toolbar-primary">
-          {onAdd ? (
-            <ErpAddButton onClick={onAdd}>{addLabel}</ErpAddButton>
-          ) : null}
-          {onImport ? (
-            <Button size="sm" variant="outline" onClick={onImport}>
-              <Import className="h-4 w-4" />
-              {importLabel}
-            </Button>
-          ) : null}
-        </div>
-        <ErpSearchBar
-          value={searchValue}
-          onChange={(value) => {
-            onSearchChange(value);
-            setPage(1);
-          }}
-          advancedOpen={showFilters}
-          onAdvancedToggle={() => setShowFilters((v) => !v)}
-        />
-        <div className="erp-table-tools">
+      <div className="emp-data-toolbar">
+        <div className="emp-data-toolbar-start">
           <div className="relative">
-            <Button size="sm" variant="outline" className="erp-columns-button" onClick={toggleColumnsPopover} aria-expanded={showColumns} aria-label={t('erpTable.columns')}>
+            <button type="button" className="emp-data-tool-btn" onClick={toggleColumnsPopover} aria-expanded={showColumns}>
               <Columns3 className="h-4 w-4" />
               <span>{t('erpTable.columns')}</span>
-            </Button>
+            </button>
             {showColumns ? (
               <div className="erp-columns-popover" role="dialog" aria-label={isRtl ? 'إظهار الأعمدة' : 'Visible columns'}>
                 <strong>{isRtl ? 'اختيار الأعمدة' : 'Choose Columns'}</strong>
@@ -369,48 +381,26 @@ export function ErpDataTable<T>({
               </div>
             ) : null}
           </div>
-          <div className="relative">
-            <Button size="sm" variant="outline" className="erp-export-button" onClick={() => setShowExport((value) => !value)} aria-expanded={showExport}>
-              <span>{isRtl ? 'تصدير' : 'Export'}</span>
-              <FileDown className="h-4 w-4" />
-            </Button>
-            {showExport ? (
-              <div className="erp-export-popover" role="menu" aria-label={isRtl ? 'تصدير الجدول' : 'Export table'}>
-                <button type="button" role="menuitem" onClick={() => { void copyVisible(sortedRows); setShowExport(false); }}>
-                  <Copy className="h-4 w-4" />
-                  <span>{isRtl ? 'نسخ' : 'Copy'}</span>
-                </button>
-                <button type="button" role="menuitem" onClick={() => { exportCsv(sortedRows); setShowExport(false); }}>
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span>CSV</span>
-                </button>
-                <button type="button" role="menuitem" onClick={() => { exportExcel(sortedRows, '-excel'); setShowExport(false); }}>
-                  <FileDown className="h-4 w-4" />
-                  <span>Excel</span>
-                </button>
-                <button type="button" role="menuitem" onClick={() => { printVisible(sortedRows); setShowExport(false); }}>
-                  <FileText className="h-4 w-4" />
-                  <span>PDF</span>
-                </button>
-                <button type="button" role="menuitem" onClick={() => { printVisible(sortedRows); setShowExport(false); }}>
-                  <Printer className="h-4 w-4" />
-                  <span>{isRtl ? 'طباعة' : 'Print'}</span>
-                </button>
-              </div>
-            ) : null}
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="erp-fullscreen-button"
+          <button
+            type="button"
+            className="emp-data-tool-btn"
             onClick={() => setIsFullscreen((value) => !value)}
             aria-pressed={isFullscreen}
-            aria-label={isRtl ? (isFullscreen ? 'إغلاق التكبير' : 'تكبير الجدول') : (isFullscreen ? 'Exit fullscreen table' : 'Fullscreen table')}
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             <span>{isRtl ? (isFullscreen ? 'تصغير' : 'تكبير') : (isFullscreen ? 'Exit' : 'Fullscreen')}</span>
-          </Button>
+          </button>
         </div>
+        <ErpSearchBar
+          className="emp-data-search-bar"
+          value={searchValue}
+          onChange={(value) => {
+            onSearchChange(value);
+            setPage(1);
+          }}
+          advancedOpen={showFilters}
+          onAdvancedToggle={() => setShowFilters((v) => !v)}
+        />
       </div>
 
       {showFilters && advancedFilters ? <div id={filtersId} className="erp-advanced-filters">{advancedFilters}</div> : null}
@@ -431,12 +421,12 @@ export function ErpDataTable<T>({
         </div>
       ) : null}
 
-      <div className="erp-table-scroll erp-premium-table-scroll">
-        <table className="erp-premium-table" aria-rowcount={sortedRows.length}>
+      <div className="emp-data-table-scroll erp-table-scroll">
+        <table className="emp-data-table erp-premium-table" aria-rowcount={sortedRows.length}>
           <caption className="sr-only">{description ? `${title}. ${description}` : title}</caption>
           <thead>
             <tr>
-              {renderRowActions ? <th className="erp-actions-cell text-center" scope="col"><Settings className="mx-auto h-4 w-4" /><span className="sr-only">{t('erpTable.actions')}</span></th> : null}
+              {renderRowActions ? <th className="erp-actions-cell emp-data-th-actions text-center" scope="col"><Settings className="mx-auto h-4 w-4" /><span className="sr-only">{t('erpTable.actions')}</span></th> : null}
               {showSelection ? (
                 <th className="erp-selection-cell" scope="col">
                   <input
@@ -475,7 +465,7 @@ export function ErpDataTable<T>({
               })}
             </tr>
             {showFilters ? (
-              <tr className="erp-column-filter-row">
+              <tr className="emp-data-filter-row erp-column-filter-row">
                 {renderRowActions ? <th aria-hidden="true" /> : null}
                 {showSelection ? <th aria-hidden="true" /> : null}
                 {visibleColumns.map((column) => (
