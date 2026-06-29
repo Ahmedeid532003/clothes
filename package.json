@@ -11,6 +11,8 @@
     "dev:online": "powershell -ExecutionPolicy Bypass -File scripts/run-online.ps1",
     "build": "vite build",
     "build:netlify": "vite build --mode production",
+    "build:cloudflare": "vite build --mode production",
+    "deploy:cloudflare": "powershell -ExecutionPolicy Bypass -File scripts/deploy-cloudflare.ps1",
     "deploy:netlify": "powershell -ExecutionPolicy Bypass -File scripts/netlify-cli-deploy.ps1",
     "pack:netlify": "powershell -ExecutionPolicy Bypass -File scripts/pack-netlify-upload.ps1",
     "pack:cloudflare": "powershell -ExecutionPolicy Bypass -File scripts/pack-cloudflare-pages.ps1",
