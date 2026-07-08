@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { AppSidebar } from "@/components/app-sidebar";
 import { LoginPage } from "@/components/auth/LoginPage";
 import { DashboardHome } from "@/components/dashboard/Home";
 import { ProfilePage } from "@/components/profile/ProfilePage";
 import { DashboardMain } from "@/components/dashboard/DashboardMain";
+import { ProductPage } from "@/components/product/ProductPage";
 import { HrDepartmentsPage } from "@/components/hr/HrDepartmentsPage";
 import { HrJobStructurePage } from "@/components/hr/HrJobStructurePage";
 import { HrSectionsPage } from "@/components/hr/HrSectionsPage";
@@ -20,8 +21,8 @@ import { CommissionsPage } from "@/components/hr/CommissionsPage";
 import { EmployeeReportsPage } from "@/components/hr/EmployeeReportsPage";
 import { PayrollSheetPage } from "@/components/hr/PayrollSheetPage";
 import { PurchaseInvoicesPage } from "@/components/purchases/PurchaseInvoicesPage";
-import { PosGalleryPage } from "@/components/pos/PosGalleryPage";
-import { PosBarcodePage } from "@/components/pos/PosBarcodePage";
+import { PosBarcodePage } from '@/components/pos/PosBarcodePage';
+import { PosIntegratedPage } from '@/components/pos/PosIntegratedPage';
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { FullscreenToggle } from "@/components/fullscreen-toggle";
 import { ThemeModeControls } from "@/components/theme-mode-controls";
@@ -30,7 +31,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { entityName } from "@/lib/entity-name";
 import { canViewPage, firstAllowedTab } from "@/lib/permissions/access";
-import { ACCOUNTING_NAV, ANALYTICS_NAV, CRM_NAV, ERP_NAV, HR_NAV, POS_NAV, PRODUCT_MANAGEMENT_NAV } from "@/lib/navigation";
+import { ACCOUNTING_NAV, ANALYTICS_NAV, CRM_NAV, ERP_NAV, HR_NAV, MANAGEMENT_NAV, MANAGEMENT_SECTION_NAV, POS_NAV, PRODUCT_MANAGEMENT_NAV } from "@/lib/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,10 +101,7 @@ import { ProductsPage } from "@/components/inventory/ProductsPage";
 import { StockBalancesPage } from "@/components/inventory/StockBalancesPage";
 import { SeasonsPage } from "@/components/inventory/SeasonsPage";
 import { SuppliersPage } from "@/components/inventory/SuppliersPage";
-import { StockTransfersPage } from "@/components/inventory/StockTransfersPage";
-import { StockScrapPage } from "@/components/inventory/StockScrapPage";
-import { StockDisbursementPage } from "@/components/inventory/StockDisbursementPage";
-import { StockAdditionPage } from "@/components/inventory/StockAdditionPage";
+import { StockPermitsHubPage } from "@/components/inventory/StockPermitsHubPage";
 import { StockValuationPage } from "@/components/inventory/StockValuationPage";
 import { StockCountPage } from "@/components/inventory/StockCountPage";
 import { OrdersHubPage } from "@/components/orders/OrdersHubPage";
@@ -113,6 +111,7 @@ import { PriceAdjustmentsPage } from "@/components/inventory/PriceAdjustmentsPag
 import { OkazionNoticeHubPage } from "@/components/inventory/OkazionNoticeHubPage";
 import { StoreOfferHubPage } from "@/components/inventory/StoreOfferHubPage";
 import { BarcodePrintPage } from "@/components/inventory/BarcodePrintPage";
+import { isProductModuleRoute } from "@/components/product/productModuleNav";
 import { SupplierAccountsPage } from "@/components/inventory/SupplierAccountsPage";
 import { SupplierPaymentsPage } from "@/components/suppliers/SupplierPaymentsPage";
 import { SupplierWeeklyReportsPage } from "@/components/suppliers/SupplierWeeklyReportsPage";
@@ -135,6 +134,7 @@ import { SellerPerformancePage } from "@/components/reports/SellerPerformancePag
 
 const TAB_ORDER = [
   ...ANALYTICS_NAV.map((n) => n.tab),
+  ...MANAGEMENT_NAV.map((i) => i.tab),
   ...PRODUCT_MANAGEMENT_NAV.map((i) => i.tab),
   ...ERP_NAV.flatMap((g) => g.items.map((i) => i.tab)),
   ...ACCOUNTING_NAV.flatMap((g) => g.items.map((i) => i.tab)),
@@ -191,7 +191,7 @@ function getStoredFavorites() {
 
 function moduleKeyForTab(tab: string): ModuleKey {
   if (tab === 'profile') return 'settings';
-  if (tab === 'dashboard' || tab === 'home') return 'dashboard';
+  if (tab === 'dashboard' || tab === 'home' || tab === 'product') return 'dashboard';
   if (['hr-job-structure', 'departments', 'hr-sections', 'work-shifts', 'job-titles', 'employee-groups', 'employee-data', 'employee-reports', 'create-users'].includes(tab)) return 'employees';
   if (['attendance', 'attendance-import', 'official-holidays'].includes(tab)) return 'attendance';
   if (['bonuses', 'deduction-items', 'deductions', 'allowance-items', 'employee-commissions', 'payroll', 'payment-auth-types', 'payroll-payments'].includes(tab)) return 'payroll';
@@ -200,7 +200,7 @@ function moduleKeyForTab(tab: string): ModuleKey {
   if (['purchase-invoices', 'purchase-return-invoices', 'reorder-alerts', 'purchase-orders', 'supplier-payments'].includes(tab)) return 'purchases';
   if (['chart-of-accounts', 'currencies', 'asset-depreciation', 'general-expenses', 'payroll-advances', 'expense-types', 'expense-vouchers', 'cash-shifts', 'shift-handovers', 'treasury-movements', 'pending-shifts', 'enterprise-cash-balances', 'banks', 'bank-accounts', 'cheques', 'card-transactions', 'e-wallets', 'banking-statements', 'payment-methods-dashboard'].includes(tab)) return 'accounting';
   if (['journal-entries', 'trial-balance', 'balance-sheet', 'income-statement', 'general-ledger'].includes(tab)) return 'reports';
-  if (['warehouses', 'seasons', 'stock-transfers', 'stock-disbursements', 'stock-additions', 'stock-scrap', 'stock-balances', 'stock-valuation', 'stock-count', 'products', 'composite-products', 'product-sections', 'brands', 'classifications', 'sizes', 'colors', 'price-adjustments', 'barcode-print', 'suppliers', 'supplier-inventories', 'supplier-weekly-reports', 'supplier-accounts', 'supplier-discounts', 'store-discounts', 'supplier-types', 'supplier-groups'].includes(tab)) return 'inventory';
+  if (['warehouses', 'seasons', 'stock-balances', 'stock-valuation', 'suppliers', 'supplier-inventories', 'supplier-weekly-reports', 'supplier-accounts', 'supplier-discounts', 'store-discounts', 'supplier-types', 'supplier-groups', 'product-categories', 'products-list', 'composite-items', 'bundled-items', 'item-transfer', 'item-issue', 'item-addition', 'item-destruction', 'price-modification', 'inventory-check', 'barcode-printing', 'product-reports-shortcut', 'products', 'composite-products', 'product-sections', 'brands', 'classifications', 'sizes', 'colors', 'price-adjustments', 'barcode-print', 'stock-transfers', 'stock-disbursements', 'stock-additions', 'stock-scrap', 'stock-count', 'mgmt-dashboard', 'mgmt-setup', 'mgmt-catalog', 'mgmt-inventory', 'mgmt-permits', 'mgmt-audit', 'mgmt-style-builder'].includes(tab)) return 'inventory';
   return 'hr';
 }
 
@@ -301,7 +301,7 @@ export default function App() {
       ...ACCOUNTING_NAV,
       ...POS_NAV,
       ...CRM_NAV,
-      { id: 'productManagement', items: PRODUCT_MANAGEMENT_NAV },
+      ...MANAGEMENT_SECTION_NAV,
     ];
 
     const analytics = ANALYTICS_NAV.map((item) => ({
@@ -411,7 +411,26 @@ export default function App() {
     return <LoginPage />;
   }
 
+  const renderProductModule = () => (
+    <ProductPage activeTab={activeTab} onNavigate={setActiveTab} />
+  );
+
   const renderContent = () => {
+    if (isProductModuleRoute(activeTab)) {
+      if (!user || !canViewPage(user, activeTab)) {
+        return (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+            <p className="font-semibold">{t('app.noAccessTitle')}</p>
+            <p className="text-sm mt-1">{t('app.noAccessDesc')}</p>
+          </div>
+        );
+      }
+      return renderProductModule();
+    }
+    return renderPageBody();
+  };
+
+  const renderPageBody = () => {
     if (activeTab === 'profile') {
       return <ProfilePage onBack={() => setActiveTab('home')} />;
     }
@@ -426,6 +445,8 @@ export default function App() {
     switch (activeTab) {
       case 'home':
         return <DashboardHome />;
+      case 'product':
+        return renderProductModule();
       case 'dashboard':
         return <DashboardMain />;
       case 'create-users':
@@ -495,7 +516,7 @@ export default function App() {
       case 'seller-performance':
         return <SellerPerformancePage />;
       case 'pos':
-        return <PosGalleryPage onClose={() => setActiveTab('home')} />;
+        return <PosIntegratedPage onClose={() => setActiveTab('home')} />;
       case 'pos-barcode':
         return <PosBarcodePage onClose={() => setActiveTab('home')} />;
       case 'warehouses':
@@ -503,49 +524,55 @@ export default function App() {
       case 'seasons':
         return <SeasonsPage />;
       case 'product-sections':
-        return <ProductSectionsPage />;
       case 'brands':
-        return <BrandsPage />;
       case 'classifications':
-        return <ClassificationsPage />;
       case 'sizes':
-        return <SizesPage />;
       case 'colors':
-        return <ColorsPage />;
       case 'products':
-        return <ProductsPage />;
+      case 'composite-products':
+      case 'price-adjustments':
+      case 'barcode-print':
+      case 'stock-transfers':
+      case 'stock-disbursements':
+      case 'stock-additions':
+      case 'stock-scrap':
+      case 'stock-count':
+      case 'product-categories':
+      case 'products-list':
+      case 'composite-items':
+      case 'bundled-items':
+      case 'item-transfer':
+      case 'item-issue':
+      case 'item-addition':
+      case 'item-destruction':
+      case 'price-modification':
+      case 'inventory-check':
+      case 'barcode-printing':
+      case 'product-reports-shortcut':
+      case 'mgmt-dashboard':
+      case 'mgmt-setup':
+      case 'mgmt-catalog':
+      case 'mgmt-inventory':
+      case 'mgmt-permits':
+      case 'mgmt-audit':
+      case 'mgmt-style-builder':
+        return renderProductModule();
       case 'stock-balances':
         return <StockBalancesPage />;
-      case 'stock-transfers':
-        return <StockTransfersPage />;
-      case 'stock-disbursements':
-        return <StockDisbursementPage />;
-      case 'stock-additions':
-        return <StockAdditionPage />;
-      case 'stock-scrap':
-        return <StockScrapPage />;
       case 'stock-valuation':
         return <StockValuationPage />;
-      case 'stock-count':
-        return <StockCountPage />;
       case 'general-item-movement':
         return <GeneralItemMovementReportPage />;
       case 'supplier-inventories':
         return <SupplierGroupInventoryPage />;
       case 'supplier-accounts':
         return <SupplierAccountsPage />;
-      case 'composite-products':
-        return <CompositeProductsPage />;
       case 'supplier-payments':
         return <SupplierPaymentsPage />;
       case 'supplier-discounts':
         return <OkazionNoticeHubPage />;
       case 'store-discounts':
         return <StoreOfferHubPage />;
-      case 'price-adjustments':
-        return <PriceAdjustmentsPage initialScope={priceAdjustScope} />;
-      case 'barcode-print':
-        return <BarcodePrintPage />;
       case 'supplier-types':
         return <SupplierTypesPage />;
       case 'supplier-groups':

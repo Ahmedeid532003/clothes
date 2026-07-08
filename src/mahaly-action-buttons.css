@@ -1,0 +1,119 @@
+/* Mahaly action buttons — إضافة / تسجيل / حفظ (reference: تسجيل خصم جديد) */
+:root {
+  --mahaly-action-bg: #1a73e8;
+  --mahaly-action-hover: #1557b0;
+  --mahaly-action-text: #ffffff;
+  --mahaly-action-radius: 0.875rem;
+  --mahaly-action-py: 0.625rem;
+  --mahaly-action-px: 1.5rem;
+  --mahaly-action-gap: 0.5rem;
+  --mahaly-action-fs: 0.8125rem;
+  --mahaly-action-fw: 700;
+  --mahaly-action-min-h: 2.5rem;
+}
+
+.mahaly-action-btn,
+.hr-structure-add-btn,
+.erp-add-action,
+.erp-add-save-action,
+button:has(> svg.lucide-plus):not(.mahaly-action-exempt):not([class*='outline']):not([class*='ghost']):not([class*='icon']):not([class*='w-full']) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--mahaly-action-gap) !important;
+  min-height: var(--mahaly-action-min-h) !important;
+  height: auto !important;
+  padding: var(--mahaly-action-py) var(--mahaly-action-px) !important;
+  border: 0 !important;
+  border-radius: var(--mahaly-action-radius) !important;
+  background: var(--mahaly-action-bg) !important;
+  color: var(--mahaly-action-text) !important;
+  font-family: var(--mahaly-font, 'Cairo Variable', 'Cairo', sans-serif) !important;
+  font-size: var(--mahaly-action-fs) !important;
+  font-weight: var(--mahaly-action-fw) !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  overflow: visible !important;
+  isolation: auto !important;
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease !important;
+}
+
+.mahaly-action-btn:hover,
+.hr-structure-add-btn:hover,
+.erp-add-action:hover,
+.erp-add-save-action:hover,
+button:has(> svg.lucide-plus):not(.mahaly-action-exempt):not([class*='outline']):not([class*='ghost']):not([class*='icon']):not([class*='w-full']):hover {
+  background: var(--mahaly-action-hover) !important;
+  color: var(--mahaly-action-text) !important;
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+.mahaly-action-btn:active,
+.hr-structure-add-btn:active,
+.erp-add-action:active,
+.erp-add-save-action:active {
+  transform: scale(0.98) !important;
+}
+
+.mahaly-action-btn:disabled,
+.hr-structure-add-btn:disabled,
+.erp-add-action:disabled,
+.erp-add-save-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.hr-structure-add-btn-aura,
+.hr-structure-add-btn-shine,
+button.erp-add-action::before {
+  display: none !important;
+}
+
+.hr-structure-add-btn-core {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: var(--mahaly-action-gap) !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.hr-structure-add-btn-icon,
+.hr-structure-add-btn > svg,
+.erp-add-action > svg,
+.mahaly-action-btn > svg,
+button:has(> svg.lucide-plus) > svg.lucide-plus {
+  width: 1rem !important;
+  height: 1rem !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--mahaly-action-text) !important;
+  box-shadow: none !important;
+  flex-shrink: 0;
+}
+
+.hr-structure-add-btn-label,
+.erp-add-action > :not(svg) {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-shadow: none !important;
+  color: inherit !important;
+}
+
+button.mahaly-action-btn--toolbar {
+  min-height: var(--mahaly-action-min-h) !important;
+}

@@ -2500,14 +2500,14 @@ html.dark [data-slot="sidebar-inset"] main {
   transform: translateY(-1px);
 }
 
-[data-slot="sidebar-inset"] :where(button[variant="outline"], button.border, .erp-table-tools button, .erp-pagination button) {
+[data-slot="sidebar-inset"] :where(button[variant="outline"], button.border, .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action), .erp-pagination button) {
   border-color: var(--ui-border) !important;
   background: var(--ui-surface) !important;
   color: var(--ui-text) !important;
   box-shadow: none !important;
 }
 
-[data-slot="sidebar-inset"] :where(button[variant="outline"], button.border, .erp-table-tools button, .erp-pagination button):hover {
+[data-slot="sidebar-inset"] :where(button[variant="outline"], button.border, .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action), .erp-pagination button):hover {
   background: var(--ui-surface-muted) !important;
   border-color: var(--ui-border-strong) !important;
 }
@@ -2758,7 +2758,7 @@ html.dark .erp-premium-table-card {
   box-shadow: 0 0 0 4px rgb(59 130 246 / 8%) !important;
 }
 
-.erp-premium-table-card .erp-table-tools button,
+.erp-premium-table-card .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action),
 .erp-premium-table-card .erp-pagination button {
   min-height: 2.35rem;
   border: 1px solid #e2e8f0 !important;
@@ -2769,7 +2769,7 @@ html.dark .erp-premium-table-card {
   box-shadow: 0 1px 2px rgb(15 23 42 / 4%) !important;
 }
 
-.erp-premium-table-card .erp-table-tools button:hover,
+.erp-premium-table-card .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action):hover,
 .erp-premium-table-card .erp-pagination button:hover {
   border-color: #cbd5e1 !important;
   background: #f8fafc !important;
@@ -2958,7 +2958,7 @@ html.dark .erp-premium-table tbody tr:hover {
 }
 
 html.dark .erp-premium-table-card .erp-table-search,
-html.dark .erp-premium-table-card .erp-table-tools button,
+html.dark .erp-premium-table-card .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action),
 html.dark .erp-premium-table-card .erp-pagination button,
 html.dark .erp-premium-table-card .erp-table-footer select {
   border-color: rgb(148 163 184 / 18%) !important;
@@ -7098,7 +7098,8 @@ button[data-slot="button"],
   box-shadow: var(--ds-shadow-brand) !important;
 }
 
-[data-slot="button"][class*="border"],
+[data-slot="button"][class*="border-border"],
+[data-slot="button"][class*="border-input"],
 .btn-premium-secondary {
   border-color: var(--ds-border-subtle) !important;
   background: color-mix(in srgb, var(--ds-surface) 92%, transparent) !important;
@@ -13320,7 +13321,7 @@ html[dir="rtl"] [data-sidebar="menu-sub-button"][aria-current="page"] {
   box-shadow: 0 10px 20px rgb(37 99 235 / 0.18) !important;
 }
 
-.app-content-card :where(button.border, button[variant="outline"], .erp-table-tools button, .erp-pagination button) {
+.app-content-card :where(button.border, button[variant="outline"], .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action), .erp-pagination button) {
   border-color: var(--sf-border) !important;
   border-radius: 0.9rem !important;
   background: #ffffff !important;
@@ -13878,8 +13879,8 @@ html[dir="rtl"] [data-sidebar="menu-sub-button"][aria-current="page"] {
   background: var(--ai-blue-hover) !important;
 }
 
-.app-content-card :where(button.border, button[variant="outline"], .erp-table-tools button, .erp-pagination button),
-.dashboard-card-tools button {
+.app-content-card :where(button.border, button[variant="outline"], .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action), .erp-pagination button),
+.dashboard-card-tools button:not(.hr-structure-add-btn):not(.erp-add-action) {
   border-color: var(--ai-border) !important;
   border-radius: var(--ai-radius-sm) !important;
   background: #ffffff !important;
@@ -24908,6 +24909,30 @@ html[data-app-theme="dark"] :where(p, label, span, small, .text-muted-foreground
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%) !important;
 }
 
+/* Product module (mozafen): keep orange table header — do not inherit system blue */
+.app-content-card .product-module-page table thead tr:first-child th,
+.app-tenant-shell .product-module-page table thead tr:first-child th,
+[data-slot="sidebar-inset"] .product-module-page table thead tr:first-child th {
+  background: #f06424 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid #ea580c !important;
+  border-inline-end: 1px solid rgb(255 255 255 / 18%) !important;
+  padding: 0.875rem !important;
+  font-weight: 800 !important;
+  font-size: 0.75rem !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.app-content-card .product-module-page table thead tr:first-child th:first-child,
+.app-tenant-shell .product-module-page table thead tr:first-child th:first-child,
+[data-slot="sidebar-inset"] .product-module-page table thead tr:first-child th:first-child,
+.app-content-card .product-module-page table thead tr:first-child th:last-child,
+.app-tenant-shell .product-module-page table thead tr:first-child th:last-child,
+[data-slot="sidebar-inset"] .product-module-page table thead tr:first-child th:last-child {
+  border-radius: 0 !important;
+}
+
 .app-content-card table thead tr:first-child th:first-child,
 .app-tenant-shell table thead tr:first-child th:first-child,
 [data-slot="sidebar-inset"] table thead tr:first-child th:first-child {
@@ -26300,397 +26325,364 @@ html.dark .app-content-card :where(.report-table, table.w-full.text-sm, table.w-
   background: color-mix(in srgb, var(--module-accent, #60a5fa) 8%, rgb(15 23 42 / 88%)) !important;
 }
 
-/* ═══ Ma7aly Control Panel — لوحة التحكم (mockup design) ═══ */
-.mahaly-control-panel {
-  --mcp-navy: #0f1f45;
-  --mcp-navy-deep: #0a1735;
-  --mcp-orange: #ff7a00;
-  display: grid;
-  gap: 1rem;
-  padding-bottom: 1.25rem;
+@import './pos-premium.css';
+@import './pos-smart-cashier.css';
+@import './montagat-canvas.css';
+@import './pos-integrated.css';
+@import './home-dashboard.css';
+@import './control-panel.css';
+
+/* ── زر إضافة — pill أزرق متدرج (مطابق للتصميم المرجعي) ── */
+.app-content-card .erp-table-tools .hr-structure-add-btn,
+.erp-premium-table-card .erp-table-tools .hr-structure-add-btn,
+[data-slot="sidebar-inset"] .erp-table-tools .hr-structure-add-btn,
+.emp-data-action-buttons .hr-structure-add-btn,
+.erp-crud-actions .hr-structure-add-btn,
+.app-content-card > :is(.space-y-4, .space-y-5, .space-y-6).p-1 > :first-child .hr-structure-add-btn,
+.erp-table-tools .hr-structure-add-btn,
+button.hr-structure-add-btn.erp-add-action,
+button.hr-structure-add-btn {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #7dd3fc 0%, #2563eb 42%, #1e3a8a 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 18px 40px rgb(37 99 235 / 38%),
+    0 0 0 1px rgb(37 99 235 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 34%) !important;
 }
 
-.mcp-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
+/* Mozafen product module — designer scrollbar + shell */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-.mcp-page-heading h1 {
-  margin: 0;
-  color: #0f1f45;
-  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 1.9rem);
-  font-weight: 1000;
-}
-
-.mcp-page-heading p {
-  margin: 0.15rem 0 0;
-  color: #64748b;
-  font-size: 0.84rem;
-  font-weight: 800;
-}
-
-.mcp-branch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  background: #fff;
-  padding: 0 0.9rem;
-  color: #334155;
-  font-size: 0.8rem;
-  font-weight: 900;
-}
-
-.mcp-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  border: 1px solid #e8edf5;
-  border-radius: 1rem;
-  background: #fff;
-  padding: 0.75rem 0.9rem;
-  box-shadow: 0 6px 22px rgb(15 31 69 / 5%);
-}
-
-.mcp-period-tabs {
-  display: inline-flex;
-  gap: 0.35rem;
-}
-
-.mcp-period-tabs button {
-  min-height: 2.1rem;
-  border: 1px solid transparent;
-  border-radius: 0.65rem;
+.sidebar-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  padding: 0 0.85rem;
-  color: #64748b;
-  font-size: 0.76rem;
-  font-weight: 900;
-  cursor: pointer;
 }
 
-.mcp-period-tabs button.is-active {
-  border-color: var(--mcp-orange);
-  background: #fff;
-  color: #0f172a;
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
 }
 
-.mcp-filter-end {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.6);
 }
 
-.mcp-date-range,
-.mcp-filter-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.65rem;
-  background: #fff;
-  padding: 0 0.75rem;
-  color: #334155;
-  font-size: 0.76rem;
-  font-weight: 800;
+.product-module-shell {
+  min-height: calc(100vh - 8rem);
 }
 
-.mcp-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+.product-module-subnav-list {
+  max-height: calc(100vh - 14rem);
 }
 
-.mcp-kpi-card {
-  display: grid;
-  gap: 0.65rem;
-  min-height: 10.5rem;
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #122654 0%, var(--mcp-navy) 100%);
-  padding: 0.95rem;
-  color: #fff;
-  box-shadow: 0 12px 32px rgb(10 23 53 / 20%);
+.product-module-page {
+  width: 100%;
+  min-width: 0;
 }
 
-.mcp-kpi-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+.app-content-card .erp-table-tools .hr-structure-add-btn:hover,
+.erp-premium-table-card .erp-table-tools .hr-structure-add-btn:hover,
+[data-slot="sidebar-inset"] .erp-table-tools .hr-structure-add-btn:hover,
+.emp-data-action-buttons .hr-structure-add-btn:hover,
+.erp-crud-actions .hr-structure-add-btn:hover,
+.app-content-card > :is(.space-y-4, .space-y-5, .space-y-6).p-1 > :first-child .hr-structure-add-btn:hover,
+.erp-table-tools .hr-structure-add-btn:hover,
+button.hr-structure-add-btn.erp-add-action:hover,
+button.hr-structure-add-btn:hover {
+  color: #ffffff !important;
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.05) saturate(1.08);
+  box-shadow:
+    0 26px 52px rgb(37 99 235 / 42%),
+    0 0 0 1px rgb(125 211 252 / 45%),
+    0 0 28px rgb(56 189 248 / 28%) !important;
 }
 
-.mcp-kpi-card-top h3 {
-  margin: 0;
-  font-size: 0.74rem;
-  font-weight: 900;
-  line-height: 1.5;
+.hr-structure-add-btn-label {
+  color: #ffffff !important;
 }
 
-.mcp-kpi-icon {
-  display: grid;
-  width: 1.9rem;
-  height: 1.9rem;
-  place-items: center;
-  border-radius: 0.5rem;
-  flex-shrink: 0;
+.hr-structure-add-btn-core {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%) !important;
 }
 
-.mcp-kpi-icon-orange { background: rgb(255 122 0 / 22%); color: #ffb366; }
-.mcp-kpi-icon-blue { background: rgb(59 130 246 / 22%); color: #93c5fd; }
-.mcp-kpi-icon-pink { background: rgb(236 72 153 / 22%); color: #f9a8d4; }
-.mcp-kpi-icon-light { background: rgb(255 255 255 / 16%); color: #fff; }
-
-.mcp-kpi-amount {
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
+.hr-structure-add-btn-icon {
+  background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%) !important;
+  color: #1d4ed8 !important;
 }
 
-.mcp-kpi-amount small,
-.mcp-kpi-highlight-value small,
-.mcp-expense-tile strong small,
-.mcp-revenue-copy strong small,
-.mcp-revenue-split strong small,
-.mcp-treasury-green-value strong small,
-.mcp-treasury-green-splits strong small,
-.mcp-branch-sales-meta span small,
-.mcp-shift-action strong small,
-.mcp-bank-row span small,
-.mcp-bank-total span small,
-.mcp-bank-due span small {
-  font-size: 0.62rem;
-  font-weight: 900;
-  opacity: 0.78;
+.app-content-card .erp-table-tools .erp-add-action,
+.erp-table-tools .erp-add-action,
+button.erp-add-action:not(.hr-structure-add-btn) {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #7dd3fc 0%, #2563eb 42%, #1e3a8a 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 18px 40px rgb(37 99 235 / 38%),
+    0 0 0 1px rgb(37 99 235 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 34%) !important;
 }
 
-.mcp-kpi-amount strong {
-  font-family: "Times New Roman", Times, serif;
-  font-size: clamp(1.4rem, 1rem + 0.9vw, 1.8rem);
-  font-weight: 900;
-  line-height: 1;
+/* Unified visuals from provided references: toolbar, footer, action button.
+   NOTE: .product-module-page is intentionally excluded — mozafen keeps its own orange UI. */
+.unified-table-toolbar:not(.product-module-page .unified-table-toolbar) {
+  min-height: 44px !important;
+  border-radius: 12px 12px 0 0 !important;
+  background: #fff !important;
 }
 
-.mcp-kpi-net-label {
-  color: rgb(255 255 255 / 70%);
-  font-size: 0.66rem;
-  font-weight: 800;
+:where(.erp-table-tools, .emp-data-toolbar) .w-\[32px\].h-\[32px\],
+:where(.erp-table-tools, .emp-data-toolbar) .w-\[36px\].h-\[36px\],
+.unified-table-toolbar:not(:where(.product-module-page *)) .w-\[32px\].h-\[32px\],
+.unified-table-toolbar:not(:where(.product-module-page *)) .w-\[36px\].h-\[36px\],
+.unified-table-toolbar:not(:where(.product-module-page *)) button:not(.erp-add-action) {
+  border-color: #e2e8f0 !important;
+  background: #fff !important;
+  color: #f59e0b !important;
+  border-radius: 10px !important;
 }
 
-.mcp-kpi-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
-  border-top: 1px solid rgb(255 255 255 / 12%);
-  padding-top: 0.65rem;
+.unified-table-toolbar:not(:where(.product-module-page *)) input[type="text"] {
+  height: 34px !important;
+  border-radius: 10px !important;
+  border-color: #e2e8f0 !important;
+  background: #fff !important;
 }
 
-.mcp-kpi-split > div { display: grid; gap: 0.1rem; }
-.mcp-kpi-split strong { font-family: "Times New Roman", Times, serif; font-size: 0.88rem; font-weight: 900; }
-.mcp-kpi-split .is-plus { color: #4ade80; }
-.mcp-kpi-split .is-minus { color: #fb7185; }
-.mcp-kpi-split span { color: rgb(255 255 255 / 65%); font-size: 0.62rem; font-weight: 800; }
+/* Do NOT restyle mozafen orange primary buttons to blue — keep pixel-perfect mozafen */
 
-.mcp-kpi-card-highlight {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: linear-gradient(145deg, #ff8a1a, var(--mcp-orange) 55%, #ea580c);
-  box-shadow: 0 14px 36px rgb(255 122 0 / 28%);
+.unified-table-footer:not(:where(.product-module-page *)),
+.erp-table-footer {
+  min-height: 44px !important;
+  border-top: 1px solid #e5e7eb !important;
+  background: #fff !important;
 }
 
-.mcp-kpi-card-highlight .mcp-kpi-icon {
-  align-self: flex-end;
+.unified-table-footer:not(:where(.product-module-page *)) .font-mono,
+.erp-table-footer-badge {
+  min-width: 28px !important;
+  height: 26px !important;
+  border-radius: 8px !important;
+  padding-inline: 8px !important;
 }
 
-.mcp-kpi-highlight-body {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
+.unified-table-footer:not(:where(.product-module-page *)) button,
+.erp-table-page-btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
 }
 
-.mcp-kpi-highlight-labels {
-  display: grid;
-  gap: 0.1rem;
-  font-size: 0.82rem;
-  font-weight: 1000;
-  line-height: 1.35;
+button.erp-add-action:not(.hr-structure-add-btn) {
+  min-height: 52px !important;
+  padding-inline: 20px 8px !important;
+  border-radius: 16px !important;
+  font-size: 1.05rem !important;
+  font-weight: 900 !important;
 }
 
-.mcp-kpi-highlight-value {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
+html[dir="rtl"] button.erp-add-action:not(.hr-structure-add-btn) {
+  flex-direction: row-reverse !important;
+  padding-inline: 8px 20px !important;
 }
 
-.mcp-kpi-highlight-value strong {
-  font-family: "Times New Roman", Times, serif;
-  font-size: clamp(1.6rem, 1.1rem + 1vw, 2rem);
-  font-weight: 900;
+button.erp-add-action:not(.hr-structure-add-btn) > svg {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 7px !important;
+  border-radius: 999px !important;
 }
 
-.mcp-revenue-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 1rem;
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #122654, var(--mcp-navy));
-  padding: 1.2rem 1.3rem;
-  color: #fff;
+/* ── SYSTEM-WIDE: force the same toolbar/footer/button look everywhere ── */
+/* Any "table toolbar" that looks like the reference (top strip above tables). */
+.app-content-card :where(.erp-table-tools, .emp-data-toolbar, .emp-data-action-bar, .unified-table-toolbar) {
+  background: #ffffff !important;
 }
 
-.mcp-revenue-copy h2 { margin: 0; font-size: 1rem; font-weight: 1000; }
-.mcp-revenue-copy p { margin: 0.3rem 0 0.7rem; color: #ffb366; font-size: 0.76rem; font-weight: 900; }
-.mcp-revenue-copy strong { font-family: "Times New Roman", Times, serif; font-size: clamp(1.9rem, 1.2rem + 1.8vw, 2.6rem); font-weight: 900; }
-
-.mcp-revenue-splits { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
-.mcp-revenue-split {
-  display: grid;
-  gap: 0.3rem;
-  border-radius: 0.8rem;
-  background: rgb(255 255 255 / 7%);
-  padding: 0.85rem;
-  border-inline-start: 4px solid transparent;
-}
-.mcp-revenue-split-cash { border-inline-start-color: var(--mcp-orange); }
-.mcp-revenue-split-visa { border-inline-start-color: #60a5fa; }
-.mcp-revenue-split span { font-size: 0.7rem; font-weight: 800; opacity: 0.75; }
-.mcp-revenue-split strong { font-family: "Times New Roman", Times, serif; font-size: 1.2rem; font-weight: 900; }
-
-.mcp-expense-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
-.mcp-expense-tile {
-  position: relative;
-  display: grid;
-  gap: 0.45rem;
-  min-height: 6rem;
-  border-radius: 0.9rem;
-  background: linear-gradient(180deg, #122654, var(--mcp-navy));
-  padding: 0.85rem;
-  color: #fff;
-}
-.mcp-expense-tile h4 { margin: 0; font-size: 0.7rem; font-weight: 900; line-height: 1.45; max-width: 90%; }
-.mcp-expense-tile strong { font-family: "Times New Roman", Times, serif; font-size: 1.1rem; font-weight: 900; }
-.mcp-expense-dismiss {
-  position: absolute;
-  inset-block-end: 0.55rem;
-  inset-inline-end: 0.55rem;
-  display: grid;
-  width: 1.45rem;
-  height: 1.45rem;
-  place-items: center;
-  border: 0;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 10%);
-  color: rgb(255 255 255 / 70%);
+.app-content-card :where(.erp-table-tools, .emp-data-toolbar, .unified-table-toolbar) {
+  min-height: 44px !important;
+  border-bottom: 1px solid #edf1f7 !important;
 }
 
-.mcp-treasury-green {
-  display: grid;
-  gap: 0.9rem;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #16a34a, #22c55e 55%, #15803d);
-  padding: 1.15rem 1.25rem;
-  color: #fff;
-}
-.mcp-treasury-green-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.mcp-treasury-green-value strong { font-family: "Times New Roman", Times, serif; font-size: clamp(1.9rem, 1.2rem + 1.6vw, 2.5rem); font-weight: 900; }
-.mcp-treasury-green-heading { display: flex; align-items: center; gap: 0.7rem; }
-.mcp-treasury-dollar { display: grid; width: 2.8rem; height: 2.8rem; place-items: center; border-radius: 0.75rem; background: rgb(255 255 255 / 15%); }
-.mcp-treasury-green-heading h2 { margin: 0; font-size: 0.95rem; font-weight: 1000; }
-.mcp-treasury-green-heading p { margin: 0.15rem 0 0; font-size: 0.72rem; font-weight: 800; opacity: 0.9; }
-.mcp-treasury-green-splits { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
-.mcp-treasury-green-splits article { display: grid; gap: 0.25rem; border-radius: 0.75rem; background: rgb(255 255 255 / 14%); padding: 0.75rem; border-inline-start: 3px solid rgb(255 255 255 / 50%); }
-.mcp-treasury-green-splits span { font-size: 0.7rem; font-weight: 800; }
-.mcp-treasury-green-splits strong { font-family: "Times New Roman", Times, serif; font-size: 1.15rem; font-weight: 900; }
-
-.mcp-branch-sales-card,
-.mcp-panel-card {
-  border: 1px solid #e8edf5;
-  border-radius: 1rem;
-  background: #fff;
-  padding: 1rem 1.05rem;
-  box-shadow: 0 8px 26px rgb(15 31 69 / 5%);
+/* Reference search input in table toolbars */
+.app-content-card :where(.erp-search-bar input, .emp-data-search-bar input),
+.app-content-card :where(.unified-table-toolbar input[type="text"]) {
+  height: 34px !important;
+  border-radius: 10px !important;
+  border-color: #e2e8f0 !important;
+  background: #ffffff !important;
 }
 
-.mcp-branch-sales-head { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; margin-bottom: 0.85rem; }
-.mcp-branch-sales-head h2 { margin: 0; color: #0f1f45; font-size: 0.95rem; font-weight: 1000; }
-.mcp-branch-sales-head > span { border-radius: 999px; background: #f1f5f9; padding: 0.22rem 0.65rem; color: #64748b; font-size: 0.66rem; font-weight: 900; }
-.mcp-branch-sales-list { display: grid; gap: 0.85rem; }
-.mcp-branch-sales-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; }
-.mcp-branch-sales-meta strong { font-size: 0.82rem; font-weight: 900; }
-.mcp-branch-sales-meta span { font-family: "Times New Roman", Times, serif; font-size: 0.9rem; font-weight: 900; }
-.mcp-branch-progress { height: 0.5rem; border-radius: 999px; background: #eef2f7; overflow: hidden; }
-.mcp-branch-progress i { display: block; height: 100%; border-radius: inherit; }
-.mcp-branch-progress-orange { background: linear-gradient(90deg, #ff7a00, #fb923c); }
-.mcp-branch-progress-blue { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-
-.mcp-dual-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
-.mcp-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.65rem; margin-bottom: 0.85rem; }
-.mcp-panel-head h2 { display: flex; align-items: center; gap: 0.4rem; margin: 0; color: #0f1f45; font-size: 0.95rem; font-weight: 1000; }
-.mcp-panel-head p { margin: 0.2rem 0 0; color: #64748b; font-size: 0.7rem; font-weight: 800; line-height: 1.5; }
-.mcp-count-badge { display: inline-flex; min-width: 1.2rem; align-items: center; justify-content: center; border-radius: 999px; background: rgb(255 122 0 / 14%); padding: 0.08rem 0.35rem; color: var(--mcp-orange); font-size: 0.65rem; font-weight: 1000; }
-.mcp-panel-icon { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: 0.75rem; flex-shrink: 0; }
-.mcp-panel-icon-orange { background: #fff7ed; color: var(--mcp-orange); }
-.mcp-panel-icon-blue { background: #eff6ff; color: #2563eb; }
-
-.mcp-shift-list, .mcp-bank-list { display: grid; gap: 0.6rem; }
-.mcp-shift-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.55rem; border: 1px solid #eef2f7; border-radius: 0.8rem; padding: 0.65rem 0.75rem; }
-.mcp-shift-tag { border-radius: 999px; background: #fff7ed; padding: 0.15rem 0.45rem; color: #c2410c; font-size: 0.62rem; font-weight: 1000; }
-.mcp-shift-tag.is-live { background: rgb(255 122 0 / 14%); color: var(--mcp-orange); }
-.mcp-shift-info strong { display: block; font-size: 0.76rem; font-weight: 900; }
-.mcp-shift-info small { color: #64748b; font-size: 0.66rem; font-weight: 800; }
-.mcp-shift-action { display: grid; justify-items: end; gap: 0.3rem; }
-.mcp-shift-action strong { font-family: "Times New Roman", Times, serif; font-size: 0.86rem; font-weight: 900; }
-.mcp-receive-btn { display: inline-flex; align-items: center; gap: 0.25rem; border: 0; border-radius: 0.55rem; background: linear-gradient(135deg, #16a34a, #15803d); padding: 0.28rem 0.55rem; color: #fff; font-size: 0.65rem; font-weight: 1000; }
-
-.mcp-bank-row, .mcp-bank-due { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.45rem; }
-.mcp-bank-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; }
-.mcp-bank-dot-blue { background: #2563eb; }
-.mcp-bank-dot-violet { background: #7c3aed; }
-.mcp-bank-row strong, .mcp-bank-due strong { font-size: 0.76rem; font-weight: 900; }
-.mcp-bank-row span, .mcp-bank-due span { font-family: "Times New Roman", Times, serif; font-size: 0.84rem; font-weight: 900; }
-.mcp-bank-total { display: flex; align-items: center; justify-content: space-between; border-radius: 0.7rem; background: #f8fafc; padding: 0.6rem 0.75rem; }
-.mcp-bank-due .is-danger { color: #e11d48; }
-.mcp-bank-alert { display: flex; gap: 0.45rem; border-radius: 0.7rem; background: #fff1f2; padding: 0.6rem 0.7rem; color: #be123c; }
-.mcp-bank-alert p { margin: 0; font-size: 0.7rem; font-weight: 900; line-height: 1.5; }
-.mcp-bank-deposit-btn { display: inline-flex; align-items: center; gap: 0.3rem; justify-self: end; border: 1px solid #dbeafe; border-radius: 0.65rem; background: #f8fafc; padding: 0.4rem 0.7rem; color: #1d4ed8; font-size: 0.7rem; font-weight: 1000; }
-
-.mcp-attendance-table { width: 100%; border-collapse: collapse; }
-.mcp-attendance-table th { padding: 0.6rem 0.7rem; background: #f8fafc; color: #64748b; font-size: 0.7rem; font-weight: 900; text-align: start; border-bottom: 1px solid #eef2f7; }
-.mcp-attendance-table td { padding: 0.7rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-.mcp-attendance-table td strong { display: block; font-size: 0.78rem; font-weight: 900; }
-.mcp-attendance-table td small { display: block; color: #94a3b8; font-size: 0.66rem; font-weight: 800; }
-.mcp-att-status { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 999px; }
-.mcp-att-status-ok { background: #dcfce7; color: #16a34a; }
-.mcp-att-status-late { background: #fef3c7; }
-.mcp-att-status-absent { background: #ffe4e6; box-shadow: 0 0 0 3px rgb(244 63 94 / 12%); }
-.mcp-att-delay { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.74rem; font-weight: 900; }
-.mcp-att-delay-ok { color: #16a34a; }
-.mcp-att-delay-late { color: #ea580c; }
-.mcp-att-delay-absent { color: #e11d48; }
-
-@media (max-width: 1100px) {
-  .mcp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mcp-expense-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mcp-revenue-hero { grid-template-columns: 1fr; }
-  .mcp-dual-grid { grid-template-columns: 1fr; }
+/* Toolbar icon buttons (filter/columns/export/etc.) */
+.app-content-card :where(.erp-table-tools > button, .emp-data-tool-btn),
+.app-content-card :where(.unified-table-toolbar button:not(.erp-add-action)) {
+  border-color: #e2e8f0 !important;
+  background: #ffffff !important;
+  border-radius: 10px !important;
 }
 
-@media (max-width: 640px) {
-  .mcp-kpi-grid,
-  .mcp-expense-grid,
-  .mcp-revenue-splits,
-  .mcp-treasury-green-splits { grid-template-columns: 1fr; }
-  .mcp-treasury-green-top { flex-direction: column; align-items: flex-start; }
-  .mcp-shift-row { grid-template-columns: 1fr; }
+/* Footer/pagination everywhere */
+.app-content-card :where(.erp-table-footer, .unified-table-footer) {
+  min-height: 44px !important;
+  border-top: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
 }
+
+.app-content-card :where(.erp-table-page-btn) {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+}
+
+.app-content-card :where(.erp-table-footer-select-wrap select) {
+  height: 28px !important;
+  border-radius: 8px !important;
+}
+
+/* Primary action button (Add/Save/Register) everywhere */
+.app-content-card :where(.mahaly-action-btn, .erp-add-action, button.erp-add-action):not(.hr-structure-add-btn) {
+  min-height: 52px !important;
+  border-radius: 16px !important;
+  padding-inline: 20px 8px !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 1.05rem !important;
+  box-shadow:
+    0 18px 40px rgb(37 99 235 / 38%),
+    0 0 0 1px rgb(37 99 235 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 34%) !important;
+}
+
+html[dir="rtl"] .app-content-card :where(.mahaly-action-btn, .erp-add-action, button.erp-add-action):not(.hr-structure-add-btn) {
+  flex-direction: row-reverse !important;
+  padding-inline: 8px 20px !important;
+}
+
+.app-content-card :where(.mahaly-action-btn, .erp-add-action, button.erp-add-action):not(.hr-structure-add-btn) > svg {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 7px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%) !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 6px 14px rgb(15 23 42 / 16%), inset 0 1px 0 rgb(255 255 255 / 95%) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOZAFEN PRODUCT MODULE — pixel-perfect isolation from system design tokens.
+   Do not convert orange headers / primary buttons / footer to blue ERP chrome.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.app-content-card .product-module-page table thead,
+.app-content-card .product-module-page table thead tr:first-child,
+.app-content-card .product-module-page table thead tr:first-child th,
+.app-content-card .product-module-page table th,
+.app-tenant-shell .product-module-page table thead tr:first-child th,
+[data-slot="sidebar-inset"] .product-module-page table thead,
+[data-slot="sidebar-inset"] .product-module-page table thead tr:first-child th {
+  background: #f06424 !important;
+  color: #ffffff !important;
+  border-bottom-color: #ea580c !important;
+  border-inline-end-color: rgb(255 255 255 / 18%) !important;
+  box-shadow: none !important;
+}
+
+.app-content-card .product-module-page table thead tr:first-child th,
+[data-slot="sidebar-inset"] .product-module-page table thead tr:first-child th {
+  padding: 0.875rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  border-radius: 0 !important;
+  font-family: inherit !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.app-content-card .product-module-page table thead tr:not(:first-child) th,
+.app-content-card .product-module-page table thead tr:not(:first-child) td {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  border-bottom-color: #e2e8f0 !important;
+  border-inline-end-color: #e2e8f0 !important;
+}
+
+/* Restores mozafen orange primary CTAs (Create New Item, etc.) */
+.app-content-card .product-module-page button[class*="bg-orange-500"],
+[data-slot="sidebar-inset"] .product-module-page button[class*="bg-orange-500"],
+.product-module-page button[class*="bg-orange-500"][class*="font-extrabold"],
+.product-module-page button[class*="bg-orange-500"][class*="font-black"],
+.product-module-page button:has(> svg.lucide-plus)[class*="bg-orange-500"] {
+  min-height: unset !important;
+  height: auto !important;
+  border-radius: 0.5rem !important;
+  padding: 0.625rem 1rem !important;
+  background: #f97316 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%) !important;
+  flex-direction: row !important;
+  transform: none !important;
+}
+
+.product-module-page button[class*="bg-orange-500"]:hover,
+.product-module-page button:has(> svg.lucide-plus)[class*="bg-orange-500"]:hover {
+  background: #ea580c !important;
+  background-image: none !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.product-module-page button[class*="bg-orange-500"] > svg,
+.product-module-page button:has(> svg.lucide-plus)[class*="bg-orange-500"] > svg.lucide-plus {
+  width: 15px !important;
+  height: 15px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Undo system outline/border button chrome on mozafen pagination & toolbar icons */
+.app-content-card .product-module-page button.border,
+[data-slot="sidebar-inset"] .product-module-page button.border {
+  border-radius: 0.5rem !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: inherit !important;
+  min-height: unset !important;
+  transform: none !important;
+}
+
+.app-content-card .product-module-page button[class*="bg-[#0a1945]"],
+.product-module-page button[class*="bg-[#0a1945]"] {
+  background: #0a1945 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #0a1945 !important;
+  box-shadow: none !important;
+}
+
+/* Keep mozafen table toolbar / footer author styles */
+.app-content-card .product-module-page [class*="border-b"][class*="bg-slate-50"] {
+  background: rgb(248 250 252 / 0.5) !important;
+}
+
+.app-content-card .product-module-page [class*="border-t"][class*="bg-slate-50"] {
+  background: rgb(248 250 252 / 0.4) !important;
+  border-top-color: #e2e8f0 !important;
+}
+

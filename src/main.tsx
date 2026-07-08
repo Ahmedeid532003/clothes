@@ -3,6 +3,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import './mahaly-action-buttons.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { AuthProvider } from '@/lib/auth/AuthContext';
