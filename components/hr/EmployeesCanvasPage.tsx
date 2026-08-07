@@ -12,7 +12,7 @@ type Props = {
 };
 
 /** Bump this on every UI deploy so iframe bypasses stale cached HTML/JS. */
-const EMPLOYEES_CANVAS_CACHE_BUST = 'ui-fix-20260807d';
+const EMPLOYEES_CANVAS_CACHE_BUST = 'ui-fix-20260807e';
 
 /** Isolated host for original EmployeesTab (iframe). ERP sidebar stays outside. */
 export function EmployeesCanvasPage({ activeTab, onNavigate }: Props) {

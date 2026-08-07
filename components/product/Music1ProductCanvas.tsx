@@ -11,7 +11,7 @@ type Props = {
 };
 
 /** Bump this on every UI deploy so iframe bypasses stale cached HTML/JS. */
-const PRODUCT_CANVAS_CACHE_BUST = 'ui-fix-20260807d';
+const PRODUCT_CANVAS_CACHE_BUST = 'ui-fix-20260807e';
 
 /**
  * Isolated product canvas host (iframe → product.html).

@@ -160,7 +160,7 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
           <div className="flex items-center gap-2">
             <div className="relative">
               <button onClick={() => { setTempVisibleColumns({ ...visibleColumns }); setColumnSettingsOpen(!columnSettingsOpen); }} className="w-[32px] h-[32px] flex items-center justify-center text-orange-500 bg-white border border-slate-200 hover:border-orange-400 rounded-[8px] hover:shadow-xs transition cursor-pointer" title={lang === 'ar' ? 'تخصيص الأعمدة' : 'Columns'}>
-                <Settings size={15} />
+                <Settings size={15} className="text-orange-500" />
               </button>
               {columnSettingsOpen && (
                 <div className="absolute right-0 rtl:right-0 rtl:left-auto mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-3.5 text-xs text-left rtl:text-right">
@@ -229,7 +229,7 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
             <button onClick={() => setDirViewMode(dirViewMode === 'table' ? 'kanban' : 'table')} className="h-[32px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-[8px] hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px]" title={lang === 'ar' ? 'تبديل العرض' : 'Toggle View'}>
               {dirViewMode === 'table' ? (
                 <>
-                  <Grid size={14} className="text-[#0a1945]" />
+                  <Grid size={14} className="text-orange-500" />
                   <span>{lang === 'ar' ? 'بطاقات' : 'Cards'}</span>
                 </>
               ) : (

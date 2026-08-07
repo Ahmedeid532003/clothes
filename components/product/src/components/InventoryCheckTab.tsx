@@ -230,7 +230,7 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
       <div className="flex flex-col-reverse sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/50 p-2.5 rounded-2xl border border-[#eaeff2]">
         {/* Right side (First in DOM so it goes to the Right in RTL) */}
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          {/* Settings Button */}
+          {/* Settings Button — orange icon like Products Registry */}
           <div className="relative">
             <button
               onClick={() => {
@@ -241,11 +241,11 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
                 "w-[36px] h-[36px] flex items-center justify-center rounded-lg border transition cursor-pointer select-none",
                 columnSettingsOpen
                   ? "bg-[#0a1945] text-white border-[#0a1945]"
-                  : "bg-white text-slate-650 hover:text-orange-500 border-slate-200 hover:border-orange-400"
+                  : "bg-white text-orange-500 border-slate-200 hover:border-orange-400 hover:shadow-xs"
               )}
               title={isAr ? "تخصيص الأعمدة" : "Column Settings"}
             >
-              <Settings size={15} />
+              <Settings size={15} className={columnSettingsOpen ? "text-white" : "text-orange-500"} />
             </button>
             {columnSettingsOpen && (
               <div className="absolute right-0 rtl:right-0 rtl:left-auto mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-3.5 text-xs text-left rtl:text-right">
@@ -276,7 +276,7 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
             )}
           </div>
 
-          {/* Download/Export — between Settings and Cards */}
+          {/* Download/Export — between Settings and Cards (Products Registry layout) */}
           <ExportDataButton
             lang={lang}
             onToast={triggerToast}
@@ -295,26 +295,26 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
                   : 'Print dialog opened!',
               )
             }
+            className="w-[36px] h-[36px] shrink-0"
             style={{
               width: '36px',
               height: '36px',
+              minWidth: '36px',
               borderRadius: '8px',
             }}
           />
-
-          <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
           {/* View Toggle */}
           <button
             onClick={() =>
               setViewMode(viewMode === "table" ? "kanban" : "table")
             }
-            className="h-[36px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px]"
+            className="h-[36px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-700 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px]"
             title={isAr ? "تبديل العرض" : "Toggle View"}
           >
             {viewMode === "table" ? (
               <>
-                <Grid size={14} className="text-[#0a1945]" />
+                <Grid size={14} className="text-orange-500" />
                 <span>{isAr ? "بطاقات" : "Cards"}</span>
               </>
             ) : (
