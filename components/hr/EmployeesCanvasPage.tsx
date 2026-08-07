@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   isEmployeesCanvasRoute,
@@ -11,18 +11,25 @@ type Props = {
   onNavigate: (tab: string) => void;
 };
 
+/** Bump this on every UI deploy so iframe bypasses stale cached HTML/JS. */
+const EMPLOYEES_CANVAS_CACHE_BUST = 'ui-fix-20260807d';
+
 /** Isolated host for original EmployeesTab (iframe). ERP sidebar stays outside. */
 export function EmployeesCanvasPage({ activeTab, onNavigate }: Props) {
   const { locale } = useLanguage();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastPostedTab = useRef<string | null>(null);
 
-  const src = `/canvas/employees/?${new URLSearchParams({
-    embed: '1',
-    tab: employeesTabToSubTab(activeTab),
-    lang: locale === 'en' ? 'en' : 'ar',
-    v: 'rtl-rows-2',
-  }).toString()}`;
+  const src = useMemo(
+    () =>
+      `/canvas/employees/?${new URLSearchParams({
+        embed: '1',
+        tab: employeesTabToSubTab(activeTab),
+        lang: locale === 'en' ? 'en' : 'ar',
+        v: EMPLOYEES_CANVAS_CACHE_BUST,
+      }).toString()}`,
+    [activeTab, locale],
+  );
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -61,6 +68,7 @@ export function EmployeesCanvasPage({ activeTab, onNavigate }: Props) {
       style={{ isolation: 'isolate' }}
     >
       <iframe
+        key={src}
         ref={iframeRef}
         title="Ma7aly Employees Canvas"
         src={src}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   isProductModuleRoute,
@@ -10,6 +10,9 @@ type Props = {
   onNavigate?: (tab: string) => void;
 };
 
+/** Bump this on every UI deploy so iframe bypasses stale cached HTML/JS. */
+const PRODUCT_CANVAS_CACHE_BUST = 'ui-fix-20260807d';
+
 /**
  * Isolated product canvas host (iframe → product.html).
  * Keeps original Music1 design CSS isolated; ERP sidebar stays outside.
@@ -19,12 +22,15 @@ export function Music1ProductCanvas({ activeTab, onNavigate }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastPostedTab = useRef<string | null>(null);
 
-  const srcRef = useRef(
-    `/canvas/product/?${new URLSearchParams({
-      embed: '1',
-      tab: tabToProductModuleSubTab(activeTab),
-      lang: locale === 'en' ? 'en' : 'ar',
-    }).toString()}`,
+  const src = useMemo(
+    () =>
+      `/canvas/product/?${new URLSearchParams({
+        embed: '1',
+        tab: tabToProductModuleSubTab(activeTab),
+        lang: locale === 'en' ? 'en' : 'ar',
+        v: PRODUCT_CANVAS_CACHE_BUST,
+      }).toString()}`,
+    [activeTab, locale],
   );
 
   useEffect(() => {
@@ -61,9 +67,10 @@ export function Music1ProductCanvas({ activeTab, onNavigate }: Props) {
       style={{ isolation: 'isolate' }}
     >
       <iframe
+        key={src}
         ref={iframeRef}
         title="Ma7aly Product Canvas"
-        src={srcRef.current}
+        src={src}
         className="h-full w-full flex-1 border-0"
         allow="fullscreen"
       />

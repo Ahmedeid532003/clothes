@@ -118,11 +118,11 @@ export const ExportDataButton: React.FC<ExportDataButtonProps> = ({
         className={cn(
           "w-full h-full font-extrabold rounded-lg border border-slate-200 transition-all flex items-center justify-center cursor-pointer text-xs/none uppercase tracking-wider select-none",
           hideText 
-            ? "p-0 min-h-[32px] bg-white hover:bg-orange-50 hover:border-orange-400 text-orange-500" 
+            ? "p-0 w-[36px] h-[36px] min-h-[36px] min-w-[36px] bg-white hover:bg-orange-50 hover:border-orange-400 text-orange-500 shadow-none" 
             : "min-h-[38px] px-4 gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-orange-600"
         )}
       >
-        <Download size={hideText ? 14 : 14} className="text-orange-500" style={hideText ? { marginTop: "-3px", marginBottom: "-3px", height: "14px", width: "18px" } : {}} />
+        <Download size={15} className="text-orange-500 shrink-0" />
         {!hideText && (
           <span className="text-[11px] whitespace-nowrap">
             {lang === 'ar' ? 'تصدير البيانات' : 'Export Data'}
