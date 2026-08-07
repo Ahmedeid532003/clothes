@@ -4,7 +4,9 @@ import { LoginPage } from "@/components/auth/LoginPage";
 import { DashboardHome } from "@/components/dashboard/Home";
 import { ProfilePage } from "@/components/profile/ProfilePage";
 import { DashboardMain } from "@/components/dashboard/DashboardMain";
-import { ProductPage } from "@/components/product/ProductPage";
+import { Music1ProductCanvas } from "@/components/product/Music1ProductCanvas";
+import { EmployeesCanvasPage } from "@/components/hr/EmployeesCanvasPage";
+import { isEmployeesCanvasRoute } from "@/components/hr/employeesCanvasNav";
 import { HrDepartmentsPage } from "@/components/hr/HrDepartmentsPage";
 import { HrJobStructurePage } from "@/components/hr/HrJobStructurePage";
 import { HrSectionsPage } from "@/components/hr/HrSectionsPage";
@@ -20,7 +22,8 @@ import { AttendancePage } from "@/components/hr/AttendancePage";
 import { CommissionsPage } from "@/components/hr/CommissionsPage";
 import { EmployeeReportsPage } from "@/components/hr/EmployeeReportsPage";
 import { PayrollSheetPage } from "@/components/hr/PayrollSheetPage";
-import { PurchaseInvoicesPage } from "@/components/purchases/PurchaseInvoicesPage";
+import { PurchasesCanvasPage } from "@/components/purchases/PurchasesCanvasPage";
+import { isPurchasesCanvasRoute } from "@/components/purchases/purchasesCanvasNav";
 import { PosBarcodePage } from '@/components/pos/PosBarcodePage';
 import { PosIntegratedPage } from '@/components/pos/PosIntegratedPage';
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -111,14 +114,11 @@ import { PriceAdjustmentsPage } from "@/components/inventory/PriceAdjustmentsPag
 import { OkazionNoticeHubPage } from "@/components/inventory/OkazionNoticeHubPage";
 import { StoreOfferHubPage } from "@/components/inventory/StoreOfferHubPage";
 import { BarcodePrintPage } from "@/components/inventory/BarcodePrintPage";
-import { isProductModuleRoute } from "@/components/product/productModuleNav";
+import { isProductModuleNavOnly, isProductModuleRoute } from "@/components/product/productModuleNav";
 import { SupplierAccountsPage } from "@/components/inventory/SupplierAccountsPage";
 import { SupplierPaymentsPage } from "@/components/suppliers/SupplierPaymentsPage";
 import { SupplierWeeklyReportsPage } from "@/components/suppliers/SupplierWeeklyReportsPage";
 import { GeneralItemMovementReportPage } from "@/components/reports/GeneralItemMovementReportPage";
-import { ReorderAlertsPage } from "@/components/purchases/ReorderAlertsPage";
-import { PurchaseOrdersPage } from "@/components/purchases/PurchaseOrdersPage";
-import { PurchasesHub } from "@/components/purchases/PurchasesHub";
 import { SalesInvoicesPage } from "@/components/sales/SalesInvoicesPage";
 import { SalesReturnsPage } from "@/components/sales/SalesReturnsPage";
 import { TaxInvoicesPage } from "@/components/sales/TaxInvoicesPage";
@@ -191,13 +191,13 @@ function getStoredFavorites() {
 
 function moduleKeyForTab(tab: string): ModuleKey {
   if (tab === 'profile') return 'settings';
-  if (tab === 'dashboard' || tab === 'home' || tab === 'product') return 'dashboard';
+  if (tab === 'dashboard' || tab === 'home' || tab === 'product' || tab === 'product-management') return 'dashboard';
   if (['hr-job-structure', 'departments', 'hr-sections', 'work-shifts', 'job-titles', 'employee-groups', 'employee-data', 'employee-reports', 'create-users'].includes(tab)) return 'employees';
   if (['attendance', 'attendance-import', 'official-holidays'].includes(tab)) return 'attendance';
   if (['bonuses', 'deduction-items', 'deductions', 'allowance-items', 'employee-commissions', 'payroll', 'payment-auth-types', 'payroll-payments'].includes(tab)) return 'payroll';
   if (tab.startsWith('customer-') || tab === 'customers' || tab === 'installment-collection') return 'crm';
   if (['sales-invoices', 'sales-returns', 'tax-invoices', 'sales-quotations', 'customer-reservations', 'seller-performance', 'pos', 'pos-barcode', 'scan-orders'].includes(tab)) return 'sales';
-  if (['purchase-invoices', 'purchase-return-invoices', 'reorder-alerts', 'purchase-orders', 'supplier-payments'].includes(tab)) return 'purchases';
+  if (['purchase-invoices', 'purchase-returns', 'purchase-alerts', 'purchase-orders', 'shipping-companies', 'purchase-reports', 'purchase-return-invoices', 'reorder-alerts', 'supplier-payments'].includes(tab)) return 'purchases';
   if (['chart-of-accounts', 'currencies', 'asset-depreciation', 'general-expenses', 'payroll-advances', 'expense-types', 'expense-vouchers', 'cash-shifts', 'shift-handovers', 'treasury-movements', 'pending-shifts', 'enterprise-cash-balances', 'banks', 'bank-accounts', 'cheques', 'card-transactions', 'e-wallets', 'banking-statements', 'payment-methods-dashboard'].includes(tab)) return 'accounting';
   if (['journal-entries', 'trial-balance', 'balance-sheet', 'income-statement', 'general-ledger'].includes(tab)) return 'reports';
   if (['warehouses', 'seasons', 'stock-balances', 'stock-valuation', 'suppliers', 'supplier-inventories', 'supplier-weekly-reports', 'supplier-accounts', 'supplier-discounts', 'store-discounts', 'supplier-types', 'supplier-groups', 'product-categories', 'products-list', 'composite-items', 'bundled-items', 'item-transfer', 'item-issue', 'item-addition', 'item-destruction', 'price-modification', 'inventory-check', 'barcode-printing', 'product-reports-shortcut', 'products', 'composite-products', 'product-sections', 'brands', 'classifications', 'sizes', 'colors', 'price-adjustments', 'barcode-print', 'stock-transfers', 'stock-disbursements', 'stock-additions', 'stock-scrap', 'stock-count', 'mgmt-dashboard', 'mgmt-setup', 'mgmt-catalog', 'mgmt-inventory', 'mgmt-permits', 'mgmt-audit', 'mgmt-style-builder'].includes(tab)) return 'inventory';
@@ -264,6 +264,12 @@ export default function App() {
   const [favoriteTabs, setFavoriteTabs] = useState<string[]>(getStoredFavorites);
   const { t, dir, isRtl } = useLanguage();
   const { user, tenant, branches, activeBranchId, loading, logout } = useAuth();
+
+  useEffect(() => {
+    if (activeTab === 'product') {
+      setActiveTab('product-management');
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!user) return;
@@ -411,24 +417,23 @@ export default function App() {
     return <LoginPage />;
   }
 
-  const renderProductModule = () => (
-    <ProductPage activeTab={activeTab} onNavigate={setActiveTab} />
-  );
+  const isProductCanvas =
+    isProductModuleRoute(activeTab) && !isProductModuleNavOnly(activeTab);
+  const isPurchasesCanvas = isPurchasesCanvasRoute(activeTab);
+  const isEmployeesCanvas = isEmployeesCanvasRoute(activeTab);
 
-  const renderContent = () => {
-    if (isProductModuleRoute(activeTab)) {
-      if (!user || !canViewPage(user, activeTab)) {
-        return (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
-            <p className="font-semibold">{t('app.noAccessTitle')}</p>
-            <p className="text-sm mt-1">{t('app.noAccessDesc')}</p>
-          </div>
-        );
-      }
-      return renderProductModule();
-    }
-    return renderPageBody();
-  };
+  if ((isProductCanvas || isPurchasesCanvas || isEmployeesCanvas) && !canViewPage(user, activeTab)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 max-w-lg">
+          <p className="font-semibold">{t('app.noAccessTitle')}</p>
+          <p className="text-sm mt-1">{t('app.noAccessDesc')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const renderContent = () => renderPageBody();
 
   const renderPageBody = () => {
     if (activeTab === 'profile') {
@@ -445,8 +450,6 @@ export default function App() {
     switch (activeTab) {
       case 'home':
         return <DashboardHome />;
-      case 'product':
-        return renderProductModule();
       case 'dashboard':
         return <DashboardMain />;
       case 'create-users':
@@ -490,17 +493,12 @@ export default function App() {
       case 'reorder-alerts':
       case 'purchase-orders':
       case 'purchase-invoices':
-        return (
-          <PurchasesHub activeTab={activeTab}>
-            {activeTab === 'reorder-alerts' ? <ReorderAlertsPage embedded /> : null}
-            {activeTab === 'purchase-orders' ? <PurchaseOrdersPage embedded /> : null}
-            {activeTab === 'purchase-invoices' ? (
-              <PurchaseInvoicesPage invoiceType="purchase" embedded />
-            ) : null}
-          </PurchasesHub>
-        );
+      case 'purchase-returns':
+      case 'purchase-alerts':
+      case 'shipping-companies':
+      case 'purchase-reports':
       case 'purchase-return-invoices':
-        return <PurchaseInvoicesPage invoiceType="return" />;
+        return <PurchasesCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />;
       case 'scan-orders':
         return <OrdersHubPage />;
       case 'sales-invoices':
@@ -524,39 +522,33 @@ export default function App() {
       case 'seasons':
         return <SeasonsPage />;
       case 'product-sections':
+        return <ProductSectionsPage />;
       case 'brands':
+        return <BrandsPage />;
       case 'classifications':
+        return <ClassificationsPage />;
       case 'sizes':
+        return <SizesPage />;
       case 'colors':
+        return <ColorsPage />;
       case 'products':
+        return <ProductsPage />;
       case 'composite-products':
+        return <CompositeProductsPage />;
       case 'price-adjustments':
+        return <PriceAdjustmentsPage initialScope={priceAdjustScope} />;
       case 'barcode-print':
+        return <BarcodePrintPage />;
       case 'stock-transfers':
+        return <StockPermitsHubPage permitKind="transfer" />;
       case 'stock-disbursements':
+        return <StockPermitsHubPage permitKind="disbursement" />;
       case 'stock-additions':
+        return <StockPermitsHubPage permitKind="addition" />;
       case 'stock-scrap':
+        return <StockPermitsHubPage permitKind="scrap" />;
       case 'stock-count':
-      case 'product-categories':
-      case 'products-list':
-      case 'composite-items':
-      case 'bundled-items':
-      case 'item-transfer':
-      case 'item-issue':
-      case 'item-addition':
-      case 'item-destruction':
-      case 'price-modification':
-      case 'inventory-check':
-      case 'barcode-printing':
-      case 'product-reports-shortcut':
-      case 'mgmt-dashboard':
-      case 'mgmt-setup':
-      case 'mgmt-catalog':
-      case 'mgmt-inventory':
-      case 'mgmt-permits':
-      case 'mgmt-audit':
-      case 'mgmt-style-builder':
-        return renderProductModule();
+        return <StockCountPage />;
       case 'stock-balances':
         return <StockBalancesPage />;
       case 'stock-valuation':
@@ -819,16 +811,35 @@ export default function App() {
   );
 
   const mainContent = (
-    <TenantAppLayout header={appHeader} subscription={tenant?.subscription} pageKey={activeTab} moduleContext={moduleContext}>
-      {renderContent()}
-    </TenantAppLayout>
+    <SidebarInset
+      data-product-canvas={isProductCanvas ? 'true' : undefined}
+      data-purchases-canvas={isPurchasesCanvas ? 'true' : undefined}
+      data-employees-canvas={isEmployeesCanvas ? 'true' : undefined}
+      className={
+        isProductCanvas || isPurchasesCanvas || isEmployeesCanvas
+          ? 'music1-canvas-inset flex min-h-svh min-w-0 flex-1 flex-col overflow-hidden p-0'
+          : 'flex min-h-svh flex-col overflow-hidden'
+      }
+    >
+      {isProductCanvas ? (
+        <Music1ProductCanvas activeTab={activeTab} onNavigate={setActiveTab} />
+      ) : isPurchasesCanvas ? (
+        <PurchasesCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />
+      ) : isEmployeesCanvas ? (
+        <EmployeesCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />
+      ) : (
+        <TenantAppLayout header={appHeader} subscription={tenant?.subscription} pageKey={activeTab} moduleContext={moduleContext}>
+          {renderContent()}
+        </TenantAppLayout>
+      )}
+    </SidebarInset>
   );
 
   return (
     <SidebarProvider dir={dir} className="min-h-svh">
       {isRtl ? (
         <>
-          <SidebarInset className="flex min-h-svh flex-col overflow-hidden">{mainContent}</SidebarInset>
+          {mainContent}
           <AppSidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -856,7 +867,7 @@ export default function App() {
             onLogout={logout}
             onProfile={() => setActiveTab('profile')}
           />
-          <SidebarInset className="flex min-h-svh flex-col overflow-hidden">{mainContent}</SidebarInset>
+          {mainContent}
         </>
       )}
     </SidebarProvider>

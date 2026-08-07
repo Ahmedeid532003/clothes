@@ -28,3 +28,9 @@ release/netlify-site/
 release/netlify-site-*/
 release/netlify-upload-*/
 release/mahalyerp-*.zip
+
+# Ephemeral Cloudflare staging folders and local inspect dumps
+.pages-deploy/
+.pages-deploy-*/
+.tmp-*/
+deploy-log.txt

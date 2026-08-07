@@ -9,8 +9,8 @@ export type NavItem = {
 };
 
 export const ANALYTICS_NAV = [
-  { id: 'dashboard', tab: 'dashboard' },
   { id: 'home', tab: 'home' },
+  { id: 'dashboard', tab: 'dashboard' },
 ] as const;
 
 export const HR_NAV: NavItem[] = [
@@ -27,6 +27,26 @@ export const HR_NAV: NavItem[] = [
       { id: 'payroll', tab: 'payroll' },
     ],
   },
+];
+
+/** عناصر إدارة المنتجات — تظهر تحت «المنتجات» في الشريط الجانبي (مثل المبيعات) */
+export const MANAGEMENT_NAV: NavSubItem[] = [
+  { id: 'pmCategories', tab: 'product-categories' },
+  { id: 'pmProducts', tab: 'products-list' },
+  { id: 'pmComposite', tab: 'composite-items' },
+  { id: 'pmBundled', tab: 'bundled-items' },
+  { id: 'pmTransfer', tab: 'item-transfer' },
+  { id: 'pmIssue', tab: 'item-issue' },
+  { id: 'pmAddition', tab: 'item-addition' },
+  { id: 'pmDestruction', tab: 'item-destruction' },
+  { id: 'pmPriceMod', tab: 'price-modification' },
+  { id: 'pmInventoryCheck', tab: 'inventory-check' },
+  { id: 'pmBarcode', tab: 'barcode-printing' },
+  { id: 'pmReports', tab: 'product-reports-shortcut' },
+];
+
+export const MANAGEMENT_SECTION_NAV: NavItem[] = [
+  { id: 'pmProductsGroup', items: MANAGEMENT_NAV },
 ];
 
 /** عناصر إدارة المنتجات — تظهر داخل قسم قابل للطي (مثل الموردين). */
@@ -169,8 +189,12 @@ export const ERP_NAV: NavItem[] = [
   {
     id: 'purchases',
     items: [
-      { id: 'purchasesWorkspace', tab: 'purchase-invoices' },
-      { id: 'purchaseReturnInvoices', tab: 'purchase-return-invoices' },
+      { id: 'purchaseInvoices', tab: 'purchase-invoices' },
+      { id: 'purchaseReturns', tab: 'purchase-returns' },
+      { id: 'purchaseAlerts', tab: 'purchase-alerts' },
+      { id: 'purchaseOrders', tab: 'purchase-orders' },
+      { id: 'shippingCompanies', tab: 'shipping-companies' },
+      { id: 'purchaseReports', tab: 'purchase-reports' },
     ],
   },
 ];

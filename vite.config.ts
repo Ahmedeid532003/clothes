@@ -19,11 +19,25 @@ export default defineConfig(({mode}) => {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
+      // Same-origin /api → Fly (avoids CORS when using `npm run dev:online`)
+      proxy: {
+        '/api': {
+          target: process.env.MAHALY_FLY_API || 'https://mahalyerp-api.fly.dev',
+          changeOrigin: true,
+          secure: true,
+        },
+      },
     },
     build: {
       sourcemap: false,
       reportCompressedSize: false,
       rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          'canvas/product/index': path.resolve(__dirname, 'canvas/product/index.html'),
+          'canvas/purchases/index': path.resolve(__dirname, 'canvas/purchases/index.html'),
+          'canvas/employees/index': path.resolve(__dirname, 'canvas/employees/index.html'),
+        },
         maxParallelFileOps: 2,
         output: {
           manualChunks(id) {

@@ -12,7 +12,11 @@ export type ProductModuleSubTabId =
   | 'barcode-printing'
   | 'product-reports-shortcut';
 
-export const PRODUCT_MODULE_SUBMENUS: { id: ProductModuleSubTabId; labelEn: string; labelAr: string }[] = [
+export const PRODUCT_MODULE_SUBMENUS: {
+  id: ProductModuleSubTabId;
+  labelEn: string;
+  labelAr: string;
+}[] = [
   { id: 'product-categories', labelEn: 'Product Classifications', labelAr: 'تصنيفات المنتجات' },
   { id: 'products-list', labelEn: 'Products Registry', labelAr: 'المنتجات' },
   { id: 'composite-items', labelEn: 'Composite Items', labelAr: 'أصناف مركبة' },
@@ -29,11 +33,16 @@ export const PRODUCT_MODULE_SUBMENUS: { id: ProductModuleSubTabId; labelEn: stri
 
 const PRODUCT_MODULE_ROUTE_IDS = new Set<string>([
   'product',
+  'product-management',
   ...PRODUCT_MODULE_SUBMENUS.map((m) => m.id),
 ]);
 
 export function isProductModuleRoute(tab: string): boolean {
   return PRODUCT_MODULE_ROUTE_IDS.has(tab);
+}
+
+export function isProductModuleNavOnly(tab: string): boolean {
+  return tab === 'product' || tab === 'product-management';
 }
 
 export function tabToProductModuleSubTab(tab: string): ProductModuleSubTabId {

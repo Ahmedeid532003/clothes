@@ -18,7 +18,18 @@ import { useLanguage } from "@/lib/i18n/LanguageContext"
 import { useAuth } from "@/lib/auth/AuthContext"
 import type { BranchSummary } from "@/lib/api/auth"
 import { canViewPage } from "@/lib/permissions/access"
-import { ACCOUNTING_NAV, ANALYTICS_NAV, CRM_NAV, ERP_NAV, HR_NAV, POS_NAV, PRODUCT_NAV } from "@/lib/navigation"
+import {
+  ACCOUNTING_NAV,
+  ANALYTICS_NAV,
+  CRM_NAV,
+  ERP_NAV,
+  HR_NAV,
+  MANAGEMENT_SECTION_NAV,
+  POS_NAV,
+} from "@/lib/navigation"
+import { isProductModuleRoute } from "@/components/product/productModuleNav"
+import { isPurchasesCanvasRoute } from "@/components/purchases/purchasesCanvasNav"
+import { isEmployeesCanvasRoute } from "@/components/hr/employeesCanvasNav"
 import { tenantHasCrm, tenantHasModule } from "@/lib/modules"
 import { entityName } from "@/lib/entity-name"
 import {
@@ -79,6 +90,8 @@ import {
   Smartphone,
   FileSpreadsheet,
   ScanBarcode,
+  Sparkles,
+  Shirt,
 } from "lucide-react"
 
 const SUB_ICONS: Record<string, React.ReactNode> = {
@@ -125,6 +138,11 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   sellerPerformance: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   purchasesWorkspace: <TruckIcon className="h-4 w-4 shrink-0" />,
   purchaseInvoices: <FileTextIcon className="h-4 w-4 shrink-0" />,
+  purchaseReturns: <Undo2Icon className="h-4 w-4 shrink-0" />,
+  purchaseAlerts: <ShieldAlert className="h-4 w-4 shrink-0" />,
+  purchaseOrders: <ClipboardListIcon className="h-4 w-4 shrink-0" />,
+  shippingCompanies: <TruckIcon className="h-4 w-4 shrink-0" />,
+  purchaseReports: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   purchaseReturnInvoices: <Undo2Icon className="h-4 w-4 shrink-0" />,
   warehouses: <WarehouseIcon className="h-4 w-4 shrink-0" />,
   seasons: <TagsIcon className="h-4 w-4 shrink-0" />,
@@ -142,6 +160,25 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   stockValuation: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   stockCount: <ClipboardCheckIcon className="h-4 w-4 shrink-0" />,
   compositeProducts: <BoxesIcon className="h-4 w-4 shrink-0" />,
+  mgmtDashboard: <LayoutDashboardIcon className="h-4 w-4 shrink-0" />,
+  mgmtSetup: <TagsIcon className="h-4 w-4 shrink-0" />,
+  mgmtCatalog: <PackageIcon className="h-4 w-4 shrink-0" />,
+  mgmtInventory: <WarehouseIcon className="h-4 w-4 shrink-0" />,
+  mgmtPermits: <ArrowLeftRight className="h-4 w-4 shrink-0" />,
+  mgmtAudit: <ClipboardCheckIcon className="h-4 w-4 shrink-0" />,
+  mgmtStyleBuilder: <Sparkles className="h-4 w-4 shrink-0" />,
+  pmCategories: <LayersIcon className="h-4 w-4 shrink-0" />,
+  pmProducts: <PackageIcon className="h-4 w-4 shrink-0" />,
+  pmComposite: <BoxesIcon className="h-4 w-4 shrink-0" />,
+  pmBundled: <Shirt className="h-4 w-4 shrink-0" />,
+  pmTransfer: <ArrowLeftRight className="h-4 w-4 shrink-0" />,
+  pmIssue: <ArrowUpFromLine className="h-4 w-4 shrink-0" />,
+  pmAddition: <ArrowDownToLine className="h-4 w-4 shrink-0" />,
+  pmDestruction: <MinusCircleIcon className="h-4 w-4 shrink-0" />,
+  pmPriceMod: <PriceTagIcon className="h-4 w-4 shrink-0" />,
+  pmInventoryCheck: <ClipboardCheckIcon className="h-4 w-4 shrink-0" />,
+  pmBarcode: <PrinterIcon className="h-4 w-4 shrink-0" />,
+  pmReports: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   priceAdjustments: <PriceTagIcon className="h-4 w-4 shrink-0" />,
   barcodePrint: <PrinterIcon className="h-4 w-4 shrink-0" />,
   suppliers: <TruckIcon className="h-4 w-4 shrink-0" />,
@@ -192,6 +229,8 @@ const GROUP_ICONS: Record<string, React.ReactNode> = {
   purchases: <ShoppingBagIcon />,
   purchaseSuppliers: <TruckIcon />,
   productManagement: <PackageIcon />,
+  pmProductsGroup: <PackageIcon />,
+  management: <PackageIcon />,
   pos: <StoreIcon />,
   expenses: <WalletIcon />,
   banking: <LandmarkIcon />,
@@ -227,6 +266,16 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
   const { t, dir, isRtl } = useLanguage()
   const { tenant, user: authUser, branches, activeBranchId, setActiveBranchId, canSwitchAllBranches } = useAuth()
   const [openSection, setOpenSection] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (activeTab && isProductModuleRoute(activeTab)) {
+      setOpenSection('pmProductsGroup')
+    } else if (activeTab && isPurchasesCanvasRoute(activeTab)) {
+      setOpenSection('purchases')
+    } else if (activeTab && isEmployeesCanvasRoute(activeTab)) {
+      setOpenSection('employees')
+    }
+  }, [activeTab])
   const [branchTeams, setBranchTeams] = React.useState<
     { id: string; name: string; logo: React.ReactNode; plan: string; imageUrl?: string | null }[]
   >([])
@@ -274,7 +323,12 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
       id: item.id,
       name: t(`nav.${item.id}`),
       tab: item.tab,
-      icon: item.id === 'dashboard' ? <LayoutDashboardIcon /> : <HomeIcon />,
+      icon:
+        item.id === 'dashboard' ? (
+          <LayoutDashboardIcon />
+        ) : (
+          <HomeIcon />
+        ),
       isActive: item.tab === activeTab,
     }),
   )
@@ -285,7 +339,9 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
         id: group.id,
         title: t(`nav.${group.id}`),
         icon: GROUP_ICONS[group.id],
-        isActive: group.items.some((sub) => sub.tab === activeTab),
+        isActive:
+          group.items.some((sub) => sub.tab === activeTab) ||
+          (group.id === 'pmProductsGroup' && !!activeTab && isProductModuleRoute(activeTab)),
         items: group.items
           .filter((sub) => canViewPage(authUser, sub.tab))
           .map((sub) => ({
@@ -300,7 +356,11 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
 
   const navMain = tenantHasModule(tenant, 'hr') ? buildNavItems(HR_NAV) : []
   const erpNav = tenantHasModule(tenant, 'purchases') ? buildNavItems(ERP_NAV) : []
-  const productNav = tenantHasModule(tenant, 'inventory') ? buildNavItems(PRODUCT_NAV) : []
+  const managementNav = buildNavItems(MANAGEMENT_SECTION_NAV).map((group) =>
+    group.id === 'pmProductsGroup'
+      ? { ...group, title: t('nav.productManagement') }
+      : group,
+  )
   const posNav = tenantHasModule(tenant, 'pos') ? buildNavItems(POS_NAV) : []
   const crmNav = tenantHasCrm(tenant) ? buildNavItems(CRM_NAV) : []
   const accountingNav = tenantHasModule(tenant, 'accounting')
@@ -356,9 +416,10 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             onItemClick={(tab) => onTabChange?.(tab)}
           />
         )}
-        {productNav.length > 0 && (
+        {managementNav.length > 0 && (
           <NavMain
-            items={productNav}
+            items={managementNav}
+            label={t('nav.productManagement')}
             hideLabel
             openSection={openSection}
             onOpenChange={setOpenSection}
