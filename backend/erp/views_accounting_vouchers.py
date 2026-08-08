@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from erp.accounting_models import CashShift
 from erp.permissions import HasPageAction, can_perform_action, can_use_feature, can_access_page
 from erp.serializers_accounting_vouchers import (
     CashShiftCloseSerializer,
@@ -25,6 +26,19 @@ class TreasuryListView(APIView):
     permission_classes = [HasPageAction]
     required_page = "expense-vouchers"
     required_action = "view"
+
+    def check_permissions(self, request):
+        user = request.user
+        if not user or not user.is_authenticated:
+            self.permission_denied(request)
+        if getattr(user, "is_owner", False):
+            return
+        if any(
+            can_access_page(user, page)
+            for page in ("expense-vouchers", "cash-shifts", "pos", "pos-barcode")
+        ):
+            return
+        super().check_permissions(request)
 
     def get(self, request):
         return Response(voucher_service.list_treasuries())
@@ -155,6 +169,19 @@ class CashShiftPosGateView(APIView):
     required_page = "pos"
     required_action = "view"
 
+    def check_permissions(self, request):
+        user = request.user
+        if not user or not user.is_authenticated:
+            self.permission_denied(request)
+        if getattr(user, "is_owner", False):
+            return
+        if any(
+            can_access_page(user, page)
+            for page in ("pos", "pos-barcode", "cash-shifts")
+        ):
+            return
+        super().check_permissions(request)
+
     def get(self, request):
         row = voucher_service.get_my_open_shift(request.user)
         return Response(
@@ -165,10 +192,46 @@ class CashShiftPosGateView(APIView):
         )
 
 
+class CashShiftOpenOptionsView(APIView):
+    """فروع وخزائن وإمكانية فتح وردية — لنقطة البيع والورديات."""
+
+    permission_classes = [HasPageAction]
+    required_page = "cash-shifts"
+    required_action = "view"
+
+    def check_permissions(self, request):
+        user = request.user
+        if not user or not user.is_authenticated:
+            self.permission_denied(request)
+        if getattr(user, "is_owner", False):
+            return
+        if any(
+            can_access_page(user, page)
+            for page in ("cash-shifts", "pos", "pos-barcode")
+        ):
+            return
+        super().check_permissions(request)
+
+    def get(self, request):
+        return Response(voucher_service.get_shift_open_options(request.user))
+
+
 class CashShiftOpenView(APIView):
     permission_classes = [HasPageAction]
     required_page = "cash-shifts"
     required_action = "update"
+
+    def check_permissions(self, request):
+        user = request.user
+        if not user or not user.is_authenticated:
+            self.permission_denied(request)
+        if getattr(user, "is_owner", False):
+            return
+        if can_perform_action(user, "cash-shifts", "update"):
+            return
+        if can_access_page(user, "pos") or can_access_page(user, "pos-barcode"):
+            return
+        self.permission_denied(request)
 
     def post(self, request):
         ser = CashShiftOpenSerializer(data=request.data)
@@ -267,4 +330,6 @@ class CashShiftActionView(APIView):
                 return Response({"detail": "إجراء غير معروف."}, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError:
             raise
+        except CashShift.DoesNotExist:
+            raise ValidationError("الوردية غير موجودة.")
         return Response(voucher_service.get_cash_shift(shift.pk))

@@ -62,8 +62,8 @@ export function PosCartPanel({
   const net = Math.max(cartTotal - disc, 0);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
-      <div className="shrink-0 space-y-2 border-b border-slate-100 p-3">
+    <div className="pos-cart-panel">
+      <div className="pos-cart-panel-head space-y-1.5">
         <div className="flex gap-2">
           <select
             className="h-10 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold outline-none focus:border-[#4169E1]"
@@ -97,8 +97,8 @@ export function PosCartPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full text-sm" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
-          <thead className="sticky top-0 z-10 bg-slate-100 text-[11px] font-black uppercase text-slate-600">
+        <table className="pos-cart-panel-table w-full text-sm" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+          <thead className="sticky top-0 z-10">
             <tr>
               <th className="w-8 px-2 py-2 text-center">#</th>
               <th className="px-2 py-2 text-start">{t('pos.colName')}</th>
@@ -166,7 +166,7 @@ export function PosCartPanel({
         </table>
       </div>
 
-      <div className="shrink-0 border-t border-slate-200 bg-slate-50 p-3">
+      <div className="pos-cart-panel-foot">
         <div className="mb-2 grid grid-cols-2 gap-2">
           <div>
             <label className="mb-1 block text-[10px] font-black uppercase text-slate-500">{t('pos.invoiceDiscount')}</label>
@@ -188,18 +188,16 @@ export function PosCartPanel({
           </div>
         </div>
         <div className="flex items-stretch gap-2">
-          <div className="flex min-w-[120px] flex-col justify-center rounded-xl bg-slate-200/80 px-3 py-2">
-            <span className="text-[10px] font-black uppercase text-slate-600">{t('pos.grandTotal')}</span>
-            <span className="text-2xl font-black text-slate-900 tabular-nums">{net.toFixed(2)}</span>
+          <div className="pos-cart-total-box">
+            <span>{t('pos.grandTotal')}</span>
+            <span>{net.toFixed(2)}</span>
           </div>
           <div className="flex flex-1 flex-col gap-1.5">
             {payGateError ? (
-              <p className="rounded-lg border border-red-300 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700 text-center">
-                {payGateError}
-              </p>
+              <p className="pos-alert pos-alert--error text-center text-xs">{payGateError}</p>
             ) : null}
             <Button
-              className="h-11 flex-1 bg-[#4169E1] text-base font-black hover:bg-[#3451b2]"
+              className="pos-pay-btn flex-1 text-base"
               disabled={cart.length === 0 || paying}
               onClick={onPay}
             >

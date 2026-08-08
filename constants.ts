@@ -9,6 +9,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'ShoppingCart',
     color: 'bg-blue-500',
     link: '/pos',
+    tab: 'pos',
     requiredPermission: ['sales', 'admin']
   },
   {
@@ -18,6 +19,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'ArrowLeftRight',
     color: 'bg-purple-500',
     link: '/inventory/transfer',
+    tab: 'stock-transfers',
     requiredPermission: ['inventory', 'admin']
   },
   {
@@ -27,6 +29,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'FilePlus',
     color: 'bg-green-500',
     link: '/purchases/invoice',
+    tab: 'purchase-invoices',
     requiredPermission: ['inventory', 'manager', 'admin']
   },
   {
@@ -36,6 +39,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'Undo2',
     color: 'bg-red-500',
     link: '/purchases/return',
+    tab: 'purchase-return-invoices',
     requiredPermission: ['inventory', 'manager', 'admin']
   },
   {
@@ -45,6 +49,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'UserPlus',
     color: 'bg-amber-500',
     link: '/crm/customers',
+    tab: 'customers',
     requiredPermission: ['sales', 'manager', 'admin']
   },
   {
@@ -54,6 +59,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: 'Truck',
     color: 'bg-cyan-500',
     link: '/suppliers/data',
+    tab: 'suppliers',
     requiredPermission: ['inventory', 'manager', 'admin']
   }
 ];

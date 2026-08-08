@@ -127,6 +127,7 @@ from erp.views_inventory_extended import (
     StockCountDetailView,
     StockCountListCreateView,
     StockValuationView,
+    MgmtDashboardView,
     SupplierAccountLedgerView,
     GeneralItemMovementReportView,
     SupplierGroupInventoryReportView,
@@ -246,6 +247,7 @@ from erp.views_accounting_vouchers import (
     EnterpriseCashDashboardView,
     CashShiftListView,
     CashShiftMyOpenView,
+    CashShiftOpenOptionsView,
     CashShiftOpenView,
     CashShiftPosGateView,
     ExpenseVoucherActionView,
@@ -318,6 +320,7 @@ from erp.views_accounting_extended import (
     TreasuryMovementActionView,
     TreasuryMovementListCreateView,
 )
+from erp.views_dashboard import ControlPanelDashboardView
 
 urlpatterns = [
     path("auth/login/", LoginView.as_view(), name="auth-login"),
@@ -325,6 +328,7 @@ urlpatterns = [
     path("auth/refresh/", TenantTokenRefreshView.as_view(), name="auth-refresh"),
     path("auth/me/", MeView.as_view(), name="auth-me"),
     path("auth/profile/", ProfileView.as_view(), name="auth-profile"),
+    path("dashboard/control-panel/", ControlPanelDashboardView.as_view(), name="control-panel-dashboard"),
     path("organization/branches/", BranchListView.as_view(), name="branches"),
     path("organization/warehouses/", WarehouseListCreateView.as_view(), name="warehouses"),
     path("organization/warehouses/<uuid:pk>/", WarehouseDetailView.as_view(), name="warehouse-detail"),
@@ -399,6 +403,7 @@ urlpatterns = [
         name="stock-addition-action",
     ),
     path("inventory/stock-valuation/", StockValuationView.as_view(), name="stock-valuation"),
+    path("inventory/mgmt-dashboard/", MgmtDashboardView.as_view(), name="mgmt-dashboard"),
     path(
         "inventory/reports/supplier-group/",
         SupplierGroupInventoryReportView.as_view(),
@@ -1045,6 +1050,7 @@ urlpatterns = [
         name="expense-voucher-action",
     ),
     path("accounting/cash-shifts/", CashShiftListView.as_view(), name="cash-shifts"),
+    path("accounting/cash-shifts/open-options/", CashShiftOpenOptionsView.as_view(), name="cash-shift-open-options"),
     path("accounting/cash-shifts/open/", CashShiftOpenView.as_view(), name="cash-shift-open"),
     path("accounting/cash-shifts/my-open/", CashShiftMyOpenView.as_view(), name="cash-shift-my-open"),
     path("accounting/cash-shifts/active/", CashShiftActiveUsersView.as_view(), name="cash-shift-active"),

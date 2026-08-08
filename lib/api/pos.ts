@@ -143,11 +143,15 @@ export async function searchPosProducts(params: {
   q?: string;
   barcode?: string;
   inStock?: boolean;
+  catalog?: boolean;
+  limit?: number;
 }): Promise<PosSearchResult> {
   const sp = new URLSearchParams();
   if (params.q) sp.set('q', params.q);
   if (params.barcode) sp.set('barcode', params.barcode);
   if (params.inStock) sp.set('in_stock', '1');
+  if (params.catalog) sp.set('catalog', '1');
+  if (params.limit) sp.set('limit', String(params.limit));
   const qs = sp.toString();
   return apiFetch<PosSearchResult>(qs ? `/pos/products/?${qs}` : '/pos/products/');
 }

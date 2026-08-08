@@ -1,4 +1,5 @@
 import { apiFetch } from './client';
+import { cacheKey, cachedGet } from './request-cache';
 
 export type BranchDto = {
   id: string;
@@ -13,5 +14,9 @@ export type BranchDto = {
 };
 
 export async function fetchBranches(): Promise<BranchDto[]> {
-  return apiFetch<BranchDto[]>('/organization/branches/');
+  return cachedGet(
+    cacheKey('/organization/branches/'),
+    () => apiFetch<BranchDto[]>('/organization/branches/'),
+    300_000,
+  );
 }

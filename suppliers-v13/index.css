@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Cairo", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.4);
+    border-radius: 4px;
+  }
+  
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.6);
+  }
+}
+
+@layer base {
+  label:not(:has(input[type='checkbox'])):not(:has(input[type='radio'])),
+  .searchable-select-label,
+  table td,
+  table td span,
+  table td div,
+  table th {
+    font-family: 'Cairo', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #0b0b0b !important;
+    line-height: 16.5px !important;
+  }
+}
+
+@layer base {
+  table thead[class*="bg-[#f97316]"] th,
+  table thead[class*="bg-orange"] th,
+  table thead.bg-orange-500 th,
+  table thead[class*="bg-[#FF6900]" i] th,
+  table th[class*="bg-[#f97316]"],
+  table th[class*="bg-orange"],
+  table th.bg-orange-500,
+  table th[class*="bg-[#FF6900]" i] {
+    color: #ffffff !important;
+  }
+}
+
+@layer base {
+  table thead, 
+  table thead tr {
+    height: auto !important;
+    min-height: 34px !important;
+  }
+  table th {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    height: auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+}
+
+/* Focus Mode Adjustments */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) {
+  height: 44px;
+}
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(4) > label:nth-of-type(1) {
+  margin-bottom: -18px;
+}
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > label:nth-of-type(1) {
+  margin-bottom: -18px;
+  margin-top: -13px;
+}
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > label:nth-of-type(1) {
+  margin-bottom: -15px;
+}
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) {
+  padding-top: 9px;
+}

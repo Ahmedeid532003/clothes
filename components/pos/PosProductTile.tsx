@@ -19,7 +19,7 @@ export function PosProductTile({ item, onClick }: Props) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-start shadow-sm transition hover:-translate-y-0.5 hover:border-[#4169E1]/40 hover:shadow-lg"
+      className="pos-product-tile group flex flex-col overflow-hidden text-start"
     >
       <div className={`relative flex h-[130px] items-center justify-center bg-gradient-to-br ${gradient} p-4`}>
         <span className="absolute start-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-black text-[#4169E1] shadow">

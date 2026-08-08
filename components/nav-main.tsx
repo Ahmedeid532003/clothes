@@ -77,7 +77,12 @@ export function NavMain({
             render={<SidebarMenuItem />}
           >
             <CollapsibleTrigger
-              render={<SidebarMenuButton isActive={item.isActive} />}
+              render={
+                <SidebarMenuButton
+                  isActive={item.isActive}
+                  tooltip={state === 'collapsed' ? item.title : undefined}
+                />
+              }
               onMouseEnter={(event) => updateFlyoutTop(item.id, event.currentTarget)}
               onFocus={(event) => updateFlyoutTop(item.id, event.currentTarget)}
               onClick={(event) => updateFlyoutTop(item.id, event.currentTarget)}

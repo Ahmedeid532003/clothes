@@ -47,6 +47,14 @@ SYSTEM_PAGES: list[dict[str, str]] = [
     {"key": "seller-performance", "label_en": "Seller Performance", "label_ar": "مبيعات البائعين"},
     {"key": "pos", "label_en": "Point of Sale", "label_ar": "نقطة البيع"},
     {"key": "pos-barcode", "label_en": "Barcode POS", "label_ar": "بيع بالباركود"},
+    {"key": "inventory-management", "label_en": "Management", "label_ar": "إدارة"},
+    {"key": "mgmt-dashboard", "label_en": "Dashboard & analytics", "label_ar": "لوحة المؤشرات والتحليلات"},
+    {"key": "mgmt-setup", "label_en": "Clothing parameters", "label_ar": "تعريف محددات الملابس"},
+    {"key": "mgmt-catalog", "label_en": "Products catalog", "label_ar": "دليل المنتجات والأصناف"},
+    {"key": "mgmt-inventory", "label_en": "Warehouse balances", "label_ar": "أرصدة وتقييم المخازن"},
+    {"key": "mgmt-permits", "label_en": "Movement permits", "label_ar": "الأذونات وحركة البضائع"},
+    {"key": "mgmt-audit", "label_en": "Stock count", "label_ar": "محاضر الجرد والتسوية"},
+    {"key": "mgmt-style-builder", "label_en": "Outfit builder", "label_ar": "منسق ومصمم الأطقم"},
     # مخزون — مرحلة 0 و 1
     {"key": "warehouses", "label_en": "Warehouses", "label_ar": "المخازن"},
     {"key": "seasons", "label_en": "Seasons", "label_ar": "المواسم"},
@@ -332,6 +340,14 @@ _DEFAULT_CRUD_FEATURES = [
 ]
 
 for _page in (
+    "inventory-management",
+    "mgmt-dashboard",
+    "mgmt-setup",
+    "mgmt-catalog",
+    "mgmt-inventory",
+    "mgmt-permits",
+    "mgmt-audit",
+    "mgmt-style-builder",
     "warehouses",
     "seasons",
     "product-sections",

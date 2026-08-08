@@ -37,6 +37,7 @@ export default defineConfig(({mode}) => {
           'canvas/product/index': path.resolve(__dirname, 'canvas/product/index.html'),
           'canvas/purchases/index': path.resolve(__dirname, 'canvas/purchases/index.html'),
           'canvas/employees/index': path.resolve(__dirname, 'canvas/employees/index.html'),
+          'canvas/suppliers/index': path.resolve(__dirname, 'canvas/suppliers/index.html'),
         },
         maxParallelFileOps: 2,
         output: {

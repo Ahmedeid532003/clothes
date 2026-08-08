@@ -2,6 +2,7 @@ import type { AuthUser } from '@/lib/api/auth';
 import { isProductModuleRoute } from '@/components/product/productModuleNav';
 import { isPurchasesCanvasRoute } from '@/components/purchases/purchasesCanvasNav';
 import { isEmployeesCanvasRoute } from '@/components/hr/employeesCanvasNav';
+import { isSuppliersCanvasRoute } from '@/components/suppliers/suppliersCanvasNav';
 
 const PAGE_ALIASES: Record<string, string[]> = {
   'inventory-management': [
@@ -85,10 +86,19 @@ const PAGE_ALIASES: Record<string, string[]> = {
 export function canViewPage(user: AuthUser | null, pageKey: string): boolean {
   if (!user) return false;
   if (user.is_owner) return true;
-  if (pageKey === 'home' || pageKey === 'profile' || pageKey === 'product' || pageKey === 'product-management') return true;
+  if (
+    pageKey === 'home' ||
+    pageKey === 'profile' ||
+    pageKey === 'settings' ||
+    pageKey === 'interface-settings' ||
+    pageKey === 'product' ||
+    pageKey === 'product-management'
+  )
+    return true;
   if (isProductModuleRoute(pageKey)) return true;
   if (isPurchasesCanvasRoute(pageKey)) return true;
   if (isEmployeesCanvasRoute(pageKey)) return true;
+  if (isSuppliersCanvasRoute(pageKey)) return true;
   const aliases = PAGE_ALIASES[pageKey];
   if (aliases) return aliases.some((key) => !!user.permissions?.pages?.[key]);
   return !!user.permissions?.pages?.[pageKey];

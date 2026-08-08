@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, Gift, Plus, Printer } from 'lucide-react';
+import { ArrowRight, Gift, Printer } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   fetchBarcodeLabels,
@@ -8,7 +8,7 @@ import {
 } from '@/lib/api/inventory';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { StoreOfferNoticePage } from '@/components/inventory/StoreOfferNoticePage';
-import { Button } from '@/components/ui/button';
+import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { printOkazionBarcodeLabels } from '@/lib/print/okazionBarcodePrint';
 import { ERP_NATIVE_SELECT } from '@/lib/ui/erpNativeSelect';
@@ -80,10 +80,7 @@ export function StoreOfferHubPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">{t('storeOffer.hubDesc')}</p>
         </div>
-        <Button size="sm" className="bg-violet-600 hover:bg-violet-700 font-bold" onClick={() => setMode('editor')}>
-          <Plus className="h-4 w-4 me-1" />
-          {t('common.add')}
-        </Button>
+        <ErpAddButton onClick={() => setMode('editor')}>{t('common.add')}</ErpAddButton>
       </header>
 
       {error && <p className="mx-4 mt-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">{error}</p>}

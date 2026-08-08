@@ -9,11 +9,12 @@ Get-NetTCPConnection -LocalPort $WebPort -State Listen -ErrorAction SilentlyCont
 
 Start-Sleep -Seconds 2
 
-Write-Host "Backend (cloud): $FlyApi" -ForegroundColor Cyan
+Write-Host "Backend (cloud via Vite proxy): $FlyApi" -ForegroundColor Cyan
 Write-Host "Starting frontend on http://127.0.0.1:$WebPort ..." -ForegroundColor Cyan
 
 Set-Location $Root
-$cmd = "set VITE_API_URL=$FlyApi/api/v1&& set VITE_DEPLOY_ACCESS_CODE=&& npm run dev"
+# Relative /api/v1 → Vite proxies to Fly (no browser CORS)
+$cmd = "set VITE_API_URL=/api/v1&& set MAHALY_FLY_API=$FlyApi&& set VITE_DEPLOY_ACCESS_CODE=&& npm run dev"
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmd -WorkingDirectory $Root -WindowStyle Minimized
 
 Start-Sleep -Seconds 6

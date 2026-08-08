@@ -1,0 +1,168 @@
+/**
+ * Host-only spacing — mirrors product embed: p-3 sm:p-5 max-w-7xl.
+ * Mobile: keep every panel inside the phone viewport (no horizontal bleed).
+ */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+[data-employees-host] {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: none;
+  background: #f8fafc;
+}
+
+[data-employees-host-inner] {
+  width: 100%;
+  max-width: min(80rem, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.75rem 0.75rem 1.5rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  [data-employees-host-inner] {
+    padding: 1.25rem 1.25rem 1.5rem;
+  }
+}
+
+[data-employees-host] .-mx-\[8px\] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+[data-employees-host] *,
+[data-employees-host] *::before,
+[data-employees-host] *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Phone + small tablet ---------- */
+@media (max-width: 768px) {
+  [data-employees-host-inner] {
+    padding: 0.55rem 0.55rem 1.25rem;
+  }
+
+  /* Outer org shell: less padding so cards fit */
+  [data-employees-host] .rounded-3xl.p-6 {
+    padding: 0.85rem !important;
+  }
+
+  [data-employees-host] .rounded-3xl.p-5 {
+    padding: 0.75rem !important;
+  }
+
+  /* Org card headers: title + actions wrap instead of overflowing */
+  [data-employees-host] .border-b.pb-2\.5.flex.items-center.justify-between,
+  [data-employees-host] .flex.items-center.justify-between.border-b {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    row-gap: 0.65rem;
+  }
+
+  [data-employees-host] .flex.items-center.justify-between.border-b > div {
+    min-width: 0;
+  }
+
+  [data-employees-host] .flex.items-center.justify-between.border-b h4 {
+    font-size: 0.8rem !important;
+    line-height: 1.25 !important;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* List rows: allow text wrap; keep action chips */
+  [data-employees-host] .rounded-xl.flex.items-center.justify-between {
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  [data-employees-host] .rounded-xl .flex-1.min-w-0,
+  [data-employees-host] .rounded-xl .min-w-0 {
+    min-width: 0 !important;
+    overflow-wrap: anywhere;
+  }
+
+  /* Tag rows wrap under title */
+  [data-employees-host] .rounded-xl .flex.items-center.justify-end.gap-1\.5 {
+    flex-wrap: wrap;
+  }
+
+  /* Tables stay inside a swipe lane — never expand the page */
+  [data-employees-host] .overflow-x-auto {
+    max-width: 100% !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  [data-employees-host] table {
+    max-width: none;
+  }
+
+  /* Hide wide desktop tables when a phone card board exists nearby */
+  [data-employees-host] .hidden.md\:block,
+  [data-employees-host] .hidden.md\:grid {
+    display: none !important;
+  }
+
+  /* Modals: nearly full-screen, scrollable, safe insets */
+  [data-employees-host] .fixed.inset-0 {
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left)) !important;
+    align-items: flex-end !important;
+  }
+
+  @media (min-height: 640px) {
+    [data-employees-host] .fixed.inset-0 {
+      align-items: center !important;
+    }
+  }
+
+  [data-employees-host] .fixed.inset-0 > div[class*='max-w'],
+  [data-employees-host] .fixed.inset-0 > [class*='rounded-3xl'],
+  [data-employees-host] .fixed.inset-0 > [class*='rounded-2xl'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(92dvh, 100%) !important;
+    overflow-y: auto !important;
+    margin: 0 !important;
+  }
+
+  /* Touch-friendly icon buttons in card headers */
+  [data-employees-host] button.w-7.h-7 {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+  }
+
+  [data-employees-host] input,
+  [data-employees-host] select,
+  [data-employees-host] textarea {
+    font-size: 16px !important; /* prevent iOS zoom-on-focus */
+  }
+}
+
+@media (max-width: 480px) {
+  [data-employees-host-inner] {
+    padding: 0.4rem 0.4rem 1rem;
+  }
+
+  [data-employees-host] .grid.grid-cols-1.md\:grid-cols-2,
+  [data-employees-host] .grid.gap-6 {
+    gap: 0.75rem !important;
+  }
+}

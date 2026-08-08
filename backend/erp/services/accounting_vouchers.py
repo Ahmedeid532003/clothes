@@ -665,9 +665,12 @@ def close_cash_shift(shift_id, *, data: dict, user) -> CashShift:
     _recalc_shift_expected(shift.pk)
     shift.refresh_from_db(using=_USING)
     report = get_shift_daily_report(shift.pk)
-    book = Decimal(str(report.get("net_cash") or 0))
+    opening = shift.opening_balance or Decimal("0")
+    net_cash = Decimal(str(report.get("net_cash") or 0))
+    expected_drawer = opening + net_cash
     shift.actual_balance = actual
-    shift.difference = actual - book
+    shift.difference = actual - expected_drawer
+    shift.expected_balance = expected_drawer
     shift.report_snapshot = report
     shift.status = CashShift.Status.CLOSED
     shift.closed_at = timezone.now()
@@ -679,6 +682,7 @@ def close_cash_shift(shift_id, *, data: dict, user) -> CashShift:
         update_fields=[
             "actual_balance",
             "difference",
+            "expected_balance",
             "report_snapshot",
             "status",
             "closed_at",
@@ -1064,6 +1068,65 @@ def get_enterprise_cash_dashboard() -> dict:
         "treasuries": enriched_treasuries,
         "user_balances": user_balances,
         "active_shift_rows": shift_rows,
+    }
+
+
+def get_shift_open_options(user) -> dict:
+    """فروع + خزائن + هل يمكن للمستخدم فتح وردية الآن."""
+    from erp.branch_access import branches_for_user
+    from erp.services.accounting_pending import assert_can_open_shift
+
+    ensure_default_treasuries()
+    branches = [
+        {
+            "id": str(b.pk),
+            "name": (b.name_ar or b.name_en or b.code or "").strip(),
+        }
+        for b in branches_for_user(user).order_by("code")
+    ]
+    treasuries = [
+        {
+            "id": t["id"],
+            "code": t["code"],
+            "name_ar": t["name_ar"],
+            "label": f'{t["code"]} — {t["name_ar"]}',
+        }
+        for t in list_treasuries()
+    ]
+
+    my_open = get_my_open_shift(user)
+    can_open = True
+    block_reason = ""
+
+    if my_open:
+        can_open = False
+        block_reason = "لديك وردية مفتوحة بالفعل — أغلقها أولاً."
+    elif not branches:
+        can_open = False
+        block_reason = "لا يوجد فرع متاح لحسابك. راجع صلاحيات الفروع."
+    elif not treasuries:
+        can_open = False
+        block_reason = "لا توجد خزنة نقدية. تواصل مع المدير."
+    else:
+        try:
+            assert_can_open_shift(user)
+        except ValidationError as exc:
+            can_open = False
+            detail = exc.detail
+            if isinstance(detail, list) and detail:
+                block_reason = str(detail[0])
+            elif isinstance(detail, dict) and detail:
+                first = next(iter(detail.values()))
+                block_reason = str(first[0] if isinstance(first, list) and first else first)
+            else:
+                block_reason = str(detail)
+
+    return {
+        "branches": branches,
+        "treasuries": treasuries,
+        "can_open": can_open,
+        "block_reason": block_reason,
+        "open_shift": my_open,
     }
 
 

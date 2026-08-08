@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { LoginPage } from "@/components/auth/LoginPage";
 import { DashboardHome } from "@/components/dashboard/Home";
 import { ProfilePage } from "@/components/profile/ProfilePage";
+import { InterfaceSettingsPage } from "@/components/settings/InterfaceSettingsPage";
 import { DashboardMain } from "@/components/dashboard/DashboardMain";
 import { Music1ProductCanvas } from "@/components/product/Music1ProductCanvas";
 import { EmployeesCanvasPage } from "@/components/hr/EmployeesCanvasPage";
@@ -24,6 +25,8 @@ import { EmployeeReportsPage } from "@/components/hr/EmployeeReportsPage";
 import { PayrollSheetPage } from "@/components/hr/PayrollSheetPage";
 import { PurchasesCanvasPage } from "@/components/purchases/PurchasesCanvasPage";
 import { isPurchasesCanvasRoute } from "@/components/purchases/purchasesCanvasNav";
+import { SuppliersCanvasPage } from "@/components/suppliers/SuppliersCanvasPage";
+import { isSuppliersCanvasRoute } from "@/components/suppliers/suppliersCanvasNav";
 import { PosBarcodePage } from '@/components/pos/PosBarcodePage';
 import { PosIntegratedPage } from '@/components/pos/PosIntegratedPage';
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -190,7 +193,7 @@ function getStoredFavorites() {
 }
 
 function moduleKeyForTab(tab: string): ModuleKey {
-  if (tab === 'profile') return 'settings';
+  if (tab === 'profile' || tab === 'settings' || tab === 'interface-settings') return 'settings';
   if (tab === 'dashboard' || tab === 'home' || tab === 'product' || tab === 'product-management') return 'dashboard';
   if (['hr-job-structure', 'departments', 'hr-sections', 'work-shifts', 'job-titles', 'employee-groups', 'employee-data', 'employee-reports', 'create-users'].includes(tab)) return 'employees';
   if (['attendance', 'attendance-import', 'official-holidays'].includes(tab)) return 'attendance';
@@ -338,6 +341,14 @@ export default function App() {
         group: isRtl ? 'إعدادات الحساب' : 'Account',
       };
     }
+    if (activeTab === 'settings' || activeTab === 'interface-settings') {
+      return {
+        id: 'settings',
+        tab: 'settings',
+        label: isRtl ? 'الإعدادات' : 'Settings',
+        group: isRtl ? 'التحليلات' : 'Analytics',
+      };
+    }
     return shellNavItems.find((item) => item.tab === activeTab) ?? {
       id: activeTab,
       tab: activeTab,
@@ -421,8 +432,12 @@ export default function App() {
     isProductModuleRoute(activeTab) && !isProductModuleNavOnly(activeTab);
   const isPurchasesCanvas = isPurchasesCanvasRoute(activeTab);
   const isEmployeesCanvas = isEmployeesCanvasRoute(activeTab);
+  const isSuppliersCanvas = isSuppliersCanvasRoute(activeTab);
 
-  if ((isProductCanvas || isPurchasesCanvas || isEmployeesCanvas) && !canViewPage(user, activeTab)) {
+  if (
+    (isProductCanvas || isPurchasesCanvas || isEmployeesCanvas || isSuppliersCanvas) &&
+    !canViewPage(user, activeTab)
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 max-w-lg">
@@ -433,6 +448,7 @@ export default function App() {
     );
   }
 
+  /* Suppliers: same shell as product — ERP icon rail outside, canvas in inset */
   const renderContent = () => renderPageBody();
 
   const renderPageBody = () => {
@@ -452,6 +468,9 @@ export default function App() {
         return <DashboardHome />;
       case 'dashboard':
         return <DashboardMain />;
+      case 'settings':
+      case 'interface-settings':
+        return <InterfaceSettingsPage />;
       case 'create-users':
         return <EmployeeDataPage />;
       case 'hr-job-structure':
@@ -685,14 +704,12 @@ export default function App() {
   const appHeader = (
     <header className="app-shell-header">
       <div className="app-topbar-primary">
-        <div className="app-topbar-start" aria-hidden />
-
         <div className="app-topbar-actions">
           <div className="app-header-right">
+            <SidebarTrigger className="app-icon-button app-split-trigger" />
             <button type="button" className="app-header-brand" onClick={() => navigateTo('home')}>
               Ma7alyErp
             </button>
-            <SidebarTrigger className="app-icon-button app-split-trigger" />
           </div>
 
           <div className="app-header-center">
@@ -725,7 +742,7 @@ export default function App() {
             </DropdownMenu>
 
             <DropdownMenu>
-              <DropdownMenuTrigger render={<button type="button" className="app-icon-button" />}>
+              <DropdownMenuTrigger render={<button type="button" className="app-icon-button app-fav-trigger" />}>
                 {isFavorite ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
               </DropdownMenuTrigger>
               <DropdownMenuContent className="app-command-menu" align="end" sideOffset={10}>
@@ -772,9 +789,9 @@ export default function App() {
                   <UserCircle className="h-4 w-4" />
                   {isRtl ? 'الملف الشخصي' : 'Profile'}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('settings')}>
                   <Settings className="h-4 w-4" />
-                  {isRtl ? 'إعدادات الواجهة' : 'Interface settings'}
+                  {isRtl ? 'الإعدادات' : 'Settings'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
@@ -785,25 +802,27 @@ export default function App() {
             </DropdownMenu>
 
             <LanguageSwitcher variant="header" />
-            <FullscreenToggle className="app-icon-button" />
+            <FullscreenToggle className="app-icon-button app-fullscreen-trigger" />
           </div>
         </div>
       </div>
 
       <div className="app-page-toolbar">
         <div className="app-page-title">
-          <span>{shellCopy.workspace}</span>
+          <span className="app-page-title-eyebrow">{shellCopy.workspace}</span>
           <h1>{activeNavItem.label}</h1>
-          <p>{activeNavItem.group} · {shellCopy.currentBranch}: {branchName}</p>
+          <p className="app-page-title-meta">
+            {activeNavItem.group} · {shellCopy.currentBranch}: {branchName}
+          </p>
         </div>
         <div className="app-page-tools">
           <button type="button" onClick={toggleFavorite}>
             {isFavorite ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-            {isFavorite ? shellCopy.removeFavorite : shellCopy.addFavorite}
+            <span className="app-page-tools-label">{isFavorite ? shellCopy.removeFavorite : shellCopy.addFavorite}</span>
           </button>
           <button type="button" onClick={() => navigateTo('home')}>
             <Menu className="h-4 w-4" />
-            {isRtl ? 'الرئيسية' : 'Home'}
+            <span className="app-page-tools-label">{isRtl ? 'الرئيسية' : 'Home'}</span>
           </button>
         </div>
       </div>
@@ -815,9 +834,10 @@ export default function App() {
       data-product-canvas={isProductCanvas ? 'true' : undefined}
       data-purchases-canvas={isPurchasesCanvas ? 'true' : undefined}
       data-employees-canvas={isEmployeesCanvas ? 'true' : undefined}
+      data-suppliers-canvas={isSuppliersCanvas ? 'true' : undefined}
       className={
-        isProductCanvas || isPurchasesCanvas || isEmployeesCanvas
-          ? 'music1-canvas-inset flex min-h-svh min-w-0 flex-1 flex-col overflow-hidden p-0'
+        isProductCanvas || isPurchasesCanvas || isEmployeesCanvas || isSuppliersCanvas
+          ? 'music1-canvas-inset flex h-dvh min-h-dvh min-w-0 flex-1 flex-col overflow-hidden p-0'
           : 'flex min-h-svh flex-col overflow-hidden'
       }
     >
@@ -827,6 +847,8 @@ export default function App() {
         <PurchasesCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />
       ) : isEmployeesCanvas ? (
         <EmployeesCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />
+      ) : isSuppliersCanvas ? (
+        <SuppliersCanvasPage activeTab={activeTab} onNavigate={setActiveTab} />
       ) : (
         <TenantAppLayout header={appHeader} subscription={tenant?.subscription} pageKey={activeTab} moduleContext={moduleContext}>
           {renderContent()}

@@ -51,6 +51,7 @@ export function usePosSession(activeBranchId: string | null) {
     sellerId?: string,
     sellerName?: string,
     qty = '1',
+    discountPercentOverride?: string,
   ) => {
     const sellerKey = sellerId ? `:s${sellerId}` : '';
     const key = `v:${v.variant_id}${sellerKey}`;
@@ -58,10 +59,13 @@ export function usePosSession(activeBranchId: string | null) {
     const label = `${product.name_ar} — ${v.size_name}/${v.color_name}${sellerSuffix}`;
     const offerDisc = parseFloat(v.offer_discount_per_unit || '0') || 0;
     const salePrice = parseFloat(v.sale_price || v.unit_price) || 0;
+    const unitPrice = salePrice > 0 ? String(salePrice) : v.unit_price;
     const discountPct =
-      offerDisc > 0 && salePrice > 0
-        ? String(((offerDisc / salePrice) * 100).toFixed(2))
-        : v.discount_percent || '0';
+      discountPercentOverride !== undefined
+        ? discountPercentOverride
+        : offerDisc > 0 && salePrice > 0
+          ? String(((offerDisc / salePrice) * 100).toFixed(2))
+          : v.discount_percent || '0';
     setCart((prev) => {
       const existing = prev.find((c) => c.key === key);
       if (existing) {
@@ -82,7 +86,7 @@ export function usePosSession(activeBranchId: string | null) {
           size_name: v.size_name,
           color_name: v.color_name,
           quantity: qty,
-          unit_price: v.unit_price,
+          unit_price: unitPrice,
           discount_percent: discountPct,
           discount_amount: '0',
           offer_discount_per_unit: offerDisc > 0 ? String(offerDisc) : undefined,
@@ -175,6 +179,7 @@ export function usePosSession(activeBranchId: string | null) {
     isDelivery?: boolean;
     deliveryAgentId?: string;
     notes?: string;
+    taxPercent?: string;
     payments?: Array<{ payment_method: string; amount: string; reference?: string }>;
     installmentPlanId?: string;
     downPaymentAmount?: string;
@@ -200,6 +205,7 @@ export function usePosSession(activeBranchId: string | null) {
         payment_method: opts?.paymentMethod || 'cash',
         customer: opts?.customerId || undefined,
         discount_amount: opts?.discountAmount || '0',
+        tax_percent: opts?.taxPercent ?? '0',
         is_delivery: Boolean(opts?.isDelivery),
         delivery_fee: opts?.deliveryFees || '0',
         delivery_agent: opts?.deliveryAgentId || undefined,

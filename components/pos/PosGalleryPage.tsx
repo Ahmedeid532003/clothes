@@ -182,8 +182,8 @@ export function PosGalleryPage({ onClose }: Props) {
       warehouseName={session.ctx?.warehouse.name_ar}
       onClose={onClose}
     >
-      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(320px,38%)_1fr]">
-        <div className="min-h-0 border-e border-slate-200 shadow-lg">
+      <div className="pos-gallery-layout">
+        <div className="pos-cart-panel min-h-0 border-e border-slate-200/80">
           <PosCartPanel
             cart={session.cart}
             cartTotal={session.cartTotal}
@@ -221,7 +221,7 @@ export function PosGalleryPage({ onClose }: Props) {
           />
         </div>
 
-        <div className="flex min-h-0 flex-col bg-[#f8fafc]">
+        <div className="pos-gallery-canvas flex min-h-0 flex-col">
           {session.error && session.error !== 'MULTI_HIT' && session.error !== 'NOT_FOUND' ? (
             <p className="shrink-0 bg-red-50 px-4 py-2 text-sm text-red-700">{session.error}</p>
           ) : null}

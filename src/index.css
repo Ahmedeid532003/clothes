@@ -74,6 +74,11 @@
     --theme-brand: #4f46e5;
     --theme-brand-hover: #4338ca;
     --theme-brand-soft: #eef2ff;
+    --mahaly-accent: #f06424;
+    --mahaly-accent-hover: #ea580c;
+    --mahaly-accent-soft: #fff7ed;
+    --mahaly-font-scale: 1;
+    --mahaly-font-px: 16px;
     --theme-bg: #f8fafc;
     --theme-surface: #ffffff;
     --theme-surface-soft: #f3f4f6;
@@ -2454,7 +2459,7 @@ html.dark [data-slot="sidebar-inset"] main {
   line-height: 1.55;
 }
 
-[data-slot="sidebar-inset"] :where(.rounded-xl, .rounded-2xl, .erp-table-shell, .enterprise-panel, .enterprise-kpi-card, .department-kpi-card, .hr-sections-table-card, .departments-form-card, .departments-audit-card) {
+[data-slot="sidebar-inset"] :where(.rounded-xl, .rounded-2xl, .erp-table-shell, .enterprise-panel, .enterprise-kpi-card, .department-kpi-card, .hr-sections-table-card, .departments-form-card, .departments-audit-card):not(.accent-live-fill):not(.accent-color-swatch):not(.accent-original-btn) {
   border-color: var(--ui-border) !important;
   border-radius: var(--ui-radius-card) !important;
   background-color: var(--ui-surface);
@@ -2505,6 +2510,39 @@ html.dark [data-slot="sidebar-inset"] main {
   background: var(--ui-surface) !important;
   color: var(--ui-text) !important;
   box-shadow: none !important;
+}
+
+/* Accent color picker: live fills must ignore ERP white-surface overrides */
+.accent-settings-page .accent-color-swatch,
+.accent-settings-page .accent-color-swatch > span:first-child {
+  background-image: none !important;
+}
+
+.accent-settings-page .accent-live-fill {
+  background: var(--accent-live) !important;
+  background-color: var(--accent-live) !important;
+  background-image: none !important;
+  border-color: color-mix(in srgb, var(--accent-live) 35%, #000) !important;
+  box-shadow: none !important;
+}
+
+.accent-settings-page button.accent-live-fill,
+.accent-settings-page .accent-live-fill[role="button"] {
+  color: #ffffff !important;
+}
+
+.accent-settings-page button.accent-original-btn {
+  background: #f06424 !important;
+  background-color: #f06424 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px rgb(240 100 36 / 28%) !important;
+}
+
+.accent-settings-page button.accent-original-btn:hover {
+  background: #d9551c !important;
+  background-color: #d9551c !important;
 }
 
 [data-slot="sidebar-inset"] :where(button[variant="outline"], button.border, .erp-table-tools button:not(.hr-structure-add-btn):not(.erp-add-action), .erp-pagination button):hover {
@@ -3793,12 +3831,17 @@ html.dark {
   color: #0f172a !important;
 }
 
-.app-shell-header :where(button) {
+.app-shell-header .lux-theme-switch,
+.app-shell-header .lux-theme-switch :is(span, svg, i) {
+  color: inherit !important;
+}
+
+.app-shell-header :where(button):not(.lux-theme-switch) {
   border-color: #e2e8f0 !important;
   background: #ffffff !important;
 }
 
-.app-shell-header :where(button:hover) {
+.app-shell-header :where(button:hover):not(.lux-theme-switch) {
   background: #eff6ff !important;
   color: var(--theme-brand-hover) !important;
 }
@@ -3813,7 +3856,12 @@ html.dark .app-shell-header :where(span, button, svg) {
   color: #f8fafc !important;
 }
 
-html.dark .app-shell-header :where(button) {
+html.dark .app-shell-header .lux-theme-switch,
+html.dark .app-shell-header .lux-theme-switch :is(span, svg, i) {
+  color: inherit !important;
+}
+
+html.dark .app-shell-header :where(button):not(.lux-theme-switch) {
   border-color: rgb(148 163 184 / 20%) !important;
   background: rgb(30 41 59 / 72%) !important;
 }
@@ -6204,6 +6252,22 @@ button:has(> svg.lucide-plus):not(.hr-structure-add-btn):not(.erp-add-action):no
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.85rem 1.1rem 1.1rem;
+}
+
+/* Force Arabic list rows: icons left, text right (DOM order + dir=ltr) */
+.hr-structure-item[dir="ltr"] {
+  direction: ltr;
+}
+
+html[dir="rtl"] .hr-structure-item-body,
+.hr-structure-item[dir="ltr"] .hr-structure-item-body {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+html[dir="rtl"] .hr-structure-item-body > div,
+.hr-structure-item[dir="ltr"] .hr-structure-item-body > div {
+  text-align: right;
 }
 
 .hr-structure-item {
@@ -26684,5 +26748,683 @@ html[dir="rtl"] .app-content-card :where(.mahaly-action-btn, .erp-add-action, bu
 .app-content-card .product-module-page [class*="border-t"][class*="bg-slate-50"] {
   background: rgb(248 250 252 / 0.4) !important;
   border-top-color: #e2e8f0 !important;
+}
+
+/* Music/1 في الكانفس — شريط 12 عنصر + محتوى (بدون هيدر ERP) */
+.music1-canvas-inset {
+  padding: 0 !important;
+  background: #f8fafc;
+  min-height: 100svh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .music1-canvas-inset {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}
+
+.music1-product-canvas {
+  isolation: isolate;
+  min-height: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+.music1-product-canvas__nav {
+  background: #0a1945 !important;
+  color: #b0bdcc !important;
+  position: relative !important;
+  z-index: 2;
+}
+
+.music1-product-canvas__nav button {
+  background-color: transparent;
+}
+
+.music1-product-canvas__submenu {
+  background: #ffffff !important;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.12);
+}
+
+.music1-product-canvas__submenu-item {
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+
+.music1-product-canvas__submenu-item:hover {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.music1-product-canvas__submenu-item.is-active,
+.music1-product-canvas__submenu-item[data-active='true'] {
+  background: #0e2759 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.music1-product-canvas__main {
+  background: #f8fafc;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* دمج الكانفس: إخفاء flyout ERP الأبيض عند فتح وحدة المنتجات أو المشتريات */
+body:has([data-product-canvas="true"]) .sidebar-collapsed-flyout,
+body:has([data-purchases-canvas="true"]) .sidebar-collapsed-flyout,
+body:has([data-employees-canvas="true"]) .sidebar-collapsed-flyout,
+body:has([data-suppliers-canvas="true"]) .sidebar-collapsed-flyout {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+@media (max-width: 767px) {
+  .music1-product-canvas {
+    flex-direction: column;
+  }
+
+  .music1-product-canvas__nav {
+    max-height: 42vh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Lux theme switch — premium aurora glass + spun-metal orb
+   -------------------------------------------------------------------------- */
+@keyframes lux-orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lux-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes lux-ray-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scaleY(0.85);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scaleY(1.05);
+  }
+}
+
+@keyframes lux-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes lux-liquid-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.lux-theme-switch {
+  --lux-w: 7.4rem;
+  --lux-h: 2.75rem;
+  --lux-orb: 2.28rem;
+  --lux-pad: 0.24rem;
+  position: relative !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.18rem !important;
+  width: var(--lux-w) !important;
+  height: auto !important;
+  min-height: var(--lux-h) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 220ms ease !important;
+}
+
+.lux-theme-switch:hover {
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+.lux-theme-switch.is-bump .lux-theme-switch__orb {
+  animation: lux-bump 420ms cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+@keyframes lux-bump {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  35% {
+    transform: translateY(-50%) scale(1.12);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.lux-theme-switch__aura {
+  position: absolute;
+  inset: -0.55rem -0.7rem;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 30% 50%, rgba(255, 196, 90, 0.55), transparent 62%),
+    radial-gradient(ellipse at 70% 50%, rgba(255, 140, 60, 0.28), transparent 60%);
+  filter: blur(10px);
+  z-index: 0;
+  animation: lux-aura-breathe 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__aura {
+  background: radial-gradient(ellipse at 70% 50%, rgba(99, 140, 255, 0.55), transparent 62%),
+    radial-gradient(ellipse at 35% 50%, rgba(168, 85, 247, 0.35), transparent 60%);
+}
+
+.lux-theme-switch__halo {
+  position: absolute;
+  inset: -1px;
+  border-radius: 999px;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), 0 12px 28px rgba(245, 158, 11, 0.22);
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__halo {
+  box-shadow: 0 0 0 1px rgba(148, 163, 255, 0.28), 0 12px 30px rgba(79, 70, 229, 0.35);
+}
+
+.lux-theme-switch__track {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: var(--lux-h);
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.lux-theme-switch__liquid {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(255, 236, 200, 0.55),
+    rgba(255, 214, 150, 0.45),
+    rgba(255, 255, 255, 0.75)
+  );
+  background-size: 220% 220%;
+  animation: lux-liquid-shift 7s ease infinite;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 2px rgba(180, 140, 80, 0.18),
+    0 10px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__liquid {
+  background: linear-gradient(
+    120deg,
+    rgba(30, 41, 70, 0.92),
+    rgba(67, 56, 120, 0.75),
+    rgba(30, 58, 110, 0.85),
+    rgba(15, 23, 42, 0.95)
+  );
+  background-size: 220% 220%;
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.lux-theme-switch__stars,
+.lux-theme-switch__rays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lux-theme-switch__stars i {
+  position: absolute;
+  width: 0.22rem;
+  height: 0.22rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px #c4b5fd;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__stars i {
+  opacity: 1;
+  animation: lux-star-twinkle 2.4s ease-in-out infinite;
+}
+
+.lux-theme-switch__stars i:nth-child(1) {
+  top: 28%;
+  left: 18%;
+  animation-delay: 0s;
+}
+.lux-theme-switch__stars i:nth-child(2) {
+  top: 62%;
+  left: 28%;
+  animation-delay: 0.35s;
+}
+.lux-theme-switch__stars i:nth-child(3) {
+  top: 22%;
+  left: 38%;
+  width: 0.16rem;
+  height: 0.16rem;
+  animation-delay: 0.7s;
+}
+.lux-theme-switch__stars i:nth-child(4) {
+  top: 55%;
+  left: 12%;
+  animation-delay: 1.1s;
+}
+.lux-theme-switch__stars i:nth-child(5) {
+  top: 35%;
+  left: 45%;
+  width: 0.14rem;
+  height: 0.14rem;
+  animation-delay: 1.5s;
+}
+
+.lux-theme-switch__rays i {
+  position: absolute;
+  top: 50%;
+  left: 58%;
+  width: 0.12rem;
+  height: 0.9rem;
+  margin-top: -0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 210, 100, 0), rgba(255, 190, 70, 0.9), rgba(255, 210, 100, 0));
+  transform-origin: center;
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+
+.lux-theme-switch[data-mode='light'] .lux-theme-switch__rays i {
+  opacity: 1;
+  animation: lux-ray-pulse 2.8s ease-in-out infinite;
+}
+
+.lux-theme-switch__rays i:nth-child(1) {
+  transform: rotate(18deg) translateX(0.55rem);
+}
+.lux-theme-switch__rays i:nth-child(2) {
+  transform: rotate(-12deg) translateX(0.85rem);
+  animation-delay: 0.4s;
+}
+.lux-theme-switch__rays i:nth-child(3) {
+  transform: rotate(42deg) translateX(0.7rem);
+  animation-delay: 0.8s;
+}
+.lux-theme-switch__rays i:nth-child(4) {
+  transform: rotate(-38deg) translateX(1rem);
+  animation-delay: 1.2s;
+}
+
+.lux-theme-switch__ghost {
+  position: absolute;
+  top: 50%;
+  width: 1.05rem;
+  height: 1.05rem;
+  transform: translateY(-50%);
+  z-index: 3;
+  transition: opacity 320ms ease, color 320ms ease;
+}
+
+.lux-theme-switch__ghost--sun {
+  left: 0.7rem;
+  color: rgba(180, 130, 40, 0.35);
+  opacity: 0;
+}
+
+.lux-theme-switch__ghost--moon {
+  right: 0.7rem;
+  color: rgba(120, 140, 170, 0.55);
+  opacity: 1;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__ghost--sun {
+  opacity: 1;
+  color: rgba(255, 214, 120, 0.55);
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__ghost--moon {
+  opacity: 0;
+}
+
+.lux-theme-switch__orb {
+  position: absolute;
+  top: 50%;
+  left: var(--lux-pad);
+  z-index: 5;
+  width: var(--lux-orb);
+  height: var(--lux-orb);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  transition: left 420ms cubic-bezier(0.22, 1.15, 0.36, 1);
+  filter: drop-shadow(0 8px 14px rgba(160, 110, 40, 0.4));
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb {
+  left: calc(100% - var(--lux-orb) - var(--lux-pad));
+  filter: drop-shadow(0 8px 16px rgba(70, 90, 200, 0.55));
+}
+
+.lux-theme-switch__orb-metal {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      #fff4dc 0deg 3deg,
+      #ecd4a4 3deg 6deg,
+      #f8e8c4 6deg 9deg,
+      #d8b878 9deg 12deg
+    ),
+    radial-gradient(circle at 32% 28%, #fffaf0, #e8c888 55%, #c9964a 100%);
+  background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), inset 0 -2px 4px rgba(120, 80, 20, 0.35);
+  animation: lux-orb-spin 18s linear infinite;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-metal {
+  background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      #dbe4ff 0deg 3deg,
+      #9eb0e8 3deg 6deg,
+      #c7d2fe 6deg 9deg,
+      #7c8fd4 9deg 12deg
+    ),
+    radial-gradient(circle at 32% 28%, #f1f5ff, #8b9cf0 55%, #4f46e5 100%);
+  background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -2px 4px rgba(30, 40, 120, 0.45);
+  animation-duration: 22s;
+}
+
+.lux-theme-switch__orb-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.85), transparent 42%),
+    conic-gradient(
+      from 180deg at 50% 50%,
+      transparent 0deg,
+      rgba(255, 160, 200, 0.28) 60deg,
+      rgba(140, 200, 255, 0.25) 120deg,
+      transparent 180deg
+    );
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.lux-theme-switch__orb-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1.5px solid rgba(255, 236, 190, 0.75);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+  pointer-events: none;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-ring {
+  border-color: rgba(199, 210, 254, 0.65);
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.55);
+}
+
+.lux-theme-switch__orb-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.lux-theme-switch__orb-icon--sun {
+  color: rgba(90, 65, 30, 0.72);
+  opacity: 1;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
+}
+
+.lux-theme-switch__orb-icon--moon {
+  color: rgba(30, 40, 90, 0.75);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8) rotate(-20deg);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-icon--sun {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8) rotate(25deg);
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-icon--moon {
+  opacity: 1;
+  color: rgba(15, 23, 60, 0.8);
+  transform: translate(-50%, -50%) scale(1) rotate(0deg);
+}
+
+.lux-theme-switch__label {
+  position: relative;
+  z-index: 2;
+  height: 0.85rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.lux-theme-switch__label-light,
+.lux-theme-switch__label-dark {
+  transition: opacity 280ms ease, color 280ms ease;
+}
+
+.lux-theme-switch__label-light {
+  color: #b45309;
+  opacity: 1;
+}
+
+.lux-theme-switch__label-dark {
+  position: absolute;
+  inset: 0;
+  color: #818cf8;
+  opacity: 0;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__label-light {
+  opacity: 0;
+}
+
+.lux-theme-switch[data-mode='dark'] .lux-theme-switch__label-dark {
+  opacity: 1;
+}
+
+.lux-theme-switch:focus-visible {
+  outline: none !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.45) !important;
+}
+
+.lux-theme-switch[data-mode='dark']:focus-visible {
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.5) !important;
+}
+
+/* neutralize legacy theme button chrome */
+button.lux-theme-switch,
+.lux-theme-switch.theme-mode-controls {
+  width: var(--lux-w) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-header-center .lux-theme-switch {
+  margin-inline: 0.15rem;
+}
+
+/* Beat aggressive .app-shell-header button/span !important chrome */
+.app-shell-header button.lux-theme-switch,
+.app-shell-header .lux-theme-switch {
+  width: var(--lux-w) !important;
+  min-width: var(--lux-w) !important;
+  height: auto !important;
+  min-height: calc(var(--lux-h) + 1.1rem) !important;
+  border: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  transform: none !important;
+}
+
+.app-shell-header button.lux-theme-switch:hover,
+.app-shell-header .lux-theme-switch:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+.app-shell-header .lux-theme-switch :where(span, i, svg),
+.app-shell-header .lux-theme-switch span,
+.app-shell-header .lux-theme-switch svg,
+.app-shell-header .lux-theme-switch i {
+  color: inherit !important;
+  background-image: unset;
+}
+
+.app-shell-header .lux-theme-switch__liquid {
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.88),
+    rgba(255, 236, 200, 0.55),
+    rgba(255, 214, 150, 0.45),
+    rgba(255, 255, 255, 0.75)
+  ) !important;
+  background-size: 220% 220% !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+}
+
+.app-shell-header .lux-theme-switch[data-mode='dark'] .lux-theme-switch__liquid {
+  background: linear-gradient(
+    120deg,
+    rgba(30, 41, 70, 0.92),
+    rgba(67, 56, 120, 0.75),
+    rgba(30, 58, 110, 0.85),
+    rgba(15, 23, 42, 0.95)
+  ) !important;
+  background-size: 220% 220% !important;
+  border-color: rgba(129, 140, 248, 0.35) !important;
+}
+
+.app-shell-header .lux-theme-switch__orb-metal {
+  background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      #fff4dc 0deg 3deg,
+      #ecd4a4 3deg 6deg,
+      #f8e8c4 6deg 9deg,
+      #d8b878 9deg 12deg
+    ),
+    radial-gradient(circle at 32% 28%, #fffaf0, #e8c888 55%, #c9964a 100%) !important;
+}
+
+.app-shell-header .lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-metal {
+  background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      #dbe4ff 0deg 3deg,
+      #9eb0e8 3deg 6deg,
+      #c7d2fe 6deg 9deg,
+      #7c8fd4 9deg 12deg
+    ),
+    radial-gradient(circle at 32% 28%, #f1f5ff, #8b9cf0 55%, #4f46e5 100%) !important;
+}
+
+.app-shell-header .lux-theme-switch__orb-icon--sun {
+  color: rgba(90, 65, 30, 0.72) !important;
+}
+
+.app-shell-header .lux-theme-switch[data-mode='dark'] .lux-theme-switch__orb-icon--moon {
+  color: rgba(15, 23, 60, 0.8) !important;
+}
+
+.app-shell-header .lux-theme-switch__ghost--moon {
+  color: rgba(120, 140, 170, 0.55) !important;
+}
+
+.app-shell-header .lux-theme-switch[data-mode='dark'] .lux-theme-switch__ghost--sun {
+  color: rgba(255, 214, 120, 0.55) !important;
+}
+
+.app-shell-header .lux-theme-switch__label-light {
+  color: #b45309 !important;
+}
+
+.app-shell-header .lux-theme-switch__label-dark {
+  color: #818cf8 !important;
+}
+
+.app-shell-header .lux-theme-switch__aura,
+.app-shell-header .lux-theme-switch__halo,
+.app-shell-header .lux-theme-switch__track,
+.app-shell-header .lux-theme-switch__orb,
+.app-shell-header .lux-theme-switch__orb-metal,
+.app-shell-header .lux-theme-switch__orb-shine,
+.app-shell-header .lux-theme-switch__orb-ring {
+  background-color: transparent;
+}
+
+html.dark .app-shell-header button.lux-theme-switch,
+html.dark .app-shell-header .lux-theme-switch,
+html[data-app-theme='dark'] .app-shell-header button.lux-theme-switch {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
 }
 

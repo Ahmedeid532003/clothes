@@ -18,6 +18,9 @@ from django.utils import timezone
 
 from erp.accounting_models import Treasury, TreasuryMovement
 from erp.sale_models import Sale, SaleLine, SalePayment, SaleReturn
+from tenancy.db_alias import erp_database_alias
+
+_ERP_DB = erp_database_alias()
 from erp.services import catalog as catalog_service
 from erp.services.catalog import get_current_season
 from erp.services import stock as stock_service
@@ -142,6 +145,20 @@ def _line_total(qty: Decimal, unit_price: Decimal, discount_percent: Decimal) ->
     return gross.quantize(Decimal("0.01"))
 
 
+def _effective_variant_unit_price(*, variant, product, row: dict) -> Decimal:
+    """سعر البيع الفعلي — لا نستخدم 0 من الواجهة إذا كان للصنف سعر بيع."""
+    raw = row.get("unit_price")
+    if raw is not None and str(raw).strip() != "":
+        parsed = Decimal(str(raw))
+        if parsed > 0:
+            return parsed
+    if variant.sale_price is not None and variant.sale_price > 0:
+        return variant.sale_price
+    if product.sale_price is not None and product.sale_price > 0:
+        return product.sale_price
+    return Decimal("0")
+
+
 def resolve_pos_seller(*, code: str):
     from erp.models import User
 
@@ -223,7 +240,10 @@ def _payment_amounts(total: Decimal, payment_method: str, payments: list[dict], 
             rows[method] = rows.get(method, Decimal("0")) + amount
         paid = sum(rows.values(), Decimal("0")).quantize(Decimal("0.01"))
         if abs(paid - total) > Decimal("0.01"):
-            raise ValidationError(f"إجمالي المدفوعات ({paid}) لا يساوي المطلوب ({total}) — {label}.")
+            raise ValidationError(
+                f"إجمالي المدفوعات ({paid}) لا يساوي المطلوب ({total}) — {label}. "
+                f"راجع الإجمالي والخصم والضريبة."
+            )
         if paid != total:
             diff = (total - paid).quantize(Decimal("0.01"))
             first_method = next(iter(rows))
@@ -323,6 +343,78 @@ def _variant_sale_and_offer(*, product, variant, branch_id) -> tuple[Decimal, De
     return sale, offer, offer_discount
 
 
+def _products_queryset_to_pos_hits(*, qs, warehouse_id, season_id, max_products: int):
+    results = []
+    branch_id = _branch_id_from_warehouse(warehouse_id)
+    for product in qs[:max_products]:
+        variants_payload = []
+        for variant in product.variants.filter(is_active=True):
+            bal = (
+                StockBalance.objects.using("tenant")
+                .filter(warehouse_id=warehouse_id, variant=variant)
+                .first()
+            )
+            qty = bal.quantity if bal else Decimal("0")
+            total_available = qty + _other_warehouse_qty(warehouse_id, variant.id)
+            sale_price, offer_price, offer_discount = _variant_sale_and_offer(
+                product=product, variant=variant, branch_id=branch_id
+            )
+            discount_pct = Decimal("0")
+            if offer_discount > 0 and sale_price > 0:
+                discount_pct = (offer_discount / sale_price * Decimal("100")).quantize(
+                    Decimal("0.01")
+                )
+            variants_payload.append(
+                {
+                    "variant_id": str(variant.id),
+                    "size_name": variant.size.name_ar,
+                    "color_name": variant.color.name_ar,
+                    "barcode": variant.barcode or product.barcode,
+                    "quantity_available": str(total_available),
+                    "branch_quantity_available": str(qty),
+                    "unit_price": str(sale_price),
+                    "sale_price": str(sale_price),
+                    "offer_price": str(offer_price) if offer_price is not None else None,
+                    "offer_discount_per_unit": str(offer_discount),
+                    "discount_percent": str(discount_pct),
+                }
+            )
+        if variants_payload:
+            offer_p = get_branch_offer_price(product=product, branch_id=branch_id) if branch_id else None
+            results.append(
+                {
+                    "id": str(product.id),
+                    "code": product.code,
+                    "name_ar": product.name_ar,
+                    "barcode": product.barcode,
+                    "sale_price": str(product.sale_price),
+                    "offer_price": str(offer_p) if offer_p is not None else None,
+                    "season": str(product.season_id),
+                    "season_name": product.season.name_ar,
+                    "is_current_season": str(product.season_id) == str(season_id),
+                    "variants": variants_payload,
+                }
+            )
+    return results
+
+
+def list_catalog_products_for_pos(*, warehouse_id, season_id, limit: int = 200):
+    """كل الأصناف النشطة (مع المقاسات/الألوان) — لشاشة البيع بالباركود."""
+    qs = (
+        Product.objects.using("tenant")
+        .filter(is_active=True)
+        .select_related("brand", "season")
+        .prefetch_related("variants__size", "variants__color", "variants__balances")
+        .order_by("-season_id", "code")
+    )
+    return _products_queryset_to_pos_hits(
+        qs=qs,
+        warehouse_id=warehouse_id,
+        season_id=season_id,
+        max_products=limit,
+    )
+
+
 def search_sellable_products(*, warehouse_id, season_id, query: str = "", barcode: str = ""):
     qs = (
         Product.objects.using("tenant")
@@ -348,62 +440,14 @@ def search_sellable_products(*, warehouse_id, season_id, query: str = "", barcod
                 | Q(barcode__icontains=part)
             )
     else:
-        return Product.objects.none()
+        return []
 
-    results = []
-    branch_id = _branch_id_from_warehouse(warehouse_id)
-    for product in qs[:50]:
-        variants_payload = []
-        for variant in product.variants.filter(is_active=True):
-            bal = (
-                StockBalance.objects.using("tenant")
-                .filter(warehouse_id=warehouse_id, variant=variant)
-                .first()
-            )
-            qty = bal.quantity if bal else Decimal("0")
-            total_available = qty + _other_warehouse_qty(warehouse_id, variant.id)
-            # POS — عرض كل المقاسات/الألوان النشطة؛ التحقق من الرصيد عند الحفظ
-            sale_price, offer_price, offer_discount = _variant_sale_and_offer(
-                product=product, variant=variant, branch_id=branch_id
-            )
-            discount_pct = Decimal("0")
-            if offer_discount > 0 and sale_price > 0:
-                discount_pct = (offer_discount / sale_price * Decimal("100")).quantize(
-                    Decimal("0.01")
-                )
-            variants_payload.append(
-                {
-                    "variant_id": str(variant.id),
-                    "size_name": variant.size.name_ar,
-                    "color_name": variant.color.name_ar,
-                    "barcode": variant.barcode or product.barcode,
-                    "quantity_available": str(total_available),
-                    "branch_quantity_available": str(qty),
-                    "unit_price": str(sale_price),
-                    "sale_price": str(sale_price),
-                    "offer_price": str(offer_price) if offer_price is not None else None,
-                    "offer_discount_per_unit": str(offer_discount),
-                    "discount_percent": str(discount_pct),
-                }
-            )
-        if variants_payload:
-            sale_p = Decimal(str(product.sale_price))
-            offer_p = get_branch_offer_price(product=product, branch_id=branch_id) if branch_id else None
-            results.append(
-                {
-                    "id": str(product.id),
-                    "code": product.code,
-                    "name_ar": product.name_ar,
-                    "barcode": product.barcode,
-                    "sale_price": str(product.sale_price),
-                    "offer_price": str(offer_p) if offer_p is not None else None,
-                    "season": str(product.season_id),
-                    "season_name": product.season.name_ar,
-                    "is_current_season": str(product.season_id) == str(season_id),
-                    "variants": variants_payload,
-                }
-            )
-    return results
+    return _products_queryset_to_pos_hits(
+        qs=qs,
+        warehouse_id=warehouse_id,
+        season_id=season_id,
+        max_products=50,
+    )
 
 
 def _other_warehouse_qty(warehouse_id, variant_id) -> Decimal:
@@ -595,7 +639,14 @@ def list_in_stock_products(*, warehouse_id, season_id, limit: int = 36):
                 "quantity_available": str(total_available),
                 "branch_quantity_available": str(bal.quantity),
                 "unit_price": str(
-                    variant.sale_price if variant.sale_price is not None else product.sale_price
+                    variant.sale_price
+                    if variant.sale_price is not None and variant.sale_price > 0
+                    else product.sale_price
+                ),
+                "sale_price": str(
+                    variant.sale_price
+                    if variant.sale_price is not None and variant.sale_price > 0
+                    else product.sale_price
                 ),
             }
         )
@@ -693,14 +744,18 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
             if delivery_agent_id
             else Sale.DeliveryStatus.PENDING
         )
-    sale = Sale.objects.using("tenant").create(
+    invoice_discount = Decimal(str(data.get("discount_amount") or 0))
+    if invoice_discount < 0:
+        invoice_discount = Decimal("0")
+
+    sale = Sale.objects.using(_ERP_DB).create(
         code=code,
         branch=branch,
         warehouse=warehouse,
         season=season,
         payment_method=data.get("payment_method", Sale.PaymentMethod.CASH),
         notes=notes,
-        discount_amount=Decimal(str(data.get("discount_amount") or 0)),
+        discount_amount=invoice_discount,
         tax_percent=tax_percent,
         is_tax_invoice=is_tax_invoice,
         tax_registration_number=tax_registration_number,
@@ -714,6 +769,7 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
         delivery_status=delivery_status,
     )
 
+    subtotal_acc = Decimal("0")
     for row in lines_data:
         qty = Decimal(str(row["quantity"]))
         discount_percent = Decimal(str(row.get("discount_percent") or 0))
@@ -740,6 +796,8 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
                 raise ValidationError(
                     f"الكمية غير كافية للعرض {composite.name_ar} — المتاح: {max_sets} مجموعة"
                 )
+            line_total = _line_total(qty, unit_price, discount_percent)
+            subtotal_acc += line_total
             _create_sale_line_record(
                 sale=sale,
                 composite=composite,
@@ -764,7 +822,13 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
             .select_related("product")
             .get(pk=row["variant"], is_active=True)
         )
-        unit_price = Decimal(str(row.get("unit_price") or variant.product.sale_price))
+        unit_price = _effective_variant_unit_price(
+            variant=variant, product=variant.product, row=row
+        )
+        if unit_price <= 0:
+            raise ValidationError(
+                f"الصنف {variant.product.name_ar} بدون سعر بيع — حدّث سعر الصنف أولاً."
+            )
 
         available = _auto_transfer_to_branch_warehouse(
             branch=branch,
@@ -786,6 +850,8 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
                 f"«{warehouse.name_ar}»: {available}، وفي مخازن أخرى: {other_total}"
             )
 
+        line_total = _line_total(qty, unit_price, discount_percent)
+        subtotal_acc += line_total
         _create_sale_line_record(
             sale=sale,
             variant=variant,
@@ -797,9 +863,19 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
         )
         _adjust_balance(warehouse.id, variant.id, -qty)
 
-    lines = sale.lines.all()
-    subtotal = sum((ln.line_total for ln in lines), Decimal("0"))
+    lines = list(SaleLine.objects.using(_ERP_DB).filter(sale_id=sale.pk))
+    subtotal = subtotal_acc
+    if subtotal <= 0 and lines:
+        subtotal = sum((ln.line_total for ln in lines), Decimal("0"))
+    if subtotal <= 0:
+        raise ValidationError(
+            "إجمالي الأصناف صفر — تحقق من سعر البيع والخصم على كل صنف."
+        )
     sale.subtotal = subtotal
+    inv_disc = Decimal(str(sale.discount_amount or 0))
+    if inv_disc > subtotal:
+        inv_disc = subtotal
+    sale.discount_amount = inv_disc
     taxable = max(subtotal - sale.discount_amount, Decimal("0"))
     sale.tax_amount = (taxable * sale.tax_percent / Decimal("100")).quantize(Decimal("0.01"))
     sale.total = (taxable + sale.tax_amount).quantize(Decimal("0.01"))
@@ -839,7 +915,7 @@ def create_sale(*, branch: Branch, user, data: dict) -> Sale:
     if len(payment_amounts) > 1 and not is_installment:
         sale.payment_method = Sale.PaymentMethod.MIXED
     sale.save(
-        using="tenant",
+        using=_ERP_DB,
         update_fields=[
             "subtotal",
             "tax_amount",

@@ -1,4 +1,5 @@
 import { apiFetch } from './client';
+import { cacheKey, cachedGet, invalidateApiCache, appendCachedListItem, removeCachedListItem, replaceCachedListItem } from './request-cache';
 
 export type CatalogItem = {
   id: string;
@@ -154,13 +155,26 @@ export type StockScrapDto = {
 };
 
 function catalogApi(base: string) {
+  const listPath = `${base}/`;
   return {
-    list: () => apiFetch<CatalogItem[]>(`${base}/`),
-    create: (payload: Record<string, unknown>) =>
-      apiFetch<CatalogItem>(`${base}/`, { method: 'POST', body: JSON.stringify(payload) }),
-    update: (id: string, payload: Record<string, unknown>) =>
-      apiFetch<CatalogItem>(`${base}/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) }),
-    remove: (id: string) => apiFetch<void>(`${base}/${id}/`, { method: 'DELETE' }),
+    list: () => cachedGet(cacheKey(listPath), () => apiFetch<CatalogItem[]>(listPath), 300_000),
+    create: async (payload: Record<string, unknown>) => {
+      const row = await apiFetch<CatalogItem>(listPath, { method: 'POST', body: JSON.stringify(payload) });
+      appendCachedListItem<CatalogItem>(listPath, row);
+      return row;
+    },
+    update: async (id: string, payload: Record<string, unknown>) => {
+      const row = await apiFetch<CatalogItem>(`${base}/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      replaceCachedListItem<CatalogItem>(listPath, row);
+      return row;
+    },
+    remove: async (id: string) => {
+      await apiFetch<void>(`${base}/${id}/`, { method: 'DELETE' });
+      removeCachedListItem<CatalogItem>(listPath, id);
+    },
   };
 }
 
@@ -175,65 +189,90 @@ export const supplierCategoriesApi = catalogApi('/inventory/supplier-categories'
 export const supplierDepartmentsApi = catalogApi('/inventory/supplier-departments');
 
 export async function fetchWarehouses(): Promise<WarehouseDto[]> {
-  return apiFetch<WarehouseDto[]>('/organization/warehouses/');
+  return cachedGet(cacheKey('/organization/warehouses/'), () => apiFetch<WarehouseDto[]>('/organization/warehouses/'), 300_000);
 }
 
 export async function createWarehouse(payload: Record<string, unknown>): Promise<WarehouseDto> {
-  return apiFetch<WarehouseDto>('/organization/warehouses/', {
+  const listPath = '/organization/warehouses/';
+  const branchId = String(payload.primary_branch_id ?? payload.primary_branch ?? '').trim();
+  const body: Record<string, unknown> = { ...payload };
+  if (branchId) {
+    body.primary_branch_id = branchId;
+    body.primary_branch = branchId;
+  }
+
+  const row = await apiFetch<WarehouseDto>(listPath, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
+  appendCachedListItem<WarehouseDto>(listPath, row);
+  return row;
 }
 
 export async function updateWarehouse(id: string, payload: Record<string, unknown>): Promise<WarehouseDto> {
-  return apiFetch<WarehouseDto>(`/organization/warehouses/${id}/`, {
+  const row = await apiFetch<WarehouseDto>(`/organization/warehouses/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+  replaceCachedListItem<WarehouseDto>('/organization/warehouses/', row);
+  return row;
 }
 
 export async function deleteWarehouse(id: string): Promise<void> {
   await apiFetch<void>(`/organization/warehouses/${id}/`, { method: 'DELETE' });
+  removeCachedListItem<WarehouseDto>('/organization/warehouses/', id);
 }
 
 export async function fetchSeasons(): Promise<SeasonDto[]> {
-  return apiFetch<SeasonDto[]>('/organization/seasons/');
+  return cachedGet(cacheKey('/organization/seasons/'), () => apiFetch<SeasonDto[]>('/organization/seasons/'), 300_000);
 }
 
 export async function createSeason(payload: Record<string, unknown>): Promise<SeasonDto> {
-  return apiFetch<SeasonDto>('/organization/seasons/', {
+  const row = await apiFetch<SeasonDto>('/organization/seasons/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  appendCachedListItem<SeasonDto>('/organization/seasons/', row);
+  return row;
 }
 
 export async function updateSeason(id: string, payload: Record<string, unknown>): Promise<SeasonDto> {
-  return apiFetch<SeasonDto>(`/organization/seasons/${id}/`, {
+  const row = await apiFetch<SeasonDto>(`/organization/seasons/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+  replaceCachedListItem<SeasonDto>('/organization/seasons/', row);
+  return row;
 }
 
 export async function fetchProducts(): Promise<ProductDto[]> {
-  return apiFetch<ProductDto[]>('/inventory/products/');
+  return cachedGet(cacheKey('/inventory/products/'), () => apiFetch<ProductDto[]>('/inventory/products/'), 300_000);
 }
 
 export async function createProduct(payload: Record<string, unknown>): Promise<ProductDto> {
-  return apiFetch<ProductDto>('/inventory/products/', {
+  const row = await apiFetch<ProductDto>('/inventory/products/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  appendCachedListItem<ProductDto>('/inventory/products/', row);
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function updateProduct(id: string, payload: Record<string, unknown>): Promise<ProductDto> {
-  return apiFetch<ProductDto>(`/inventory/products/${id}/`, {
+  const row = await apiFetch<ProductDto>(`/inventory/products/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
+  invalidateApiCache('/inventory/products/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function deleteProduct(id: string): Promise<void> {
   await apiFetch<void>(`/inventory/products/${id}/`, { method: 'DELETE' });
+  removeCachedListItem<ProductDto>('/inventory/products/', id);
+  invalidateApiCache('/inventory/stock-balances/');
 }
 
 export async function fetchProduct(id: string): Promise<ProductDto> {
@@ -299,7 +338,64 @@ export async function fetchStockBalances(warehouseId?: string): Promise<StockBal
   const url = warehouseId
     ? `/inventory/stock-balances/?warehouse=${warehouseId}`
     : '/inventory/stock-balances/';
-  return apiFetch<StockBalanceDto[]>(url);
+  return cachedGet(cacheKey(url), () => apiFetch<StockBalanceDto[]>(url), 300_000);
+}
+
+export type MgmtDashboardDto = {
+  summary: {
+    products_count: number;
+    composite_products_count: number;
+    total_stock_quantity: string;
+    total_purchase_value: string;
+    total_sale_value: string;
+    profit_margin_percent: string;
+  };
+  stock_by_warehouse: Array<{
+    warehouse_code: string;
+    warehouse_name: string;
+    quantity: string;
+    sale_value: string;
+  }>;
+  stock_by_classification: Array<{
+    classification_code: string;
+    classification_name: string;
+    quantity: string;
+    sale_value: string;
+  }>;
+  low_stock_alerts: Array<{
+    product_code: string;
+    product_name: string;
+    remaining_qty: string;
+    threshold_qty: string;
+    reorder_percent: string;
+  }>;
+  reorder_warning: string;
+  composite_products: Array<{
+    code: string;
+    name: string;
+    description: string;
+    sell_price: string;
+  }>;
+  recent_permits: Array<{
+    type: 'transfer' | 'disbursement' | 'addition' | 'scrap';
+    code: string;
+    status: string;
+    purpose: string;
+    date: string;
+    from_warehouse_code: string;
+    from_warehouse_name: string;
+    to_warehouse_code: string;
+    to_warehouse_name: string;
+    items_qty: string;
+  }>;
+};
+
+export async function fetchMgmtDashboard(): Promise<MgmtDashboardDto> {
+  return cachedGet(
+    cacheKey('/inventory/mgmt-dashboard/'),
+    () => apiFetch<MgmtDashboardDto>('/inventory/mgmt-dashboard/'),
+    120_000,
+  );
 }
 
 export type SupplierListFilters = {
@@ -372,14 +468,17 @@ export async function fetchStockTransferOptions(): Promise<StockTransferOptions>
 }
 
 export async function fetchStockTransfers(): Promise<StockTransferDto[]> {
-  return apiFetch<StockTransferDto[]>('/inventory/stock-transfers/');
+  return cachedGet(cacheKey('/inventory/stock-transfers/'), () => apiFetch<StockTransferDto[]>('/inventory/stock-transfers/'), 60_000);
 }
 
 export async function createStockTransfer(payload: Record<string, unknown>): Promise<StockTransferDto> {
-  return apiFetch<StockTransferDto>('/inventory/stock-transfers/', {
+  const row = await apiFetch<StockTransferDto>('/inventory/stock-transfers/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  invalidateApiCache('/inventory/stock-transfers/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function submitStockTransfer(id: string): Promise<StockTransferDto> {
@@ -387,11 +486,14 @@ export async function submitStockTransfer(id: string): Promise<StockTransferDto>
 }
 
 export async function approveStockTransfer(id: string): Promise<StockTransferDto> {
-  return apiFetch<StockTransferDto>(`/inventory/stock-transfers/${id}/approve/`, { method: 'POST' });
+  const row = await apiFetch<StockTransferDto>(`/inventory/stock-transfers/${id}/approve/`, { method: 'POST' });
+  invalidateApiCache('/inventory/stock-transfers/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function fetchStockScrap(): Promise<StockScrapDto[]> {
-  return apiFetch<StockScrapDto[]>('/inventory/stock-scrap/');
+  return cachedGet(cacheKey('/inventory/stock-scrap/'), () => apiFetch<StockScrapDto[]>('/inventory/stock-scrap/'), 60_000);
 }
 
 export async function createStockScrap(payload: Record<string, unknown>): Promise<StockScrapDto> {
@@ -453,22 +555,28 @@ export async function fetchStockDisbursementOptions(): Promise<StockVoucherOptio
 }
 
 export async function fetchStockDisbursements(): Promise<StockDisbursementDto[]> {
-  return apiFetch<StockDisbursementDto[]>('/inventory/stock-disbursements/');
+  return cachedGet(cacheKey('/inventory/stock-disbursements/'), () => apiFetch<StockDisbursementDto[]>('/inventory/stock-disbursements/'), 60_000);
 }
 
 export async function createStockDisbursement(
   payload: Record<string, unknown>,
 ): Promise<StockDisbursementDto> {
-  return apiFetch<StockDisbursementDto>('/inventory/stock-disbursements/', {
+  const row = await apiFetch<StockDisbursementDto>('/inventory/stock-disbursements/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  invalidateApiCache('/inventory/stock-disbursements/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function approveStockDisbursement(id: string): Promise<StockDisbursementDto> {
-  return apiFetch<StockDisbursementDto>(`/inventory/stock-disbursements/${id}/approve/`, {
+  const row = await apiFetch<StockDisbursementDto>(`/inventory/stock-disbursements/${id}/approve/`, {
     method: 'POST',
   });
+  invalidateApiCache('/inventory/stock-disbursements/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function fetchStockAdditionOptions(): Promise<StockVoucherOptions> {
@@ -476,22 +584,28 @@ export async function fetchStockAdditionOptions(): Promise<StockVoucherOptions> 
 }
 
 export async function fetchStockAdditions(): Promise<StockAdditionDto[]> {
-  return apiFetch<StockAdditionDto[]>('/inventory/stock-additions/');
+  return cachedGet(cacheKey('/inventory/stock-additions/'), () => apiFetch<StockAdditionDto[]>('/inventory/stock-additions/'), 60_000);
 }
 
 export async function createStockAddition(
   payload: Record<string, unknown>,
 ): Promise<StockAdditionDto> {
-  return apiFetch<StockAdditionDto>('/inventory/stock-additions/', {
+  const row = await apiFetch<StockAdditionDto>('/inventory/stock-additions/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  invalidateApiCache('/inventory/stock-additions/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function approveStockAddition(id: string): Promise<StockAdditionDto> {
-  return apiFetch<StockAdditionDto>(`/inventory/stock-additions/${id}/approve/`, {
+  const row = await apiFetch<StockAdditionDto>(`/inventory/stock-additions/${id}/approve/`, {
     method: 'POST',
   });
+  invalidateApiCache('/inventory/stock-additions/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export type StockValuationRow = {
@@ -594,14 +708,24 @@ export async function fetchStockCount(id: string): Promise<StockCountDto> {
 }
 
 export async function fetchStockCounts(): Promise<StockCountDto[]> {
-  return apiFetch<StockCountDto[]>('/inventory/stock-count/');
+  return cachedGet(cacheKey('/inventory/stock-count/'), () => apiFetch<StockCountDto[]>('/inventory/stock-count/'), 60_000);
 }
 
 export async function createStockCount(payload: Record<string, unknown>): Promise<StockCountDto> {
-  return apiFetch<StockCountDto>('/inventory/stock-count/', {
+  const body = { ...payload };
+  if (Array.isArray(body.lines)) {
+    body.lines = (body.lines as Array<Record<string, unknown>>).map((row) => ({
+      variant: row.variant ?? row.variant_id,
+      system_qty: row.system_qty ?? 0,
+      counted_qty: row.counted_qty ?? row.system_qty ?? 0,
+    }));
+  }
+  const row = await apiFetch<StockCountDto>('/inventory/stock-count/', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
+  invalidateApiCache('/inventory/stock-count/');
+  return row;
 }
 
 export async function updateStockCount(
@@ -615,7 +739,10 @@ export async function updateStockCount(
 }
 
 export async function approveStockCount(id: string): Promise<StockCountDto> {
-  return apiFetch<StockCountDto>(`/inventory/stock-count/${id}/approve/`, { method: 'POST' });
+  const row = await apiFetch<StockCountDto>(`/inventory/stock-count/${id}/approve/`, { method: 'POST' });
+  invalidateApiCache('/inventory/stock-count/');
+  invalidateApiCache('/inventory/stock-balances/');
+  return row;
 }
 
 export async function undoStockCount(id: string): Promise<StockCountDto> {
@@ -714,16 +841,18 @@ export type CompositeProductDto = {
 };
 
 export async function fetchCompositeProducts(): Promise<CompositeProductDto[]> {
-  return apiFetch<CompositeProductDto[]>('/inventory/composite-products/');
+  return cachedGet(cacheKey('/inventory/composite-products/'), () => apiFetch<CompositeProductDto[]>('/inventory/composite-products/'), 300_000);
 }
 
 export async function createCompositeProduct(
   payload: Record<string, unknown>,
 ): Promise<CompositeProductDto> {
-  return apiFetch<CompositeProductDto>('/inventory/composite-products/', {
+  const row = await apiFetch<CompositeProductDto>('/inventory/composite-products/', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  appendCachedListItem<CompositeProductDto>('/inventory/composite-products/', row);
+  return row;
 }
 
 export async function updateCompositeProduct(
@@ -738,6 +867,7 @@ export async function updateCompositeProduct(
 
 export async function deleteCompositeProduct(id: string): Promise<void> {
   await apiFetch<void>(`/inventory/composite-products/${id}/`, { method: 'DELETE' });
+  removeCachedListItem<CompositeProductDto>('/inventory/composite-products/', id);
 }
 
 export type PriceAdjustmentDto = {

@@ -73,6 +73,17 @@ class StockValuationView(APIView):
         return Response(data)
 
 
+class MgmtDashboardView(APIView):
+    """لوحة مؤشرات إدارة المنتجات — بيانات مجمّعة من قاعدة البيانات."""
+
+    permission_classes = [HasPageAction]
+    required_page = "mgmt-dashboard"
+    required_action = "view"
+
+    def get(self, request):
+        return Response(inv_ext.mgmt_dashboard())
+
+
 class StockCountListCreateView(APIView):
     permission_classes = [HasPageAction]
     required_page = "stock-count"
@@ -107,7 +118,11 @@ class StockCountListCreateView(APIView):
         self.required_action = "update"
         ser = StockCountWriteSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
-        count = inv_ext.create_stock_count(data=ser.validated_data, user=request.user)
+        payload = dict(ser.validated_data)
+        # Ensure explicit count lines from the client are preserved for create.
+        if "lines" in request.data and request.data.get("lines"):
+            payload["lines"] = request.data["lines"]
+        count = inv_ext.create_stock_count(data=payload, user=request.user)
         if request.data.get("approve"):
             count = inv_ext.approve_stock_count(count.id, user=request.user)
         count = (

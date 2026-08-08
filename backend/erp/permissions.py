@@ -16,6 +16,10 @@ PAGE_ALIASES: dict[str, list[str]] = {
     "attendance": ["employee-reports", "attendance-import"],
     "bonuses": ["employee-reports", "deductions"],
     "deductions": ["employee-reports", "bonuses"],
+    "warehouses": ["mgmt-inventory", "inventory-management"],
+    "mgmt-inventory": ["warehouses", "inventory-management", "mgmt-dashboard"],
+    "inventory-management": ["warehouses", "mgmt-inventory"],
+    "mgmt-dashboard": ["inventory-management", "products", "stock-balances", "mgmt-inventory"],
 }
 
 

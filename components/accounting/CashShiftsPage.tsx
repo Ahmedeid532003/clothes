@@ -5,18 +5,15 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   cashShiftsApi,
   pendingShiftsApi,
-  treasuriesApi,
   type ActiveShiftUser,
   type CashierDailyReportDto,
   type CashShiftDto,
 } from '@/lib/api/accounting';
-import { fetchBranches } from '@/lib/api/branches';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   AlertBanner,
   fmtMoney,
-  LinkAction,
   PageSectionHeader,
   PageToolbar,
   StatusBadge,
@@ -25,13 +22,14 @@ import { emitExpensesRefresh } from '@/components/accounting/ExpensesHub';
 import { ErpDataTable, type ErpColumn } from '@/components/erp/ErpDataTable';
 import { ErpSideDrawer } from '@/components/erp/ErpSideDrawer';
 import { canUseFeature } from '@/lib/permissions/access';
-import { resolveMyOpenShift, safeMoneyStr, shiftRowId } from '@/lib/accounting/shiftUtils';
+import { resolveMyOpenShift, safeMoneyStr, shiftRowId, normalizeMoneyForApi } from '@/lib/accounting/shiftUtils';
 import {
   buildCashierDailyReportLabels,
   printCashierDailyReportHtml,
 } from '@/components/accounting/CashierDailyReport';
 import { ShiftClosePanel } from '@/components/accounting/ShiftClosePanel';
 import { ClosedShiftsTable } from '@/components/accounting/ClosedShiftsTable';
+import { OpenShiftDrawer } from '@/components/accounting/OpenShiftDrawer';
 import {
   editableToPrintReport,
   recalcShiftClose,
@@ -48,6 +46,7 @@ export function CashShiftsPage() {
   const [activeUsers, setActiveUsers] = useState<ActiveShiftUser[]>([]);
   const [myOpen, setMyOpen] = useState<CashShiftDto | null>(null);
   const [blockOpen, setBlockOpen] = useState(false);
+  const [openBlockReason, setOpenBlockReason] = useState<string | null>(null);
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
   const [treasuries, setTreasuries] = useState<{ id: string; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,11 +59,7 @@ export function CashShiftsPage() {
   const [closeDrawer, setCloseDrawer] = useState(false);
   const [closeForm, setCloseForm] = useState<CashShiftDto | null>(null);
   const [closeLoading, setCloseLoading] = useState(false);
-  const [openPayload, setOpenPayload] = useState({
-    branch: '',
-    treasury: '',
-    opening_balance: '0',
-  });
+  const [closingShift, setClosingShift] = useState(false);
   const [actualBalance, setActualBalance] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
   const [dailyReport, setDailyReport] = useState<CashierDailyReportDto | null>(null);
@@ -77,7 +72,7 @@ export function CashShiftsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [list, open, br, tr, pending, active] = await Promise.all([
+      const [list, open, opts, pending, active] = await Promise.all([
         cashShiftsApi.list({
           status: statusFilter || undefined,
           handover_status: handoverFilter || undefined,
@@ -85,17 +80,22 @@ export function CashShiftsPage() {
           q: search.trim() || undefined,
         }).catch(() => [] as CashShiftDto[]),
         cashShiftsApi.myOpen().catch(() => null),
-        fetchBranches(),
-        treasuriesApi.list(),
+        cashShiftsApi.openOptions().catch(() => null),
         pendingShiftsApi.dashboard().catch(() => null),
         cashShiftsApi.activeUsers().catch(() => [] as ActiveShiftUser[]),
       ]);
       setRows(list);
       setMyOpen(open);
       setActiveUsers(active);
-      setBlockOpen(pending?.block_new_shift ?? false);
-      setBranches(br.map((b) => ({ id: b.id, name: b.name_ar || b.name_en || b.code })));
-      setTreasuries(tr.map((x) => ({ id: x.id, label: `${x.code} — ${x.name_ar}` })));
+      setBlockOpen(Boolean(opts && !opts.can_open && opts.block_reason));
+      setOpenBlockReason(opts?.block_reason || null);
+      setBranches((opts?.branches ?? []).map((b) => ({ id: b.id, name: b.name })));
+      setTreasuries(
+        (opts?.treasuries ?? []).map((x) => ({
+          id: x.id,
+          label: x.label || `${x.code} — ${x.name_ar}`,
+        })),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -104,9 +104,30 @@ export function CashShiftsPage() {
     }
   }, [statusFilter, handoverFilter, branchFilter, search]);
 
+  const effectiveMyOpen = useMemo(
+    () => resolveMyOpenShift(myOpen, activeUsers, rows, user?.id),
+    [myOpen, activeUsers, rows, user?.id],
+  );
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const openDrawerHandler = () => {
+      if (!effectiveMyOpen) setOpenDrawer(true);
+    };
+    window.addEventListener('cash-shifts:open-drawer', openDrawerHandler);
+    return () => window.removeEventListener('cash-shifts:open-drawer', openDrawerHandler);
+  }, [effectiveMyOpen]);
+
+  const openShiftHint = useMemo(() => {
+    if (effectiveMyOpen) return null;
+    if (openBlockReason) return openBlockReason;
+    if (!branches.length) return t('accounting.openShiftNoBranch');
+    if (!treasuries.length) return t('accounting.openShiftNoTreasury');
+    return null;
+  }, [effectiveMyOpen, openBlockReason, branches.length, treasuries.length, t]);
 
   /** نشطون = من فتحوا وردية مفتوحة (من API أو من صفوف الجدول) */
   const activeOnSystem = useMemo(() => {
@@ -159,11 +180,6 @@ export function CashShiftsPage() {
       </span>
     );
   };
-
-  const effectiveMyOpen = useMemo(
-    () => resolveMyOpenShift(myOpen, activeUsers, rows, user?.id),
-    [myOpen, activeUsers, rows, user?.id],
-  );
 
   const openCloseDrawer = (shift: CashShiftDto) => {
     const id = shiftRowId(shift);
@@ -300,29 +316,20 @@ export function CashShiftsPage() {
     [t],
   );
 
-  const onOpenShift = async () => {
-    setError(null);
-    try {
-      await cashShiftsApi.open(openPayload);
-      setOpenDrawer(false);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
-    }
-  };
-
   const onCloseShift = async () => {
     const id = shiftRowId(closeForm);
     if (!id) {
       setError('تعذّر إغلاق الوردية — معرّف غير صالح');
       return;
     }
-    const cash = safeMoneyStr(actualBalance).trim();
+    const cash = normalizeMoneyForApi(actualBalance);
     if (!cash) {
       setError(t('accounting.actualBalance'));
       return;
     }
+    if (closingShift) return;
     setError(null);
+    setClosingShift(true);
     try {
       await cashShiftsApi.close(id, {
         actual_balance: cash,
@@ -332,7 +339,13 @@ export function CashShiftsPage() {
       setCloseForm(null);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
+      const msg = e instanceof Error ? e.message : 'Error';
+      setError(msg);
+      if (/ليست مفتوحة|not open|already closed/i.test(msg)) {
+        await load();
+      }
+    } finally {
+      setClosingShift(false);
     }
   };
 
@@ -388,21 +401,19 @@ export function CashShiftsPage() {
         actions={
           <PageToolbar onRefresh={load}>
             {!effectiveMyOpen && (
-              <Button
-                size="sm"
-                disabled={blockOpen || !treasuries.length}
-                onClick={() => {
-                  setOpenPayload({
-                    branch: branches[0]?.id ?? '',
-                    treasury: treasuries[0]?.id ?? '',
-                    opening_balance: '0',
-                  });
-                  setOpenDrawer(true);
-                }}
-              >
-                <Plus className="h-4 w-4 me-1" />
-                {t('accounting.openShift')}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <Button
+                  size="sm"
+                  disabled={Boolean(effectiveMyOpen)}
+                  onClick={() => setOpenDrawer(true)}
+                >
+                  <Plus className="h-4 w-4 me-1" />
+                  {t('accounting.openShift')}
+                </Button>
+                {openShiftHint ? (
+                  <p className="text-[11px] text-amber-800 max-w-xs text-end">{openShiftHint}</p>
+                ) : null}
+              </div>
             )}
           </PageToolbar>
         }
@@ -444,11 +455,8 @@ export function CashShiftsPage() {
       ) : (
         <>
       {error ? <AlertBanner variant="error">{error}</AlertBanner> : null}
-      {blockOpen && !effectiveMyOpen ? (
-        <AlertBanner variant="warning">
-          {t('accounting.pendingBlock')}{' '}
-          <LinkAction label={t('nav.pendingShifts')} tab="pending-shifts" />
-        </AlertBanner>
+      {blockOpen && !effectiveMyOpen && openBlockReason ? (
+        <AlertBanner variant="warning">{openBlockReason}</AlertBanner>
       ) : null}
 
       {/* النشطون على النظام — بناءً على فتح وردية */}
@@ -575,7 +583,7 @@ export function CashShiftsPage() {
         }
         renderRowActions={(row) => (
           <div className="flex justify-end gap-1">
-            {row.status === 'open' && row.employee === user?.id && shiftRowId(row) && (
+            {row.status === 'open' && (row.employee === user?.id || user?.is_owner) && shiftRowId(row) && (
               <Button size="sm" variant="outline" onClick={() => openCloseDrawer(row)}>
                 {t('accounting.closeShift')}
               </Button>
@@ -596,59 +604,7 @@ export function CashShiftsPage() {
         </>
       )}
 
-      <ErpSideDrawer
-        open={openDrawer}
-        onOpenChange={setOpenDrawer}
-        title={t('accounting.openShift')}
-        onSave={onOpenShift}
-        saveLabel={t('accounting.openShift')}
-        disabled={!openPayload.branch || !openPayload.treasury}
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">{t('accounting.colBranch')}</label>
-            <select
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              value={openPayload.branch}
-              onChange={(e) => setOpenPayload({ ...openPayload, branch: e.target.value })}
-            >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">{t('accounting.treasury')}</label>
-            <select
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              value={openPayload.treasury}
-              onChange={(e) => setOpenPayload({ ...openPayload, treasury: e.target.value })}
-            >
-              {treasuries.map((tr) => (
-                <option key={tr.id} value={tr.id}>
-                  {tr.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">{t('accounting.openingBalance')}</label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0"
-              value={openPayload.opening_balance}
-              onChange={(e) =>
-                setOpenPayload({ ...openPayload, opening_balance: e.target.value })
-              }
-            />
-            <p className="text-[10px] text-slate-500 mt-1">{t('accounting.openingBalanceHint')}</p>
-          </div>
-        </div>
-      </ErpSideDrawer>
+      <OpenShiftDrawer open={openDrawer} onOpenChange={setOpenDrawer} onSuccess={load} />
 
       <ErpSideDrawer
         open={closeDrawer}
@@ -664,7 +620,7 @@ export function CashShiftsPage() {
         description={closeForm ? `${closeForm.code} — ${closeForm.employee_name}` : undefined}
         onSave={onCloseShift}
         saveLabel={t('accounting.closeShift')}
-        disabled={closeLoading || !safeMoneyStr(actualBalance).trim() || !dailyReport}
+        disabled={closeLoading || closingShift || !normalizeMoneyForApi(actualBalance) || !dailyReport}
         width="wide"
         secondaryLabel={t('barcode.print')}
         onSecondary={printCloseSlip}

@@ -1,0 +1,11 @@
+.montagat-canvas {
+  font-family: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+}
+
+.montagat-canvas .border-gray-150 {
+  border-color: #e8edf2;
+}
+
+.montagat-canvas .border-emerald-150 {
+  border-color: #bbf7d0;
+}

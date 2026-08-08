@@ -4,7 +4,6 @@ import {
   ClipboardList,
   Download,
   Package,
-  Plus,
   RefreshCw,
   ScanBarcode,
   Undo2,
@@ -13,6 +12,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { scanOrdersApi, type ScanOrderDto } from '@/lib/api/scanOrders';
 import { ScanOrderEditorPage } from '@/components/orders/ScanOrderEditorPage';
 import { Button } from '@/components/ui/button';
+import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { ERP_NATIVE_SELECT } from '@/lib/ui/erpNativeSelect';
 import { printScanOrderReceipt } from '@/lib/print/scanOrderReceiptPrint';
 import { formatMoneyLocale } from '@/lib/money';
@@ -133,14 +133,9 @@ export function OrdersHubPage() {
             Excel
           </Button>
           <div className="relative">
-            <Button
-              size="sm"
-              className="bg-violet-700 hover:bg-violet-800 font-bold"
-              onClick={() => setShowNewMenu((v) => !v)}
-            >
-              <Plus className="h-4 w-4 me-1" />
+            <ErpAddButton onClick={() => setShowNewMenu((v) => !v)}>
               {t('common.add')}
-            </Button>
+            </ErpAddButton>
             {showNewMenu && (
               <div className="absolute top-full mt-1 end-0 z-20 min-w-[200px] rounded-lg border bg-white shadow-lg py-1">
                 {(['sale', 'transfer', 'stock_count', 'purchase_return'] as OrderType[]).map((tp) => (

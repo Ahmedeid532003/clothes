@@ -4514,30 +4514,20 @@ export const EmployeesTab: React.FC<{
                     </span>
                   </div>
                   
-                  {/* Action Buttons (Desktop Only) */}
-                  <div className="hidden md:flex items-center gap-2.5 w-full">
+                  {/* Add Employee — under total, inside header strip */}
+                  <div className="hidden md:flex items-center w-full">
                     <button 
                       onClick={openAddEmployeeModal}
-                      className="flex-1 h-[36px] bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-xs uppercase tracking-wider"
+                      className="w-full h-[36px] bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-xs uppercase tracking-wider"
                     >
                       <UserPlus size={15} />
                       <span className="text-[10px] whitespace-nowrap">{lang === 'ar' ? 'إضافة موظف' : 'Add Employee'}</span>
                     </button>
-                    <div className="flex-1 h-[36px]">
-                      <ExportDataButton
-                        lang={lang}
-                        onToast={triggerHrToast}
-                        onCopy={() => triggerHrToast(lang === 'ar' ? 'تم نسخ بيانات الموظفين إلى الحافظة' : 'Staff profiles copied to clipboard!')}
-                        onPrint={() => triggerHrToast(lang === 'ar' ? 'تم فتح خيارات الطباعة للجدول' : 'Print dialog opened!')}
-                        className="w-full h-full block text-[10px]"
-                        style={{ height: '36px', minHeight: '36px' }}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Mobile Actions Panel (Search, Add, Export, Filter/View/Columns) */}
+              {/* Mobile Actions Panel (Search, Add, Filter/View/Columns) */}
               <div className="flex md:hidden flex-col gap-3 mb-4 mt-2">
                 {/* 1. Search */}
                 <div className="relative w-full">
@@ -4568,19 +4558,7 @@ export const EmployeesTab: React.FC<{
                   <span>{lang === 'ar' ? 'إضافة موظف' : 'Add Employee'}</span>
                 </button>
 
-                {/* 3. Export Data */}
-                <div className="w-full">
-                  <ExportDataButton
-                    lang={lang}
-                    onToast={triggerHrToast}
-                    onCopy={() => triggerHrToast(lang === 'ar' ? 'تم نسخ بيانات الموظفين إلى الحافظة' : 'Staff profiles copied to clipboard!')}
-                    onPrint={() => triggerHrToast(lang === 'ar' ? 'تم فتح خيارات الطباعة للجدول' : 'Print dialog opened!')}
-                    className="w-full block"
-                    style={{ height: '44px' }}
-                  />
-                </div>
-
-                {/* 4. Filter, View Mode, Columns Setup */}
+                {/* 3. Filter, View Mode, Columns Setup */}
                 <div className="flex items-center justify-between gap-2 w-full">
                   {/* Filter */}
                   <button
@@ -5540,17 +5518,18 @@ export const EmployeesTab: React.FC<{
                     <motion.div
                       key={shift.id}
                       layoutId={`shift-${shift.id}`}
-                      className={`bg-white border border-slate-200 hover:border-orange-500/30 rounded-3xl p-5 shadow-xs transition-all duration-300 relative flex flex-col justify-between space-y-4 ${maximizedBox === shift.id ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}
+                      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                      className={`bg-white border border-slate-200 hover:border-orange-500/30 rounded-3xl p-5 shadow-xs transition-all duration-300 relative flex flex-col justify-between space-y-4 no-underline ${maximizedBox === shift.id ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}
                     >
-                      {/* Top segment: Title and Period Count */}
+                      {/* Top segment: Title (start/right) + badges (end/left) */}
                       <div className="space-y-1.5">
-                        <div className="flex items-start justify-between rtl:flex-row-reverse gap-2">
-                          <h4 className="text-xs font-black text-[#0a1945] flex items-center gap-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-xs font-black text-[#0a1945] flex items-center gap-1.5 text-start no-underline">
                             <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0" />
-                            <span>{lang === 'ar' ? shift.nameAr : shift.nameEn}</span>
+                            <span className="no-underline">{lang === 'ar' ? shift.nameAr : shift.nameEn}</span>
                           </h4>
-                          <div className="flex items-center gap-1.5 rtl:flex-row-reverse">
-                            <span className="px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 text-[9px] font-extrabold rounded-md font-mono shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 text-[9px] font-extrabold rounded-md font-mono shrink-0 no-underline">
                               {shift.periodsCount === 1 
                                 ? (lang === 'ar' ? 'فترة واحدة' : '1 Period') 
                                 : shift.periodsCount === 2 
@@ -5558,6 +5537,7 @@ export const EmployeesTab: React.FC<{
                                 : (lang === 'ar' ? '٣ فترات/يوم' : '3 Periods')}
                             </span>
                             <button
+                              type="button"
                               onClick={() => setMaximizedBox(maximizedBox === shift.id ? null : shift.id)}
                               className="p-1 border-[0.5px] border-[#dee1eb] hover:border-orange-500 hover:bg-slate-50 text-slate-500 hover:text-slate-800 rounded-lg transition duration-150 active:scale-95 cursor-pointer shadow-xs"
                               title="Maximize"
@@ -5567,10 +5547,10 @@ export const EmployeesTab: React.FC<{
                           </div>
                         </div>
 
-                        {/* Employee count badge */}
-                        <div className="flex items-center gap-1 text-[9.5px] font-bold text-slate-400 rtl:flex-row-reverse">
+                        {/* Employee count — start/right in RTL */}
+                        <div className="flex items-center gap-1 text-[9.5px] font-bold text-slate-400 justify-start">
                           <Users size={11} className="text-slate-400 shrink-0" />
-                          <span>
+                          <span className="no-underline">
                             {lang === 'ar' 
                               ? `طاقم العمل: ${shiftWorkers.length} موظف` 
                               : `Assigned: ${shiftWorkers.length} personnel`}
@@ -5578,38 +5558,38 @@ export const EmployeesTab: React.FC<{
                         </div>
                       </div>
 
-                      {/* Display of weekday active hours preview */}
+                      {/* Weekday hours: day at start (right), times at end (left) */}
                       <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-3 space-y-2 text-[10.5px]">
-                        <p className="text-[9px] font-black uppercase text-slate-400 select-none border-b pb-1 rtl:text-right text-left">
+                        <p className="text-[9px] font-black uppercase text-slate-400 select-none border-b pb-1 text-start no-underline">
                           {lang === 'ar' ? 'جدول الدوام وتوقيتات الفترات' : 'Roster Sheet & Hours Map'}
                         </p>
                         
-                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        <div className="space-y-1.5 max-h-36 overflow-y-auto pe-1">
                           {daysOfWeek.map(day => {
                             const isHoliday = !!shift.daysLocked[day.id];
                             const times = shift.hours[day.id] || { p1In: '09:00', p1Out: '17:00', p2In: '17:00', p2Out: '21:00', p3In: '21:00', p3Out: '03:00' };
                             return (
-                              <div key={day.id} className="flex items-center justify-between rtl:flex-row-reverse gap-2 border-b border-slate-100/40 pb-1 text-[10px]">
-                                <span className={`font-extrabold text-slate-600 shrink-0 ${maximizedBox === shift.id ? 'text-[13px] px-[30px]' : ''}`}>
+                              <div key={day.id} className="flex items-center justify-between gap-2 border-b border-slate-100/40 pb-1 text-[10px]">
+                                <span className={`font-extrabold text-slate-600 shrink-0 text-start no-underline ${maximizedBox === shift.id ? 'text-[13px] px-[30px]' : ''}`}>
                                   {lang === 'ar' ? day.labelAr : day.labelEn}
                                 </span>
 
                                 {isHoliday ? (
-                                  <span className={`font-bold text-rose-500 px-1 py-0.2 bg-rose-50 border border-rose-100/40 rounded ${maximizedBox === shift.id ? 'text-[13px] mx-[30px]' : 'text-[9px]'}`}>
+                                  <span className={`font-bold text-rose-500 px-1 py-0.2 bg-rose-50 border border-rose-100/40 rounded no-underline ${maximizedBox === shift.id ? 'text-[13px] mx-[30px]' : 'text-[9px]'}`}>
                                     {lang === 'ar' ? 'عطلة رسمية' : 'Holiday OFF'}
                                   </span>
                                 ) : (
-                                  <div className={`font-mono text-slate-500 space-y-0.5 text-right rtl:text-left ${maximizedBox === shift.id ? 'text-[13px] px-[30px]' : 'text-[9px]'}`}>
-                                    <div className="font-semibold text-slate-800">
+                                  <div className={`font-mono text-slate-500 space-y-0.5 text-end no-underline ${maximizedBox === shift.id ? 'text-[13px] px-[30px]' : 'text-[9px]'}`}>
+                                    <div className="font-semibold text-slate-800 no-underline">
                                       {times.p1In} {times.p1In && '»'} {times.p1Out}
                                     </div>
                                     {shift.periodsCount >= 2 && times.p2In && (
-                                      <div className="text-orange-500 font-semibold">
+                                      <div className="text-orange-500 font-semibold no-underline">
                                         {times.p2In} » {times.p2Out}
                                       </div>
                                     )}
                                     {shift.periodsCount >= 3 && times.p3In && (
-                                      <div className="text-violet-500 font-semibold">
+                                      <div className="text-violet-500 font-semibold no-underline">
                                         {times.p3In} » {times.p3Out}
                                       </div>
                                     )}
@@ -5621,8 +5601,8 @@ export const EmployeesTab: React.FC<{
                         </div>
                       </div>
 
-                      {/* Fast color indicators dots footer */}
-                      <div className="flex items-center gap-1 justify-start rtl:justify-end text-[9px] text-slate-400 select-none pb-1 border-b border-slate-100">
+                      {/* Day dots — end/left in RTL */}
+                      <div className="flex items-center gap-1 justify-end text-[9px] text-slate-400 select-none pb-1 border-b border-slate-100">
                         {daysOfWeek.map(day => {
                           const isH = !!shift.daysLocked[day.id];
                           return (
@@ -5640,17 +5620,16 @@ export const EmployeesTab: React.FC<{
                         })}
                       </div>
 
-                      {/* Bottom Action buttons */}
-                      <div className="flex items-center gap-2 pt-1 rtl:flex-row-reverse">
+                      {/* Actions: Edit (visual start/left) + delete beside it */}
+                      <div className="flex items-center gap-2 pt-1 flex-row-reverse">
                         <button
                           type="button"
                           onClick={() => startEditShiftPreset(shift)}
-                          className="flex-1 py-2 bg-slate-50 hover:bg-orange-50 text-slate-600 hover:text-orange-500 border border-slate-150 rounded-lg text-[10.5px] font-extrabold transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer"
+                          className="flex-1 py-2 bg-slate-50 hover:bg-orange-50 text-slate-600 hover:text-orange-500 border border-slate-150 rounded-lg text-[10.5px] font-extrabold transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer no-underline"
                         >
                           <Edit2 size={11} />
-                          <span>{lang === 'ar' ? 'تعديل التوقيتات' : 'Configuration'}</span>
+                          <span className="no-underline">{lang === 'ar' ? 'تعديل التوقيتات' : 'Configuration'}</span>
                         </button>
-                        
                         <button
                           type="button"
                           onClick={() => handleDeleteShiftPreset(shift.id)}
@@ -5673,13 +5652,14 @@ export const EmployeesTab: React.FC<{
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.95, opacity: 0 }}
-                      className="bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl max-w-2xl w-full space-y-5 text-xs text-left rtl:text-right select-none"
+                      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                      className="bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl max-w-2xl w-full space-y-5 text-xs text-start select-none no-underline"
                     >
-                      {/* Modal Header */}
-                      <div className="-mt-6 -mx-6 px-6 py-3 bg-orange-500 rounded-t-3xl flex items-center justify-between rtl:flex-row-reverse">
-                        <div className="flex items-center gap-2 rtl:flex-row-reverse">
+                      {/* Modal Header: title at start (right in RTL), X at end (left in RTL) */}
+                      <div className="-mt-6 -mx-6 px-6 py-3 bg-orange-500 rounded-t-3xl flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
                           <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm shrink-0" />
-                          <h3 className="text-sm font-black text-white drop-shadow-sm">
+                          <h3 className="text-sm font-black text-white drop-shadow-sm text-start no-underline">
                             {editingShiftPreset 
                               ? (lang === 'ar' ? 'تعديل وحفظ إعدادات الوردية' : 'Edit Shift preset parameters') 
                               : (lang === 'ar' ? 'إضافة وتصنيف وردية جديدة' : 'Add Custom Corporate Shift')}
@@ -5688,7 +5668,7 @@ export const EmployeesTab: React.FC<{
                         <button 
                           type="button"
                           onClick={() => { setEditingShiftPreset(null); setActiveShiftModal(false); }}
-                          className="text-white hover:text-orange-100 p-1.5 rounded-lg hover:bg-orange-600 transition cursor-pointer"
+                          className="text-white hover:text-orange-100 p-1.5 rounded-lg hover:bg-orange-600 transition cursor-pointer shrink-0"
                         >
                           <X size={15} strokeWidth={2.5} />
                         </button>
@@ -5699,8 +5679,8 @@ export const EmployeesTab: React.FC<{
                         
                         {/* Name Inputs Row */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">
+                          <div className="text-start">
+                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 text-start no-underline">
                               {lang === 'ar' ? 'اسم الوردية بالإنجليزية' : 'Shift Name En'}
                             </label>
                             <input 
@@ -5708,13 +5688,14 @@ export const EmployeesTab: React.FC<{
                               value={shiftPresetNameEn} 
                               onChange={e => setShiftPresetNameEn(e.target.value)} 
                               placeholder="e.g. Double-Period Retail Shift" 
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-orange-500/50 transition font-extrabold text-slate-700 font-sans"
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-orange-500/50 transition font-extrabold text-slate-700 font-sans text-start"
+                              dir="ltr"
                               required 
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1">
+                          <div className="text-start">
+                            <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 text-start no-underline">
                               {lang === 'ar' ? 'اسم الوردية بالعربية' : 'Shift Name Ar'}
                             </label>
                             <input 
@@ -5722,7 +5703,7 @@ export const EmployeesTab: React.FC<{
                               value={shiftPresetNameAr} 
                               onChange={e => setShiftPresetNameAr(e.target.value)} 
                               placeholder="مثال: وردية منافذ ومبيعات فترتين" 
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-orange-500/50 transition font-extrabold text-slate-700 text-right font-sans"
+                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-orange-500/50 transition font-extrabold text-slate-700 text-start font-sans"
                               required 
                             />
                           </div>
@@ -5730,19 +5711,19 @@ export const EmployeesTab: React.FC<{
 
                         {/* Period slider control */}
                         <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-150 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                          <div>
-                            <h4 className="text-[11px] font-black text-[#0a1945]">{lang === 'ar' ? 'تقسيم فترات الوردية اليومية' : 'Daily Shift Period System'}</h4>
-                            <p className="text-[9.5px] text-slate-450 mt-0.5">{lang === 'ar' ? 'اختر عدد فترات العمل المنفصلة التي تسري للوردية خلال اليوم الواحد' : 'Set the concurrent active work shifts/periods occurring daily'}</p>
+                          <div className="text-start">
+                            <h4 className="text-[11px] font-black text-[#0a1945] text-start no-underline">{lang === 'ar' ? 'تقسيم فترات الوردية اليومية' : 'Daily Shift Period System'}</h4>
+                            <p className="text-[9.5px] text-slate-450 mt-0.5 text-start no-underline">{lang === 'ar' ? 'اختر عدد فترات العمل المنفصلة التي تسري للوردية خلال اليوم الواحد' : 'Set the concurrent active work shifts/periods occurring daily'}</p>
                           </div>
 
-                          <div className="flex items-center gap-1.5 self-end sm:self-center">
+                          <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
                             {[1, 2, 3].map(num => (
                               <button
                                 key={num}
                                 type="button"
                                 onClick={() => setShiftPresetPeriodsCount(num)}
                                 className={cn(
-                                  "px-3.5 py-1.5 rounded-lg font-black transition-all cursor-pointer text-xs",
+                                  "px-3.5 py-1.5 rounded-lg font-black transition-all cursor-pointer text-xs no-underline",
                                   shiftPresetPeriodsCount === num 
                                     ? "bg-[#0a1945] text-white" 
                                     : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
@@ -5756,19 +5737,19 @@ export const EmployeesTab: React.FC<{
 
                         {/* Week Day planner inside modal */}
                         <div className="space-y-3">
-                          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b pb-1">
+                          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b pb-1 text-start no-underline">
                             {lang === 'ar' ? 'تعيين الجدول الزمني وتوقيتات الأسبوع' : 'Daily timing bounds & weekdays templates'}
                           </h4>
 
-                          <div className="grid grid-cols-1 gap-2.5 max-h-[220px] overflow-y-auto overflow-x-auto pr-1 pb-2 sidebar-scrollbar">
+                          <div className="grid grid-cols-1 gap-2.5 max-h-[220px] overflow-y-auto overflow-x-auto pe-1 pb-2 sidebar-scrollbar">
                             {daysOfWeek.map(day => {
                               const isLocked = !!shiftPresetDaysLocked[day.id];
                               const dayHours = shiftPresetHours[day.id] || { p1In: '09:00', p1Out: '17:00', p2In: '17:00', p2Out: '21:00', p3In: '21:05', p3Out: '03:00' };
                               return (
                                 <div key={day.id} className="p-2.5 border border-slate-150 rounded-2xl bg-white hover:border-slate-300 transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs" style={{ minWidth: shiftPresetPeriodsCount === 3 ? '850px' : 'auto' }}>
                                   
-                                  {/* Day Name & Toggle */}
-                                  <div className="flex items-center gap-2.5 w-full sm:w-1/4">
+                                  {/* Day Name & Toggle — start/right in RTL */}
+                                  <div className="flex items-center gap-2.5 w-full sm:w-1/4 justify-start">
                                     <input 
                                       type="checkbox"
                                       id={`daylock-${day.id}`}
@@ -5778,10 +5759,10 @@ export const EmployeesTab: React.FC<{
                                       }}
                                       className="rounded border-slate-300 text-rose-500 focus:ring-rose-450 w-4 h-4 cursor-pointer"
                                     />
-                                    <label htmlFor={`daylock-${day.id}`} className="cursor-pointer rtl:text-right text-left">
-                                      <p className="font-extrabold text-slate-800">{lang === 'ar' ? day.labelAr : day.labelEn}</p>
+                                    <label htmlFor={`daylock-${day.id}`} className="cursor-pointer text-start no-underline">
+                                      <p className="font-extrabold text-slate-800 no-underline">{lang === 'ar' ? day.labelAr : day.labelEn}</p>
                                       <p className={cn(
-                                        "text-[8.5px] font-extrabold uppercase mt-0.2",
+                                        "text-[8.5px] font-extrabold uppercase mt-0.2 no-underline",
                                         isLocked ? "text-rose-500" : "text-emerald-600"
                                       )}>
                                         {isLocked ? (lang === 'ar' ? 'إجازة' : 'Holiday') : (lang === 'ar' ? 'يوم عمل' : 'Duty Day')}
@@ -5792,7 +5773,7 @@ export const EmployeesTab: React.FC<{
                                   {/* Day-specific inputs */}
                                   <div className="flex-1">
                                     {isLocked ? (
-                                      <div className="p-2 bg-rose-50/55 border border-dashed border-rose-100/50 rounded-xl text-center text-[9px] font-black text-rose-500 uppercase">
+                                      <div className="p-2 bg-rose-50/55 border border-dashed border-rose-100/50 rounded-xl text-center text-[9px] font-black text-rose-500 uppercase no-underline">
                                         ❌ {lang === 'ar' ? 'معطل - إجازة أسبوعية رسمية' : 'OFF - HOLIDAY SPECIFIED'}
                                       </div>
                                     ) : (
@@ -5801,8 +5782,8 @@ export const EmployeesTab: React.FC<{
                                         {/* Period 1 In/Out */}
                                         {shiftPresetPeriodsCount >= 1 && (
                                           <>
-                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-slate-400 mb-1.5">{lang === 'ar' ? 'ف1 - حضور' : 'P1 - In'}</p>
+                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-slate-400 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف1 - حضور' : 'P1 - In'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p1In} 
@@ -5815,8 +5796,8 @@ export const EmployeesTab: React.FC<{
                                                 className="bg-white border-2 border-slate-200 rounded-xl p-2 md:p-2.5 w-full text-center font-black text-[#0a1945] focus:border-orange-500/50 outline-none transition-all font-mono text-base md:text-[18px]"
                                               />
                                             </div>
-                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-slate-400 mb-1.5">{lang === 'ar' ? 'ف1 - انصراف' : 'P1 - Out'}</p>
+                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-slate-400 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف1 - انصراف' : 'P1 - Out'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p1Out} 
@@ -5835,8 +5816,8 @@ export const EmployeesTab: React.FC<{
                                         {/* Period 2 In/Out */}
                                         {shiftPresetPeriodsCount >= 2 && (
                                           <>
-                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-orange-400 mb-1.5">{lang === 'ar' ? 'ف2 - حضور' : 'P2 - In'}</p>
+                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-orange-400 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف2 - حضور' : 'P2 - In'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p2In} 
@@ -5849,8 +5830,8 @@ export const EmployeesTab: React.FC<{
                                                 className="bg-white border-2 border-slate-200 rounded-xl p-2 md:p-2.5 w-full text-center font-black text-orange-600 focus:border-orange-500/50 outline-none transition-all font-mono text-base md:text-[18px]"
                                               />
                                             </div>
-                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-orange-400 mb-1.5">{lang === 'ar' ? 'ف2 - انصراف' : 'P2 - Out'}</p>
+                                            <div className="p-2 px-3 bg-slate-50/70 border border-slate-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-orange-400 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف2 - انصراف' : 'P2 - Out'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p2Out} 
@@ -5869,8 +5850,8 @@ export const EmployeesTab: React.FC<{
                                         {/* Period 3 In/Out */}
                                         {shiftPresetPeriodsCount >= 3 && (
                                           <>
-                                            <div className="p-2 px-3 bg-[#fbf5ff] border border-violet-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-violet-500 mb-1.5">{lang === 'ar' ? 'ف3 - حضور' : 'P3 - In'}</p>
+                                            <div className="p-2 px-3 bg-[#fbf5ff] border border-violet-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-violet-500 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف3 - حضور' : 'P3 - In'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p3In} 
@@ -5883,8 +5864,8 @@ export const EmployeesTab: React.FC<{
                                                 className="bg-white border-2 border-slate-200 rounded-xl p-2 md:p-2.5 w-full text-center font-black text-violet-600 focus:border-orange-500/50 outline-none transition-all font-mono text-base md:text-[18px]"
                                               />
                                             </div>
-                                            <div className="p-2 px-3 bg-[#fbf5ff] border border-violet-100 rounded-xl">
-                                              <p className="text-[9.5px] font-black uppercase text-violet-500 mb-1.5">{lang === 'ar' ? 'ف3 - انصراف' : 'P3 - Out'}</p>
+                                            <div className="p-2 px-3 bg-[#fbf5ff] border border-violet-100 rounded-xl text-start">
+                                              <p className="text-[9.5px] font-black uppercase text-violet-500 mb-1.5 text-start no-underline">{lang === 'ar' ? 'ف3 - انصراف' : 'P3 - Out'}</p>
                                               <input 
                                                 type="time" 
                                                 value={dayHours.p3Out} 
@@ -5910,11 +5891,11 @@ export const EmployeesTab: React.FC<{
                           </div>
                         </div>
 
-                        {/* Backing Button controls */}
-                        <div className="flex items-center gap-3 pt-3 border-t rtl:flex-row-reverse">
+                        {/* Footer: Save (start/right) + Cancel (end/left) */}
+                        <div className="flex items-center gap-3 pt-3 border-t">
                           <button
                             type="submit"
-                            className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-lg transition cursor-pointer text-xs"
+                            className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-lg transition cursor-pointer text-xs no-underline"
                           >
                             {lang === 'ar' 
                               ? (editingShiftPreset ? 'حفظ تجميع التوقيتات' : 'إضافة وحفظ الوردية') 
@@ -5924,7 +5905,7 @@ export const EmployeesTab: React.FC<{
                           <button
                             type="button"
                             onClick={() => { setEditingShiftPreset(null); setActiveShiftModal(false); }}
-                            className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-550 font-black rounded-lg transition cursor-pointer text-xs"
+                            className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-550 font-black rounded-lg transition cursor-pointer text-xs no-underline"
                           >
                             {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                           </button>
@@ -6089,49 +6070,11 @@ export const EmployeesTab: React.FC<{
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-2 rtl:flex-row-reverse w-full justify-between sm:w-auto sm:justify-start">
-                        {/* Attendance Date Filter Input */}
-                        <div className="relative group/date">
-                           <input 
-                             type="date" 
-                             value={attendanceDate} 
-                             onChange={e=>setAttendanceDate(e.target.value)} 
-                             style={{ height: '36px' }}
-                             className="p-1 px-2 bg-white border border-slate-200 rounded-xl text-[11px] font-bold font-mono outline-none w-full sm:w-auto min-h-[36px] hover:border-orange-400 focus:border-orange-400 transition" 
-                           />
-                        </div>
-
-                        <div className="relative group/toggle">
-                          <button
-                            onClick={() => setAttendanceDirViewMode(attendanceDirViewMode === 'table' ? 'kanban' : 'table')}
-                            style={{ height: '36px' }}
-                            className="flex items-center justify-center gap-1.5 p-2 px-3 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none min-h-[36px] text-[11px] font-black"
-                          >
-                            {attendanceDirViewMode === 'table' ? (
-                              <>
-                                <LayoutGrid size={14} className="text-[#0a1945]" />
-                                <span className="font-sans">
-                                  {lang === 'ar' ? 'بطاقات' : 'Cards'}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <List size={14} className="text-orange-500" />
-                                <span className="font-sans">
-                                  {lang === 'ar' ? 'جدول' : 'Table'}
-                                </span>
-                              </>
-                            )}
-                          </button>
-                          
-                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/toggle:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
-                            {attendanceDirViewMode === 'table' 
-                              ? (lang === 'ar' ? 'تحويل لعرض البطاقات' : 'Switch to Cards view')
-                              : (lang === 'ar' ? 'تحويل للجدول الكلاسيكي' : 'Switch to Classic Table view')
-                            }
-                          </div>
-                        </div>
-
+                      <div
+                        className="flex items-center gap-2 w-full justify-between sm:w-auto sm:justify-start"
+                        style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}
+                      >
+                        {/* Settings (rightmost in Arabic) */}
                         <div className="relative group/settings">
                           <button 
                             onClick={() => {
@@ -6208,6 +6151,65 @@ export const EmployeesTab: React.FC<{
                               </div>
                             )}
                           </AnimatePresence>
+                        </div>
+
+                        {/* Download — between settings and cards */}
+                        <div className="relative group/export shrink-0" style={{ height: '36px', width: '36px' }}>
+                          <ExportDataButton
+                            lang={lang}
+                            hideText
+                            onToast={triggerHrToast}
+                            onCopy={() => triggerHrToast(lang === 'ar' ? 'تم نسخ سجل الحضور إلى الحافظة' : 'Attendance log copied!')}
+                            onPrint={() => triggerHrToast(lang === 'ar' ? 'تم فتح خيارات الطباعة لسجل الحضور' : 'Print dialog opened!')}
+                            className="w-[36px] h-[36px] block"
+                            style={{ height: '36px', width: '36px', minHeight: '36px' }}
+                          />
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/export:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
+                            {lang === 'ar' ? 'تصدير / تحميل' : 'Export / Download'}
+                          </div>
+                        </div>
+
+                        {/* Cards toggle — orange icon like settings */}
+                        <div className="relative group/toggle">
+                          <button
+                            onClick={() => setAttendanceDirViewMode(attendanceDirViewMode === 'table' ? 'kanban' : 'table')}
+                            style={{ height: '36px' }}
+                            className="flex items-center justify-center gap-1.5 p-2 px-3 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none min-h-[36px] text-[11px] font-black"
+                          >
+                            {attendanceDirViewMode === 'table' ? (
+                              <>
+                                <LayoutGrid size={14} className="text-orange-500" />
+                                <span className="font-sans">
+                                  {lang === 'ar' ? 'بطاقات' : 'Cards'}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <List size={14} className="text-orange-500" />
+                                <span className="font-sans">
+                                  {lang === 'ar' ? 'جدول' : 'Table'}
+                                </span>
+                              </>
+                            )}
+                          </button>
+                          
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/toggle:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
+                            {attendanceDirViewMode === 'table' 
+                              ? (lang === 'ar' ? 'تحويل لعرض البطاقات' : 'Switch to Cards view')
+                              : (lang === 'ar' ? 'تحويل للجدول الكلاسيكي' : 'Switch to Classic Table view')
+                            }
+                          </div>
+                        </div>
+
+                        {/* Attendance Date Filter */}
+                        <div className="relative group/date">
+                           <input 
+                             type="date" 
+                             value={attendanceDate} 
+                             onChange={e=>setAttendanceDate(e.target.value)} 
+                             style={{ height: '36px' }}
+                             className="p-1 px-2 bg-white border border-slate-200 rounded-xl text-[11px] font-bold font-mono outline-none w-full sm:w-auto min-h-[36px] hover:border-orange-400 focus:border-orange-400 transition" 
+                           />
                         </div>
                       </div>
                     </div>
@@ -6552,35 +6554,14 @@ export const EmployeesTab: React.FC<{
                   </p>
                 </div>
 
-                {/* Summary Badges on the right */}
-                <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+                {/* Summary + Add Bonus under total, inside header strip */}
+                <div className="flex flex-col gap-2.5 shrink-0 w-full md:w-[280px]">
                   <div className="bg-emerald-50 border border-emerald-100 p-3.5 px-5 rounded-2xl text-center font-sans w-full">
                     <span className="block text-[10px] uppercase tracking-wider font-extrabold text-emerald-500">{lang === 'ar' ? 'إجمالي المكافآت' : 'Total Issued Rewards'}</span>
                     <span className="text-base font-black text-emerald-600 font-mono mt-1 block">
                       {bonusesList.filter(b => bonusFilterMonth === 'all' || b.date.startsWith(bonusFilterMonth)).reduce((sum, b) => sum + b.amount, 0).toLocaleString()} <span className="text-xs font-sans font-bold">{lang === 'ar' ? 'ج.م' : 'EGP'}</span>
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Search, Filter & Export Panel */}
-              <div className="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-xs">
-                {/* Row 1: Export Button + Add Reward button */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
-                    {/* Export Data Button */}
-                    <div className="w-full sm:w-28 shrink-0">
-                      <ExportDataButton
-                        lang={lang}
-                        onToast={triggerHrToast}
-                        onCopy={() => triggerHrToast(lang === 'ar' ? 'تم نسخ سجل المكافآت' : 'Rewards registry copied!')}
-                        onPrint={() => triggerHrToast(lang === 'ar' ? 'تم فتح خيارات الطباعة لسجل المكافآت' : 'Print options opened for rewards!')}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Add Reward Button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -6591,10 +6572,10 @@ export const EmployeesTab: React.FC<{
                       setSelectedRewardType('custom');
                       setShowRewardModal(true);
                     }}
-                    className="mahaly-action-btn mahaly-action-btn--toolbar"
+                    className="w-full h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer text-xs"
                   >
-                    <Plus size={16} strokeWidth={2.5} />
-                    <span>{lang === 'ar' ? 'تسجيل مكافأة جديدة' : 'Issue New Reward'}</span>
+                    <Plus size={15} strokeWidth={2.5} />
+                    <span className="text-[10px] whitespace-nowrap">{lang === 'ar' ? 'إضافة مكافأة' : 'Add Bonus'}</span>
                   </button>
                 </div>
               </div>
@@ -6811,60 +6792,11 @@ export const EmployeesTab: React.FC<{
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2 rtl:flex-row-reverse w-full justify-between sm:w-auto sm:justify-start">
-                    {/* Bonus Date Filter Input (Changed to Month Dropdown) */}
-                    <div className="relative group/date">
-                      <select
-                        value={bonusFilterMonth}
-                        onChange={(e) => {
-                          setBonusFilterMonth(e.target.value);
-                          setBonusCurrentPage(1);
-                        }}
-                        style={{ height: '36px' }}
-                        className="p-1 px-3 pr-7 rtl:pl-7 rtl:pr-3 bg-white border border-slate-200 rounded-xl text-[11px] font-bold font-sans outline-none w-full sm:w-auto min-h-[36px] hover:border-orange-400 focus:border-orange-400 transition cursor-pointer appearance-none text-[#0a1945]"
-                      >
-                        <option value="all">{lang === 'ar' ? 'كل الأشهر' : 'All Months'}</option>
-                        <option value="2026-05">{lang === 'ar' ? 'مايو - 2026' : 'May - 2026'}</option>
-                        <option value="2026-06">{lang === 'ar' ? 'يونيو - 2026' : 'June - 2026'}</option>
-                        <option value="2026-07">{lang === 'ar' ? 'يوليو - 2026' : 'July - 2026'}</option>
-                        <option value="2026-08">{lang === 'ar' ? 'أغسطس - 2026' : 'August - 2026'}</option>
-                      </select>
-                      <div className="absolute top-1/2 right-2.5 rtl:left-2.5 rtl:right-auto -translate-y-1/2 pointer-events-none text-slate-500">
-                        <ChevronDown size={13} />
-                      </div>
-                    </div>
-
-                    <div className="relative group/toggle">
-                      <button
-                        onClick={() => setBonusDirViewMode(bonusDirViewMode === 'table' ? 'kanban' : 'table')}
-                        style={{ height: '36px' }}
-                        className="flex items-center justify-center gap-1.5 p-2 px-3 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none min-h-[36px] text-[11px] font-black"
-                      >
-                        {bonusDirViewMode === 'table' ? (
-                          <>
-                            <LayoutGrid size={14} className="text-[#0a1945]" />
-                            <span className="font-sans">
-                              {lang === 'ar' ? 'بطاقات' : 'Cards'}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <List size={14} className="text-orange-500" />
-                            <span className="font-sans">
-                              {lang === 'ar' ? 'جدول' : 'Table'}
-                            </span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/toggle:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
-                        {bonusDirViewMode === 'table' 
-                          ? (lang === 'ar' ? 'تحويل لعرض البطاقات' : 'Switch to Cards view')
-                          : (lang === 'ar' ? 'تحويل للجدول الكلاسيكي' : 'Switch to Classic Table view')
-                        }
-                      </div>
-                    </div>
-
+                  <div
+                    className="flex items-center gap-2 w-full justify-between sm:w-auto sm:justify-start"
+                    style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}
+                  >
+                    {/* Settings */}
                     <div className="relative group/settings">
                       <button 
                         onClick={() => {
@@ -6942,6 +6874,76 @@ export const EmployeesTab: React.FC<{
                           </div>
                         )}
                       </AnimatePresence>
+                    </div>
+
+                    {/* Download — between settings and cards */}
+                    <div className="relative group/export shrink-0" style={{ height: '36px', width: '36px' }}>
+                      <ExportDataButton
+                        lang={lang}
+                        hideText
+                        onToast={triggerHrToast}
+                        onCopy={() => triggerHrToast(lang === 'ar' ? 'تم نسخ سجل المكافآت' : 'Rewards registry copied!')}
+                        onPrint={() => triggerHrToast(lang === 'ar' ? 'تم فتح خيارات الطباعة لسجل المكافآت' : 'Print options opened for rewards!')}
+                        className="w-[36px] h-[36px] block"
+                        style={{ height: '36px', width: '36px', minHeight: '36px' }}
+                      />
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/export:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
+                        {lang === 'ar' ? 'تصدير / تحميل' : 'Export / Download'}
+                      </div>
+                    </div>
+
+                    {/* Cards — orange icon */}
+                    <div className="relative group/toggle">
+                      <button
+                        onClick={() => setBonusDirViewMode(bonusDirViewMode === 'table' ? 'kanban' : 'table')}
+                        style={{ height: '36px' }}
+                        className="flex items-center justify-center gap-1.5 p-2 px-3 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none min-h-[36px] text-[11px] font-black"
+                      >
+                        {bonusDirViewMode === 'table' ? (
+                          <>
+                            <LayoutGrid size={14} className="text-orange-500" />
+                            <span className="font-sans">
+                              {lang === 'ar' ? 'بطاقات' : 'Cards'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <List size={14} className="text-orange-500" />
+                            <span className="font-sans">
+                              {lang === 'ar' ? 'جدول' : 'Table'}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/toggle:block bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-lg whitespace-nowrap z-50 font-bold font-sans pointer-events-none">
+                        {bonusDirViewMode === 'table' 
+                          ? (lang === 'ar' ? 'تحويل لعرض البطاقات' : 'Switch to Cards view')
+                          : (lang === 'ar' ? 'تحويل للجدول الكلاسيكي' : 'Switch to Classic Table view')
+                        }
+                      </div>
+                    </div>
+
+                    {/* Month filter */}
+                    <div className="relative group/date">
+                      <select
+                        value={bonusFilterMonth}
+                        onChange={(e) => {
+                          setBonusFilterMonth(e.target.value);
+                          setBonusCurrentPage(1);
+                        }}
+                        style={{ height: '36px' }}
+                        className="p-1 px-3 pr-7 rtl:pl-7 rtl:pr-3 bg-white border border-slate-200 rounded-xl text-[11px] font-bold font-sans outline-none w-full sm:w-auto min-h-[36px] hover:border-orange-400 focus:border-orange-400 transition cursor-pointer appearance-none text-[#0a1945]"
+                      >
+                        <option value="all">{lang === 'ar' ? 'كل الأشهر' : 'All Months'}</option>
+                        <option value="2026-05">{lang === 'ar' ? 'مايو - 2026' : 'May - 2026'}</option>
+                        <option value="2026-06">{lang === 'ar' ? 'يونيو - 2026' : 'June - 2026'}</option>
+                        <option value="2026-07">{lang === 'ar' ? 'يوليو - 2026' : 'July - 2026'}</option>
+                        <option value="2026-08">{lang === 'ar' ? 'أغسطس - 2026' : 'August - 2026'}</option>
+                      </select>
+                      <div className="absolute top-1/2 right-2.5 rtl:left-2.5 rtl:right-auto -translate-y-1/2 pointer-events-none text-slate-500">
+                        <ChevronDown size={13} />
+                      </div>
                     </div>
                   </div>
                 </div>

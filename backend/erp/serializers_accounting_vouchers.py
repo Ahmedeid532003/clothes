@@ -34,6 +34,20 @@ class CashShiftCloseSerializer(serializers.Serializer):
     actual_balance = serializers.DecimalField(max_digits=14, decimal_places=2)
     notes = serializers.CharField(required=False, allow_blank=True)
 
+    def validate_actual_balance(self, value):
+        if value is None:
+            raise serializers.ValidationError("المبلغ الفعلي مطلوب.")
+        if value < 0:
+            raise serializers.ValidationError("المبلغ الفعلي لا يمكن أن يكون سالباً.")
+        return value
+
+    def to_internal_value(self, data):
+        payload = dict(data)
+        raw = payload.get("actual_balance")
+        if isinstance(raw, str):
+            payload["actual_balance"] = raw.replace(",", "").strip()
+        return super().to_internal_value(payload)
+
 
 class CashShiftReceiveSerializer(serializers.Serializer):
     target_treasury = serializers.UUIDField(required=False, allow_null=True)

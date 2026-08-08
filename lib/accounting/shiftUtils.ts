@@ -11,6 +11,13 @@ export function safeMoneyStr(v: string | number | null | undefined): string {
   return String(v);
 }
 
+/** Normalize user-entered money for API (strip commas, 2 decimal places). */
+export function normalizeMoneyForApi(v: string | number | null | undefined): string {
+  const n = Number(String(v ?? '').replace(/,/g, '').trim());
+  if (!Number.isFinite(n)) return '';
+  return (Math.round(n * 100) / 100).toFixed(2);
+}
+
 /** دمج my-open مع قائمة النشطين والجدول لضمان وجود id */
 export function resolveMyOpenShift(
   myOpen: CashShiftDto | null,

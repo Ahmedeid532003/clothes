@@ -39,17 +39,18 @@ class TenantMiddleware:
         if request.method == "OPTIONS":
             return self.get_response(request)
 
-        if self._is_public(request.path):
+        path = self._request_path(request)
+        if self._is_public(path):
             return self.get_response(request)
 
         slug = self._resolve_slug(request)
-        if not slug and request.path in AUTH_PATHS:
+        if not slug and path in AUTH_PATHS:
             return JsonResponse(
                 {"detail": "مطلوب هيدر X-Tenant-Slug لتسجيل الدخول."},
                 status=400,
             )
         if not slug:
-            if request.path.startswith("/api/"):
+            if path.startswith("/api/"):
                 return JsonResponse(
                     {"detail": "مطلوب تحديد المنشأة (X-Tenant-Slug أو subdomain)."},
                     status=400,
@@ -85,7 +86,13 @@ class TenantMiddleware:
         request.tenant = tenant
         return self.get_response(request)
 
+    def _request_path(self, request) -> str:
+        return (request.path_info or request.path or "").split("?", 1)[0]
+
     def _is_public(self, path: str) -> bool:
+        normalized = path.rstrip("/") or "/"
+        if normalized in ("/api/v1/health", "/api/v1/deploy/unlock"):
+            return True
         return any(path.startswith(p) for p in PUBLIC_PATH_PREFIXES)
 
     def _resolve_slug(self, request) -> str | None:

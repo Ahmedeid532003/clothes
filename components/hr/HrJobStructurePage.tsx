@@ -266,6 +266,25 @@ function ItemActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () =>
   );
 }
 
+function StructureListRow({
+  body,
+  onEdit,
+  onDelete,
+  className = '',
+}: {
+  body: React.ReactNode;
+  onEdit: () => void;
+  onDelete: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={`hr-structure-item ${className}`.trim()} dir="ltr">
+      <ItemActions onEdit={onEdit} onDelete={onDelete} />
+      <div className="hr-structure-item-body">{body}</div>
+    </div>
+  );
+}
+
 export function HrJobStructurePage() {
   const { t, isRtl } = useLanguage();
   const { user } = useAuth();
@@ -864,20 +883,21 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('hrJobStructure.noDepartments')}</p>
                 ) : (
                   departments.map((row) => (
-                    <div key={row.id} className="hr-structure-item">
-                      <div className="hr-structure-item-body">
-                        <strong>{row.name}</strong>
-                        <span>{t('hrJobStructure.managerLabel')}: {row.manager_name || '—'}</span>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer('department', row.id)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          await deleteDepartment(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                    <StructureListRow
+                      key={row.id}
+                      body={
+                        <div>
+                          <strong>{row.name}</strong>
+                          <span>{t('hrJobStructure.managerLabel')}: {row.manager_name || '—'}</span>
+                        </div>
+                      }
+                      onEdit={() => openDrawer('department', row.id)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        await deleteDepartment(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
               </StructureCard>
@@ -898,22 +918,23 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('hrJobStructure.noSections')}</p>
                 ) : (
                   sections.map((row) => (
-                    <div key={row.id} className="hr-structure-item">
-                      <div className="hr-structure-item-body">
-                        <strong>{row.name}</strong>
-                        <span className="hr-structure-parent-link">
-                          {t('hrJobStructure.belongsTo')}: {row.department_name}
-                        </span>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer('section', row.id)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          await deleteHrSection(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                    <StructureListRow
+                      key={row.id}
+                      body={
+                        <div>
+                          <strong>{row.name}</strong>
+                          <span className="hr-structure-parent-link">
+                            {t('hrJobStructure.belongsTo')}: {row.department_name}
+                          </span>
+                        </div>
+                      }
+                      onEdit={() => openDrawer('section', row.id)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        await deleteHrSection(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
               </StructureCard>
@@ -947,20 +968,22 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('employeeGroups.empty')}</p>
                 ) : (
                   groups.map((row) => (
-                    <div key={row.id} className="hr-structure-item hr-structure-item-dot">
-                      <div className="hr-structure-item-body">
-                        <span className={`hr-structure-dot ${GROUP_COLORS[row.color || 'blue'] || GROUP_COLORS.blue}`} />
-                        <strong>{row.name}</strong>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer('group', row.id)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          await employeeGroupsApi.remove(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                    <StructureListRow
+                      key={row.id}
+                      className="hr-structure-item-dot"
+                      body={
+                        <>
+                          <strong>{row.name}</strong>
+                          <span className={`hr-structure-dot ${GROUP_COLORS[row.color || 'blue'] || GROUP_COLORS.blue}`} />
+                        </>
+                      }
+                      onEdit={() => openDrawer('group', row.id)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        await employeeGroupsApi.remove(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
               </StructureCard>
@@ -981,20 +1004,22 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('jobTitles.empty')}</p>
                 ) : (
                   titles.map((row) => (
-                    <div key={row.id} className="hr-structure-item hr-structure-item-boxed">
-                      <div className="hr-structure-item-body">
-                        <strong>{row.name}</strong>
-                        <span>{t('hrJobStructure.jobLevel')}: {row.job_level || 'B'}</span>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer('jobTitle', row.id)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          await jobTitlesApi.remove(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                    <StructureListRow
+                      key={row.id}
+                      className="hr-structure-item-boxed"
+                      body={
+                        <div>
+                          <strong>{row.name}</strong>
+                          <span>{t('hrJobStructure.jobLevel')}: {row.job_level || 'B'}</span>
+                        </div>
+                      }
+                      onEdit={() => openDrawer('jobTitle', row.id)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        await jobTitlesApi.remove(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
               </StructureCard>
@@ -1023,31 +1048,32 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('hrJobStructure.noHolidays')}</p>
                 ) : (
                   holidayCatalog.map((row) => (
-                    <div key={`${row.kind}-${row.id}`} className="hr-structure-item">
-                      <div className="hr-structure-item-body">
-                        <span className="hr-structure-dot bg-emerald-500" />
-                        <div>
-                          <strong>{row.name}</strong>
-                          <span>
-                            {row.kind === 'leave_type'
-                              ? t('hrJobStructure.leaveTypeBadge')
-                              : row.holiday_date}
-                            {row.kind === 'holiday' && row.is_recurring ? (
-                              <em className="hr-structure-recurring-badge">{t('hrJobStructure.recurringYearly')}</em>
-                            ) : null}
-                          </span>
-                        </div>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer('holiday', row.id, row.kind)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          if (row.kind === 'leave_type') await leaveTypesApi.remove(row.id);
-                          else await officialHolidaysApi.remove(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                    <StructureListRow
+                      key={`${row.kind}-${row.id}`}
+                      body={
+                        <>
+                          <div>
+                            <strong>{row.name}</strong>
+                            <span>
+                              {row.kind === 'leave_type'
+                                ? t('hrJobStructure.leaveTypeBadge')
+                                : row.holiday_date}
+                              {row.kind === 'holiday' && row.is_recurring ? (
+                                <em className="hr-structure-recurring-badge">{t('hrJobStructure.recurringYearly')}</em>
+                              ) : null}
+                            </span>
+                          </div>
+                          <span className="hr-structure-dot bg-emerald-500" />
+                        </>
+                      }
+                      onEdit={() => openDrawer('holiday', row.id, row.kind)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        if (row.kind === 'leave_type') await leaveTypesApi.remove(row.id);
+                        else await officialHolidaysApi.remove(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
               </StructureCard>
@@ -1072,31 +1098,33 @@ export function HrJobStructurePage() {
                   <p className="hr-structure-empty">{t('hrJobStructure.noFinancialItems')}</p>
                 ) : (
                   financialItems.map((row) => (
-                    <div key={`${row.kind}-${row.id}`} className="hr-structure-item hr-structure-item-boxed">
-                      <div className="hr-structure-item-body">
-                        <span className={`hr-structure-dot ${row.kind === 'allowance' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        <div>
-                          <strong>{row.name}</strong>
-                          <div className="hr-structure-item-meta">
-                            <span>EGP {fmtMoney(row.default_amount)}</span>
-                            <span className={row.kind === 'allowance' ? 'hr-structure-badge-add' : 'hr-structure-badge-deduct'}>
-                              {row.kind === 'allowance'
-                                ? t('hrJobStructure.allowanceBadge')
-                                : t('hrJobStructure.deductionBadge')}
-                            </span>
+                    <StructureListRow
+                      key={`${row.kind}-${row.id}`}
+                      className="hr-structure-item-boxed"
+                      body={
+                        <>
+                          <div>
+                            <strong>{row.name}</strong>
+                            <div className="hr-structure-item-meta">
+                              <span>EGP {fmtMoney(row.default_amount)}</span>
+                              <span className={row.kind === 'allowance' ? 'hr-structure-badge-add' : 'hr-structure-badge-deduct'}>
+                                {row.kind === 'allowance'
+                                  ? t('hrJobStructure.allowanceBadge')
+                                  : t('hrJobStructure.deductionBadge')}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <ItemActions
-                        onEdit={() => openDrawer(row.kind === 'allowance' ? 'allowance' : 'deduction', row.id)}
-                        onDelete={async () => {
-                          if (!confirm(t('departments.delete') + '?')) return;
-                          if (row.kind === 'allowance') await allowanceItemsApi.remove(row.id);
-                          else await deductionItemsApi.remove(row.id);
-                          load();
-                        }}
-                      />
-                    </div>
+                          <span className={`hr-structure-dot ${row.kind === 'allowance' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                        </>
+                      }
+                      onEdit={() => openDrawer(row.kind === 'allowance' ? 'allowance' : 'deduction', row.id)}
+                      onDelete={async () => {
+                        if (!confirm(t('departments.delete') + '?')) return;
+                        if (row.kind === 'allowance') await allowanceItemsApi.remove(row.id);
+                        else await deductionItemsApi.remove(row.id);
+                        load();
+                      }}
+                    />
                   ))
                 )}
                 {perms.deductions ? (

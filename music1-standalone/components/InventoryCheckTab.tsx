@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Package, Plus, Search, Check, ChevronDown, ChevronRight, ChevronLeft, Eye, Edit2, Trash2, Filter, Grid, List, X, Settings, FileText, Boxes } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { ProductTablePagination } from './ProductTablePagination';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExportDataButton } from './ui/ExportDataButton';
 
@@ -241,11 +242,17 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
                 "w-[36px] h-[36px] flex items-center justify-center rounded-lg border transition cursor-pointer select-none",
                 columnSettingsOpen
                   ? "bg-[#0a1945] text-white border-[#0a1945]"
-                  : "bg-white text-orange-500 border-slate-200 hover:border-orange-400 hover:shadow-xs"
+                  : "bg-white border-slate-200 hover:border-orange-400 hover:shadow-xs"
               )}
+              style={columnSettingsOpen ? undefined : { color: "#f06424" }}
               title={isAr ? "تخصيص الأعمدة" : "Column Settings"}
             >
-              <Settings size={15} className={columnSettingsOpen ? "text-white" : "text-orange-500"} />
+              <Settings
+                size={15}
+                className="shrink-0"
+                stroke="currentColor"
+                style={{ color: columnSettingsOpen ? "#ffffff" : "#f06424" }}
+              />
             </button>
             {columnSettingsOpen && (
               <div className="absolute right-0 rtl:right-0 rtl:left-auto mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-3.5 text-xs text-left rtl:text-right">
@@ -309,18 +316,18 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
             onClick={() =>
               setViewMode(viewMode === "table" ? "kanban" : "table")
             }
-            className="h-[36px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:text-orange-500 text-slate-700 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px]"
+            className="h-[36px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-lg hover:border-orange-400 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px] text-slate-700"
             title={isAr ? "تبديل العرض" : "Toggle View"}
           >
             {viewMode === "table" ? (
               <>
-                <Grid size={14} className="text-orange-500" />
-                <span>{isAr ? "بطاقات" : "Cards"}</span>
+                <Grid size={14} className="!text-[#f06424] shrink-0" stroke="currentColor" />
+                <span className="text-slate-700">{isAr ? "بطاقات" : "Cards"}</span>
               </>
             ) : (
               <>
-                <List size={14} className="text-orange-500" />
-                <span>{isAr ? "جدول" : "Table"}</span>
+                <List size={14} className="!text-[#f06424] shrink-0" stroke="currentColor" />
+                <span className="text-slate-700">{isAr ? "جدول" : "Table"}</span>
               </>
             )}
           </button>
@@ -536,55 +543,20 @@ export function InventoryCheckTab({ lang, products }: InventoryCheckTabProps) {
           </div>
         )}
 
-        {/* Footer Pagination */}
-        <div className="p-4 border-t border-slate-150 flex flex-col md:flex-row items-center justify-between gap-4 text-xs bg-slate-50/40 rounded-b-3xl text-slate-600">
-          <div className="flex items-center gap-2 font-bold w-full md:w-1/3 justify-center md:justify-start">
-            <select 
-              value={pageSize} 
-              onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setCurrentPage(1);
-              }}
-              className="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-orange-500 focus:border-orange-500 block h-[28px] w-[45px] p-0 text-center outline-none cursor-pointer"
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-            </select>
-            <span>{isAr ? 'سطر لكل صفحة' : 'Rows per page'}</span>
-          </div>
-
-          <div className="flex items-center gap-1 select-none w-full md:w-1/3 justify-center">
-            <button disabled={activePage === 1} onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} className="p-1.5 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 transition cursor-pointer">
-              {isAr ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronLeft size={13} strokeWidth={2.5} />}
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                if (page === 1 || page === totalPages || Math.abs(page - activePage) <= 1) {
-                  return (
-                    <button key={page} onClick={() => setCurrentPage(page)} className={cn("w-7 h-7 flex items-center justify-center rounded-lg font-black transition cursor-pointer", activePage === page ? "bg-orange-500 text-white shadow-sm border border-orange-600" : "bg-white text-slate-600 border border-slate-200 hover:border-orange-400 hover:text-orange-500")}>
-                      {page}
-                    </button>
-                  );
-                }
-                if (Math.abs(page - activePage) === 2) return <span key={page} className="px-1 text-slate-400">...</span>;
-                return null;
-              })}
-            </div>
-            <button disabled={activePage === totalPages} onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} className="p-1.5 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 transition cursor-pointer">
-              {isAr ? <ChevronLeft size={13} strokeWidth={2.5} /> : <ChevronRight size={13} strokeWidth={2.5} />}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1.5 font-bold w-full md:w-1/3 justify-center md:justify-end">
-            {isAr ? (
-              <><span>عرض</span><span className="font-mono font-black bg-slate-200/50 border border-slate-300 px-2 py-0.5 rounded text-[#0a1945]">{paginatedData.length}</span><span>من أصل</span><span className="font-mono font-black bg-orange-100/50 border border-orange-200 px-2 py-0.5 rounded text-[#f06424]">{filteredData.length}</span></>
-            ) : (
-              <><span>Showing</span><span className="font-mono font-black bg-slate-200/50 border border-slate-300 px-2 py-0.5 rounded text-[#0a1945]">{paginatedData.length}</span><span>of</span><span className="font-mono font-black bg-orange-100/50 border border-orange-200 px-2 py-0.5 rounded text-[#f06424]">{filteredData.length}</span></>
-            )}
-          </div>
-        </div>
+        <ProductTablePagination
+          lang={lang}
+          page={activePage}
+          pageCount={totalPages}
+          pageSize={pageSize}
+          shown={paginatedData.length}
+          total={filteredData.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          className="mt-0 border-t-0 rounded-t-none"
+        />
       </div>
     </div>
   );

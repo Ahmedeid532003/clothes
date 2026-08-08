@@ -41,11 +41,11 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
+import { ErpChartContainer } from '@/components/erp/ErpChartContainer';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -413,9 +413,8 @@ export function ExecutiveDashboard() {
             subtitle={copy.revenueSub}
             action={<span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">+24.8% YoY</span>}
           />
-          <div className="h-[340px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <ErpChartContainer minHeight={340}>
+            <AreaChart data={revenueData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="5%" stopColor="#2563eb" stopOpacity={0.28} />
@@ -433,25 +432,22 @@ export function ExecutiveDashboard() {
                 <Area type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} fill="url(#revenueFill)" />
                 <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} fill="url(#profitFill)" />
                 <Line type="monotone" dataKey="target" stroke="#f59e0b" strokeWidth={2} strokeDasharray="6 6" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+            </AreaChart>
+          </ErpChartContainer>
         </ExecutiveCard>
 
         <ExecutiveCard className="xl:col-span-4">
           <SectionTitle icon={<Users className="h-5 w-5" />} title={copy.users} subtitle={copy.usersSub} />
-          <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+          <ErpChartContainer minHeight={220}>
+            <PieChart>
                 <Pie data={userStats} dataKey="value" nameKey="name" innerRadius={62} outerRadius={86} paddingAngle={4}>
                   {userStats.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip contentStyle={{ borderRadius: 16, border: '1px solid #e2e8f0' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+            </PieChart>
+          </ErpChartContainer>
           <div className="grid grid-cols-2 gap-3">
             {userStats.map((item) => (
               <div key={item.name} className="rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100 dark:bg-slate-800 dark:ring-slate-700">
@@ -585,18 +581,16 @@ export function ExecutiveDashboard() {
 
         <ExecutiveCard className="xl:col-span-4">
           <SectionTitle icon={<Gauge className="h-5 w-5" />} title={copy.performance} />
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performanceData} margin={{ top: 10, right: 0, left: -18, bottom: 0 }}>
+          <ErpChartContainer minHeight={250}>
+            <BarChart data={performanceData} margin={{ top: 10, right: 0, left: -18, bottom: 0 }}>
                 <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 8" vertical={false} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 800 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 800 }} />
                 <Tooltip contentStyle={{ borderRadius: 16, border: '1px solid #e2e8f0' }} />
                 <Bar dataKey="sales" fill="#2563eb" radius={[10, 10, 0, 0]} />
                 <Bar dataKey="orders" fill="#10b981" radius={[10, 10, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            </BarChart>
+          </ErpChartContainer>
         </ExecutiveCard>
       </div>
 

@@ -56,15 +56,15 @@ export function PosSellerPrompt({
   };
 
   return (
-    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/55 p-4">
+    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]">
       <div
-        className="w-full max-w-md rounded-2xl border-2 border-amber-400 bg-white shadow-2xl"
+        className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-4 text-white rounded-t-2xl">
-          <div>
-            <p className="text-xs font-bold uppercase opacity-90">{t('pos.sellerPromptTitle')}</p>
-            <p className="mt-1 text-lg font-black leading-snug">{productLabel}</p>
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-[#0a1128] via-[#0f2744] to-[#1e3a8a] px-4 py-3 text-white">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-white/70">{t('pos.sellerPromptTitle')}</p>
+            <p className="mt-0.5 truncate text-sm font-black leading-snug">{productLabel}</p>
           </div>
           <button
             type="button"
@@ -76,8 +76,8 @@ export function PosSellerPrompt({
           </button>
         </div>
 
-        <div className="space-y-4 p-5">
-          <p className="text-sm text-slate-600">{t('pos.sellerPromptHint')}</p>
+        <div className="space-y-3 p-4">
+          <p className="text-xs text-slate-600 leading-relaxed">{t('pos.sellerPromptHint')}</p>
 
           <div>
             <label className="text-xs font-bold text-slate-700">{t('pos.exchangeSellerCode')}</label>
@@ -87,7 +87,7 @@ export function PosSellerPrompt({
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && submit()}
               placeholder="EMP-001"
-              className="mt-1 h-12 text-lg font-mono font-bold"
+              className="mt-1 h-10 text-base font-mono font-bold"
               autoComplete="off"
               disabled={busy}
             />
@@ -129,7 +129,7 @@ export function PosSellerPrompt({
               {t('inventory.cancel')}
             </Button>
             <Button
-              className="flex-1 bg-emerald-600 font-black hover:bg-emerald-700"
+              className="flex-1 bg-[#2563eb] font-black hover:bg-[#1d4ed8]"
               onClick={submit}
               disabled={busy || !code.trim()}
             >

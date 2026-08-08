@@ -26,11 +26,14 @@ class DeployGateMiddleware:
         if request.method == "OPTIONS":
             return self.get_response(request)
 
-        path = request.path
+        path = (request.path_info or request.path or "").split("?", 1)[0]
+        normalized = path.rstrip("/") or "/"
         # Admin / static / media / favicon — بدون بوابة
         if not path.startswith("/api/v1/"):
             return self.get_response(request)
 
+        if normalized in ("/api/v1/health", "/api/v1/deploy/unlock"):
+            return self.get_response(request)
         if any(path.startswith(p) for p in API_PUBLIC_PREFIXES):
             return self.get_response(request)
 

@@ -40,24 +40,39 @@ class PosProductSearchView(APIView):
         warehouse = get_branch_sale_warehouse(branch)
         season = get_current_season()
         in_stock = request.query_params.get("in_stock", "").lower() in ("1", "true", "yes")
+        catalog = request.query_params.get("catalog", "").lower() in ("1", "true", "yes")
+        try:
+            limit = min(max(int(request.query_params.get("limit", 200)), 1), 500)
+        except ValueError:
+            limit = 200
+        query = request.query_params.get("q", "")
+        barcode = request.query_params.get("barcode", "")
         if in_stock:
             products = pos_service.list_in_stock_products(
                 warehouse_id=warehouse.id,
                 season_id=season.id,
+                limit=limit,
+            )
+            return Response({"products": products, "composites": []})
+        if catalog or (not query.strip() and not barcode.strip()):
+            products = pos_service.list_catalog_products_for_pos(
+                warehouse_id=warehouse.id,
+                season_id=season.id,
+                limit=limit,
             )
             return Response({"products": products, "composites": []})
         results = pos_service.search_pos_catalog(
             warehouse_id=warehouse.id,
             season_id=season.id,
-            query=request.query_params.get("q", ""),
-            barcode=request.query_params.get("barcode", ""),
+            query=query,
+            barcode=barcode,
         )
         return Response(results)
 
 
 class PosSaleListCreateView(APIView):
-    permission_classes = [HasPageAction]
-    required_page = "pos"
+    permission_classes = [HasPosOrBarcodePage]
+    required_page = "pos-barcode"
     required_action = "view"
 
     def get(self, request):
@@ -105,8 +120,8 @@ class PosSaleListCreateView(APIView):
 
 
 class PosExchangeView(APIView):
-    permission_classes = [HasPageAction]
-    required_page = "pos"
+    permission_classes = [HasPosOrBarcodePage]
+    required_page = "pos-barcode"
     required_action = "update"
 
     def post(self, request):

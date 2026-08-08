@@ -11,6 +11,7 @@ type ErpAddButtonProps = {
   icon?: LucideIcon;
 };
 
+/** Primary action button — exact match to reference (blue pill + white circle icon). */
 export function ErpAddButton({
   children,
   className,
@@ -24,16 +25,12 @@ export function ErpAddButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={cn('hr-structure-add-btn', className)}
+      className={cn('mahaly-action-btn erp-add-action', className)}
     >
-      <span className="hr-structure-add-btn-aura" aria-hidden />
-      <span className="hr-structure-add-btn-shine" aria-hidden />
-      <span className="hr-structure-add-btn-core">
-        <span className="hr-structure-add-btn-icon">
-          <Icon className="h-4 w-4" strokeWidth={3} />
-        </span>
-        <span className="hr-structure-add-btn-label">{children}</span>
+      <span className="mahaly-action-btn-icon" aria-hidden>
+        <Icon strokeWidth={2.75} />
       </span>
+      <span className="mahaly-action-btn-label">{children}</span>
     </button>
   );
 }

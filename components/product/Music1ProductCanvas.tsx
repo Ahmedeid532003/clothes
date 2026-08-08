@@ -4,6 +4,8 @@ import {
   isProductModuleRoute,
   tabToProductModuleSubTab,
 } from './productModuleNav';
+import { useAccentIframeSync } from '@/lib/theme/useAccentIframeSync';
+import { getStoredAccent } from '@/lib/theme/accent';
 
 type Props = {
   activeTab: string;
@@ -11,7 +13,7 @@ type Props = {
 };
 
 /** Bump this on every UI deploy so iframe bypasses stale cached HTML/JS. */
-const PRODUCT_CANVAS_CACHE_BUST = 'ui-fix-20260807e';
+const PRODUCT_CANVAS_CACHE_BUST = 'v13-accent-restore-orange-20260808a';
 
 /**
  * Isolated product canvas host (iframe → product.html).
@@ -21,6 +23,7 @@ export function Music1ProductCanvas({ activeTab, onNavigate }: Props) {
   const { locale } = useLanguage();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastPostedTab = useRef<string | null>(null);
+  useAccentIframeSync(iframeRef);
 
   const src = useMemo(
     () =>
@@ -28,6 +31,7 @@ export function Music1ProductCanvas({ activeTab, onNavigate }: Props) {
         embed: '1',
         tab: tabToProductModuleSubTab(activeTab),
         lang: locale === 'en' ? 'en' : 'ar',
+        accent: getStoredAccent(),
         v: PRODUCT_CANVAS_CACHE_BUST,
       }).toString()}`,
     [activeTab, locale],
@@ -64,14 +68,15 @@ export function Music1ProductCanvas({ activeTab, onNavigate }: Props) {
     <div
       data-product-canvas="true"
       className="music1-product-canvas flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white"
-      style={{ isolation: 'isolate' }}
+      style={{ isolation: 'isolate', height: '100%', minHeight: 0 }}
     >
       <iframe
         key={src}
         ref={iframeRef}
         title="Ma7aly Product Canvas"
         src={src}
-        className="h-full w-full flex-1 border-0"
+        className="h-full w-full min-h-0 flex-1 border-0"
+        style={{ height: '100%', width: '100%', border: 0 }}
         allow="fullscreen"
       />
     </div>

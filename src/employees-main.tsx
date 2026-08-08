@@ -1,20 +1,36 @@
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { EmployeesTab } from '@/components/additions/mozafen/EmployeesTab';
-import '@/music1-standalone/index.css';
+import EmployeesCanvasApp, {
+  EMPLOYEES_SUBTABS,
+} from '../employees-v13/EmployeesCanvasApp';
+import '../employees-v13/index.css';
+import '../employees-v13/host-spacing.css';
+import {
+  applyAccentColor,
+  getStoredAccent,
+  initAccentFromStorage,
+  listenForAccentMessages,
+  normalizeHex,
+} from '@/lib/theme/accent';
+import {
+  applyFontScale,
+  getStoredFontScale,
+  initFontScaleFromStorage,
+  listenForFontScaleMessages,
+} from '@/lib/theme/fontScale';
 
-const VALID = new Set([
-  'org',
-  'directory',
-  'shifts',
-  'attendance',
-  'bonus',
-  'deduct',
-  'commissions',
-  'payroll',
-  'disbursals',
-  'reports',
-]);
+initAccentFromStorage();
+initFontScaleFromStorage();
+const accentFromQuery = normalizeHex(new URLSearchParams(window.location.search).get('accent') || '');
+if (accentFromQuery) applyAccentColor(accentFromQuery);
+else applyAccentColor(getStoredAccent());
+const fontFromQuery = Number(new URLSearchParams(window.location.search).get('fontScale') || '');
+if (Number.isFinite(fontFromQuery) && fontFromQuery > 0) applyFontScale(fontFromQuery);
+else applyFontScale(getStoredFontScale());
+listenForAccentMessages();
+listenForFontScaleMessages();
+
+const VALID = new Set<string>(EMPLOYEES_SUBTABS);
 
 function readQuery() {
   const params = new URLSearchParams(window.location.search);
@@ -38,7 +54,11 @@ function Root() {
     const onMessage = (event: MessageEvent) => {
       const data = event.data;
       if (!data || typeof data !== 'object') return;
-      if (data.type === 'employees-v13-set-tab' && typeof data.tab === 'string' && VALID.has(data.tab)) {
+      if (
+        data.type === 'employees-v13-set-tab' &&
+        typeof data.tab === 'string' &&
+        VALID.has(data.tab)
+      ) {
         setTab(data.tab);
         const url = new URL(window.location.href);
         url.searchParams.set('tab', data.tab);
@@ -50,19 +70,17 @@ function Root() {
   }, []);
 
   return (
-    <div className="h-[100svh] w-full overflow-auto bg-slate-50 p-3 sm:p-5" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <EmployeesTab
-        lang={lang}
-        activeSubTab={tab}
-        setActiveSubTab={(next) => {
-          setTab(next);
-          const url = new URL(window.location.href);
-          url.searchParams.set('tab', next);
-          window.history.replaceState({}, '', url.toString());
-          window.parent?.postMessage({ type: 'employees-v13-tab', tab: next }, '*');
-        }}
-      />
-    </div>
+    <EmployeesCanvasApp
+      lang={lang}
+      initialSubTab={tab}
+      onSubTabChange={(next) => {
+        setTab(next);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', next);
+        window.history.replaceState({}, '', url.toString());
+        window.parent?.postMessage({ type: 'employees-v13-tab', tab: next }, '*');
+      }}
+    />
   );
 }
 

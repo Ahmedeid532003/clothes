@@ -14,7 +14,7 @@ from erp.catalog_models import (
     ProductSize,
 )
 from erp.models import Branch, InventorySettings, Season, User, Warehouse
-from erp.permissions import HasPageAction, SupplierMasterDataRead
+from erp.permissions import HasPageAction, HasPagePermission, SupplierMasterDataRead
 from erp.supplier_api_guard import guard_supplier_db
 from erp.product_models import (
     Product,
@@ -262,7 +262,7 @@ class SupplierDetailView(APIView):
 
 
 class WarehouseListCreateView(APIView):
-    permission_classes = [HasPageAction]
+    permission_classes = [HasPagePermission]
     required_page = "warehouses"
     required_action = "view"
 

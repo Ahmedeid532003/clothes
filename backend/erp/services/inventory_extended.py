@@ -129,6 +129,259 @@ def stock_valuation_report(
     return {"rows": rows, "totals": totals}
 
 
+_USING = "tenant"
+
+
+def _mgmt_recent_permits(limit: int = 3) -> list[dict]:
+    from django.db.models import Sum
+    from django.db.models.functions import Coalesce
+    from erp.product_models import StockAddition, StockDisbursement, StockScrap, StockTransfer
+
+    rows: list[dict] = []
+    per_type = max(limit, 5)
+
+    for t in (
+        StockTransfer.objects.using(_USING)
+        .select_related("from_warehouse", "to_warehouse")
+        .annotate(_items_qty=Coalesce(Sum("lines__quantity"), Decimal("0")))
+        .order_by("-created_at")[:per_type]
+    ):
+        rows.append(
+            {
+                "type": "transfer",
+                "code": t.code,
+                "status": t.status,
+                "purpose": (t.notes or "").strip(),
+                "date": t.created_at.date().isoformat() if t.created_at else "",
+                "from_warehouse_code": t.from_warehouse.code,
+                "from_warehouse_name": t.from_warehouse.name_ar,
+                "to_warehouse_code": t.to_warehouse.code,
+                "to_warehouse_name": t.to_warehouse.name_ar,
+                "items_qty": str(t._items_qty.quantize(Decimal("0.001"))),
+                "_sort": t.created_at,
+            }
+        )
+
+    purpose_labels = dict(StockDisbursement.Purpose.choices)
+    for d in (
+        StockDisbursement.objects.using(_USING)
+        .select_related("warehouse")
+        .annotate(_items_qty=Coalesce(Sum("lines__quantity"), Decimal("0")))
+        .order_by("-created_at")[:per_type]
+    ):
+        rows.append(
+            {
+                "type": "disbursement",
+                "code": d.code,
+                "status": d.status,
+                "purpose": purpose_labels.get(d.purpose, d.purpose),
+                "date": d.created_at.date().isoformat() if d.created_at else "",
+                "from_warehouse_code": d.warehouse.code,
+                "from_warehouse_name": d.warehouse.name_ar,
+                "to_warehouse_code": "",
+                "to_warehouse_name": "",
+                "items_qty": str(d._items_qty.quantize(Decimal("0.001"))),
+                "_sort": d.created_at,
+            }
+        )
+
+    add_purpose_labels = dict(StockAddition.Purpose.choices)
+    for a in (
+        StockAddition.objects.using(_USING)
+        .select_related("warehouse")
+        .annotate(_items_qty=Coalesce(Sum("lines__quantity"), Decimal("0")))
+        .order_by("-created_at")[:per_type]
+    ):
+        rows.append(
+            {
+                "type": "addition",
+                "code": a.code,
+                "status": a.status,
+                "purpose": add_purpose_labels.get(a.purpose, a.purpose),
+                "date": a.created_at.date().isoformat() if a.created_at else "",
+                "from_warehouse_code": "",
+                "from_warehouse_name": "",
+                "to_warehouse_code": a.warehouse.code,
+                "to_warehouse_name": a.warehouse.name_ar,
+                "items_qty": str(a._items_qty.quantize(Decimal("0.001"))),
+                "_sort": a.created_at,
+            }
+        )
+
+    for s in (
+        StockScrap.objects.using(_USING)
+        .select_related("warehouse")
+        .annotate(_items_qty=Coalesce(Sum("lines__quantity"), Decimal("0")))
+        .order_by("-created_at")[:per_type]
+    ):
+        rows.append(
+            {
+                "type": "scrap",
+                "code": s.code,
+                "status": s.status,
+                "purpose": (s.reason or "").strip()[:120],
+                "date": s.created_at.date().isoformat() if s.created_at else "",
+                "from_warehouse_code": s.warehouse.code,
+                "from_warehouse_name": s.warehouse.name_ar,
+                "to_warehouse_code": "",
+                "to_warehouse_name": "",
+                "items_qty": str(s._items_qty.quantize(Decimal("0.001"))),
+                "_sort": s.created_at,
+            }
+        )
+
+    rows.sort(key=lambda r: r["_sort"] or timezone.now(), reverse=True)
+    out = []
+    for row in rows[:limit]:
+        item = {k: v for k, v in row.items() if k != "_sort"}
+        out.append(item)
+    return out
+
+
+def mgmt_dashboard() -> dict:
+    """لوحة مؤشرات إدارة المنتجات — أرقام حقيقية من قاعدة البيانات."""
+    from erp.models import Warehouse
+    from erp.services.reorder_alerts import build_reorder_alerts
+
+    products_count = Product.objects.using(_USING).filter(is_active=True).count()
+    composite_count = CompositeProduct.objects.using(_USING).filter(is_active=True).count()
+
+    wh_map: dict[str, dict] = {}
+    for wh in Warehouse.objects.using(_USING).filter(is_active=True).only("id", "code", "name_ar").order_by("code"):
+        wh_map[str(wh.id)] = {
+            "warehouse_code": wh.code,
+            "warehouse_name": wh.name_ar,
+            "quantity": Decimal("0"),
+            "sale_value": Decimal("0"),
+        }
+
+    cls_map: dict[str, dict] = {}
+    uncategorized = {
+        "classification_code": "uncategorized",
+        "classification_name": "غير مصنف",
+        "quantity": Decimal("0"),
+        "sale_value": Decimal("0"),
+    }
+
+    qty = Decimal("0")
+    buy = Decimal("0")
+    sell = Decimal("0")
+
+    balance_qs = (
+        StockBalance.objects.using(_USING)
+        .filter(quantity__gt=0)
+        .select_related("warehouse", "variant__product__classification", "variant__product")
+    )
+    for bal in balance_qs:
+        v = bal.variant
+        purchase = _variant_unit_price(v, "purchase_price")
+        sale = _variant_unit_price(v, "sale_price")
+        q = bal.quantity or Decimal("0")
+        val = (q * sale).quantize(Decimal("0.01"))
+        buy_val = (q * purchase).quantize(Decimal("0.01"))
+
+        qty += q
+        buy += buy_val
+        sell += val
+
+        wh_row = wh_map.get(str(bal.warehouse_id))
+        if wh_row:
+            wh_row["quantity"] += q
+            wh_row["sale_value"] += val
+
+        cls = v.product.classification
+        if cls:
+            cid = str(cls.id)
+            if cid not in cls_map:
+                cls_map[cid] = {
+                    "classification_code": cls.code,
+                    "classification_name": cls.name_ar,
+                    "quantity": Decimal("0"),
+                    "sale_value": Decimal("0"),
+                }
+            cls_map[cid]["quantity"] += q
+            cls_map[cid]["sale_value"] += val
+        else:
+            uncategorized["quantity"] += q
+            uncategorized["sale_value"] += val
+
+    buy = buy.quantize(Decimal("0.01"))
+    sell = sell.quantize(Decimal("0.01"))
+    qty = qty.quantize(Decimal("0.001"))
+
+    margin_pct = Decimal("0")
+    if sell > 0:
+        margin_pct = ((sell - buy) / sell * Decimal("100")).quantize(Decimal("0.1"))
+
+    stock_by_warehouse = []
+    for row in wh_map.values():
+        stock_by_warehouse.append(
+            {
+                "warehouse_code": row["warehouse_code"],
+                "warehouse_name": row["warehouse_name"],
+                "quantity": str(row["quantity"].quantize(Decimal("0.001"))),
+                "sale_value": str(row["sale_value"].quantize(Decimal("0.01"))),
+            }
+        )
+    stock_by_warehouse.sort(key=lambda r: Decimal(r["sale_value"]), reverse=True)
+
+    by_classification = list(cls_map.values())
+    if uncategorized["quantity"] > 0:
+        by_classification.append(uncategorized)
+    by_classification.sort(key=lambda r: r["sale_value"], reverse=True)
+    stock_by_classification = [
+        {
+            "classification_code": row["classification_code"],
+            "classification_name": row["classification_name"],
+            "quantity": str(row["quantity"].quantize(Decimal("0.001"))),
+            "sale_value": str(row["sale_value"].quantize(Decimal("0.01"))),
+        }
+        for row in by_classification
+    ]
+
+    reorder = build_reorder_alerts()
+    low_stock_alerts = [
+        {
+            "product_code": item["product_code"],
+            "product_name": item["product_name"],
+            "remaining_qty": item["remaining_qty"],
+            "threshold_qty": item["threshold_qty"],
+            "reorder_percent": item["reorder_percent"],
+        }
+        for item in reorder.get("items", [])[:20]
+    ]
+
+    composite_products = [
+        {
+            "code": c.code,
+            "name": c.name_ar,
+            "description": c.name_en or "",
+            "sell_price": str((c.offer_price or c.sale_price or Decimal("0")).quantize(Decimal("0.01"))),
+        }
+        for c in CompositeProduct.objects.using(_USING)
+        .filter(is_active=True)
+        .only("code", "name_ar", "name_en", "offer_price", "sale_price")
+        .order_by("-created_at")[:12]
+    ]
+
+    return {
+        "summary": {
+            "products_count": products_count,
+            "composite_products_count": composite_count,
+            "total_stock_quantity": str(qty.quantize(Decimal("0.001"))),
+            "total_purchase_value": str(buy),
+            "total_sale_value": str(sell),
+            "profit_margin_percent": str(margin_pct),
+        },
+        "stock_by_warehouse": stock_by_warehouse,
+        "stock_by_classification": stock_by_classification,
+        "low_stock_alerts": low_stock_alerts,
+        "reorder_warning": reorder.get("warning") or "",
+        "composite_products": composite_products,
+        "recent_permits": _mgmt_recent_permits(3),
+    }
+
+
 def _order_qty_map(scan_order_id) -> dict:
     from erp.scan_order_models import ScanOrderLine
 
@@ -178,17 +431,37 @@ def _balance_qty(warehouse_id, variant_id) -> Decimal:
     return bal.quantity if bal else Decimal("0")
 
 
+def _normalize_count_line_row(row) -> dict:
+    if isinstance(row, dict):
+        return row
+    if hasattr(row, "items"):
+        return dict(row)
+    raise ValidationError("صيغة بند الجرد غير صالحة.")
+
+
+def _count_has_lines(count: StockCount) -> bool:
+    db = count._state.db or "tenant"
+    return StockCountLine.objects.using(db).filter(stock_count_id=count.pk).exists()
+
+
 def _build_count_lines(*, count: StockCount, data: dict) -> None:
     warehouse_id = count.warehouse_id
     count_mode = data.get("count_mode") or count.count_mode or StockCount.CountMode.FILTER
     scan_order_id = data.get("scan_order") or (count.scan_order_id if count.scan_order_id else None)
     lines_in = data.get("lines")
 
-    if lines_in:
-        for row in lines_in:
+    if lines_in is not None and len(lines_in) > 0:
+        for raw_row in lines_in:
+            row = _normalize_count_line_row(raw_row)
+            variant_id = row.get("variant") or row.get("variant_id")
+            if not variant_id:
+                raise ValidationError("بند الجرد يفتقد معرّف الصنف (variant).")
+            variant_id = str(variant_id)
+            if not ProductVariant.objects.using("tenant").filter(pk=variant_id).exists():
+                raise ValidationError(f"الصنف غير موجود في النظام: {variant_id}")
             StockCountLine.objects.using("tenant").create(
                 stock_count=count,
-                variant_id=row["variant"],
+                variant_id=variant_id,
                 system_qty=Decimal(str(row.get("system_qty", 0))),
                 counted_qty=Decimal(str(row.get("counted_qty", 0))),
             )
@@ -249,7 +522,9 @@ def create_stock_count(*, data: dict, user) -> StockCount:
         created_by=user,
     )
     _build_count_lines(count=count, data=data)
-    if not count.lines.exists():
+    if not _count_has_lines(count):
+        if data.get("lines"):
+            raise ValidationError("تعذر إنشاء بنود الجرد — تحقق من معرّفات الأصناف.")
         raise ValidationError("لا توجد أرصدة لجردها في هذا النطاق.")
     return count
 

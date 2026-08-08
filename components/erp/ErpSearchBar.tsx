@@ -15,6 +15,7 @@ type Props = {
   'aria-label'?: string;
 };
 
+/** Table toolbar search — exact match to reference image 2 (search + orange filter icon). */
 export function ErpSearchBar({
   value,
   onChange,
@@ -30,7 +31,19 @@ export function ErpSearchBar({
   const showAdv = showAdvanced && onAdvancedToggle;
 
   return (
-    <div className={cn('erp-search-bar', className)}>
+    <div className={cn('erp-search-bar unified-table-search', className)}>
+      {showAdv ? (
+        <button
+          type="button"
+          className={cn('erp-search-bar-advanced unified-toolbar-icon-btn', advancedOpen && 'is-active')}
+          onClick={onAdvancedToggle}
+          aria-expanded={advancedOpen}
+          aria-label={t('erpTable.advancedSearch')}
+          title={t('erpTable.advancedSearch')}
+        >
+          <Filter className="erp-search-bar-advanced-icon" aria-hidden />
+        </button>
+      ) : null}
       <div className="erp-search-bar-field">
         <Search className="erp-search-bar-icon" aria-hidden />
         <input
@@ -42,17 +55,6 @@ export function ErpSearchBar({
           className={cn('erp-search-bar-input', inputClassName)}
         />
       </div>
-      {showAdv ? (
-        <button
-          type="button"
-          className={cn('erp-search-bar-advanced', advancedOpen && 'is-active')}
-          onClick={onAdvancedToggle}
-          aria-expanded={advancedOpen}
-        >
-          <Filter className="erp-search-bar-advanced-icon" aria-hidden />
-          <span>{t('erpTable.advancedSearch')}</span>
-        </button>
-      ) : null}
     </div>
   );
 }

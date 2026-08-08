@@ -1,9 +1,7 @@
-import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, RefreshCw, UserRound, X } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import type { PosCartLine } from '@/lib/api/pos';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import type { usePosSellerScan } from './usePosSellerScan';
 
 type SellerHook = ReturnType<typeof usePosSellerScan>;
@@ -16,7 +14,18 @@ type Props = {
   onLookupCode: () => void;
   cart?: PosCartLine[];
   onApplyToLines?: () => void;
+  variant?: 'default' | 'inline';
 };
+
+function sellerInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
+}
 
 export function PosInvoiceSellerPick({
   seller,
@@ -26,109 +35,171 @@ export function PosInvoiceSellerPick({
   onLookupCode,
   cart = [],
   onApplyToLines,
+  variant = 'default',
 }: Props) {
   const { t } = useLanguage();
   const needsApply = cart.some((l) => !l.seller_id) && !!seller.defaultSeller;
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [focused, setFocused] = useState(false);
+
+  const suggestions = useMemo(() => {
+    const q = sellerCodeQ.trim().toLowerCase();
+    if (!q) return seller.employees.slice(0, 5);
+    return seller.employees
+      .filter(
+        (e) =>
+          e.employee_code.toLowerCase().includes(q) ||
+          (e.full_name || '').toLowerCase().includes(q) ||
+          (e.username || '').toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [seller.employees, sellerCodeQ]);
+
+  const quickPicks = useMemo(() => seller.employees.slice(0, 5), [seller.employees]);
+
+  const showSuggest =
+    focused &&
+    !seller.defaultSeller &&
+    suggestions.length > 0 &&
+    (sellerCodeQ.trim().length > 0 || seller.employees.length <= 8);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setFocused(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
+  const statusMessage = sellerCodeError
+    ? { tone: 'error' as const, text: sellerCodeError }
+    : seller.employeesError
+      ? { tone: 'error' as const, text: seller.employeesError }
+      : seller.employeesLoading
+        ? { tone: 'info' as const, text: t('pos.sellersLoading') }
+        : !seller.employeesLoading && seller.employees.length === 0
+          ? { tone: 'warn' as const, text: t('pos.sellersEmpty') }
+          : null;
+
+  const activeName = seller.defaultSeller?.full_name || seller.defaultSeller?.username || '';
 
   return (
-    <div className="w-full rounded-xl border-2 border-emerald-400 bg-gradient-to-b from-emerald-50 to-white p-2.5 space-y-2 shadow-sm">
-      <label className="flex items-center justify-between gap-2 text-[10px] font-black uppercase text-emerald-900">
+    <div
+      ref={wrapRef}
+      className={[
+        'pos-seller-strip',
+        variant === 'inline' ? 'pos-seller-strip--inline' : '',
+        seller.defaultSeller ? 'pos-seller-strip--has-seller' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {seller.defaultSeller ? (
+        <span className="pos-seller-avatar" aria-hidden>
+          {sellerInitials(activeName)}
+        </span>
+      ) : (
+        <UserRound className="h-4 w-4 shrink-0 text-[#2563eb]" aria-hidden />
+      )}
+
+      <div className="pos-seller-strip-head">
+        {seller.defaultSeller ? <span className="pos-seller-status" aria-hidden /> : null}
         <span>{t('pos.invoiceSeller')}</span>
         <button
           type="button"
-          className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100"
           title={t('inventory.refresh')}
           onClick={() => void seller.loadEmployees()}
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${seller.employeesLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 ${seller.employeesLoading ? 'animate-spin' : ''}`} />
         </button>
-      </label>
-      <select
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-white px-2 text-sm font-bold shadow-sm"
-        value={seller.defaultSellerId}
-        onChange={(e) => seller.setDefaultSellerId(e.target.value)}
-        disabled={seller.employeesLoading}
-      >
-        <option value="">
-          {seller.employeesLoading ? t('pos.sellersLoading') : t('pos.selectSeller')}
-        </option>
-        {seller.employees.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.employee_code} — {e.full_name || e.username}
-          </option>
-        ))}
-      </select>
-      {seller.employees.length > 0 ? (
-        <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto">
-          {seller.employees.map((e) => (
+      </div>
+
+      <div className="pos-seller-body">
+        {seller.defaultSeller ? (
+          <div className="pos-seller-active">
+            <span className="pos-seller-active-code">{seller.defaultSeller.employee_code}</span>
+            <span className="pos-seller-active-name">{activeName}</span>
+            <button
+              type="button"
+              className="pos-seller-clear"
+              aria-label={t('pos.selectSeller')}
+              onClick={() => seller.setDefaultSellerId('')}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="pos-seller-input-row">
+            <input
+              type="text"
+              value={sellerCodeQ}
+              placeholder={t('pos.sellerCodeHint')}
+              autoComplete="off"
+              onFocus={() => setFocused(true)}
+              onChange={(e) => onSellerCodeQChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sellerCodeQ.trim() && onLookupCode()}
+            />
+            <button
+              type="button"
+              className="pos-seller-confirm"
+              disabled={!sellerCodeQ.trim() || seller.employeesLoading}
+              onClick={onLookupCode}
+              aria-label={t('pos.sellerConfirmAdd')}
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </button>
+          </div>
+        )}
+
+        {showSuggest ? (
+          <div className="pos-seller-suggest" role="listbox">
+            {suggestions.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                role="option"
+                onClick={() => {
+                  seller.setDefaultSellerId(e.id);
+                  onSellerCodeQChange('');
+                  setFocused(false);
+                }}
+              >
+                <span className="pos-seller-suggest-code">{e.employee_code}</span>
+                <span className="pos-seller-suggest-name">{e.full_name || e.username}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {!seller.defaultSeller && quickPicks.length > 0 && variant === 'default' ? (
+        <div className="pos-seller-quick">
+          {quickPicks.map((e) => (
             <button
               key={e.id}
               type="button"
+              className={`pos-seller-quick-chip${seller.defaultSellerId === e.id ? ' is-active' : ''}`}
               title={e.full_name || e.username}
-              className={`rounded-lg border px-2 py-1.5 text-[11px] font-bold transition text-start truncate ${
-                seller.defaultSellerId === e.id
-                  ? 'border-emerald-600 bg-emerald-600 text-white'
-                  : 'border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-100'
-              }`}
               onClick={() => seller.setDefaultSellerId(e.id)}
             >
-              <span className="block font-mono">{e.employee_code}</span>
-              <span
-                className={`block truncate text-[10px] ${
-                  seller.defaultSellerId === e.id ? 'text-emerald-100' : 'text-slate-600'
-                }`}
-              >
-                {e.full_name || e.username}
-              </span>
+              <span>{e.employee_code.slice(-3)}</span>
+              <span className="max-w-[4rem] truncate">{e.full_name || e.username}</span>
             </button>
           ))}
         </div>
       ) : null}
-      <div className="flex gap-1">
-        <Input
-          className="h-9 flex-1 font-mono text-sm font-bold bg-white"
-          placeholder={t('pos.sellerCodeHint')}
-          value={sellerCodeQ}
-          onChange={(e) => onSellerCodeQChange(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && onLookupCode()}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9 shrink-0 border-emerald-400 font-bold text-emerald-900 bg-white"
-          disabled={!sellerCodeQ.trim()}
-          onClick={onLookupCode}
-        >
-          ✓
-        </Button>
-      </div>
-      {seller.defaultSeller ? (
-        <p className="text-xs font-bold text-emerald-900 text-center">
-          ✓ {seller.defaultSeller.employee_code} — {seller.defaultSeller.full_name}
-        </p>
-      ) : null}
-      {seller.employeesLoading ? (
-        <p className="text-xs font-bold text-slate-500 text-center">{t('pos.sellersLoading')}</p>
-      ) : null}
-      {!seller.employeesLoading && seller.employees.length === 0 ? (
-        <p className="text-xs font-bold text-amber-800 text-center leading-snug">{t('pos.sellersEmpty')}</p>
-      ) : null}
-      {seller.employeesError ? (
-        <p className="text-xs font-bold text-red-700 text-center">{seller.employeesError}</p>
-      ) : null}
-      {sellerCodeError ? (
-        <p className="text-xs font-bold text-red-700 text-center">{sellerCodeError}</p>
-      ) : null}
-      {needsApply && onApplyToLines ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-full border-emerald-400 text-xs font-bold text-emerald-900 bg-white"
-          onClick={onApplyToLines}
-        >
-          {t('pos.applySellerToLines')}
-        </Button>
+
+      {(statusMessage || needsApply) && variant === 'default' ? (
+        <div className="pos-seller-meta">
+          {statusMessage ? (
+            <p className={`pos-seller-msg pos-seller-msg--${statusMessage.tone}`}>{statusMessage.text}</p>
+          ) : null}
+          {needsApply && onApplyToLines ? (
+            <button type="button" className="pos-seller-apply" onClick={onApplyToLines}>
+              {t('pos.applySellerToLines')}
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

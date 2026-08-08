@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, BadgePercent, Plus, Printer } from 'lucide-react';
+import { ArrowRight, BadgePercent, Printer } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   fetchBarcodeLabels,
@@ -8,6 +8,7 @@ import {
 } from '@/lib/api/inventory';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { OkazionDiscountNoticePage } from '@/components/inventory/OkazionDiscountNoticePage';
+import { ErpAddButton } from '@/components/erp/ErpAddButton';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { printOkazionBarcodeLabels } from '@/lib/print/okazionBarcodePrint';
@@ -89,10 +90,7 @@ export function OkazionNoticeHubPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">{t('okazion.hubDesc')}</p>
         </div>
-        <Button size="sm" className="bg-orange-600 hover:bg-orange-700 font-bold" onClick={() => setMode('editor')}>
-          <Plus className="h-4 w-4 me-1" />
-          {t('common.add')}
-        </Button>
+        <ErpAddButton onClick={() => setMode('editor')}>{t('common.add')}</ErpAddButton>
       </header>
 
       {error && (

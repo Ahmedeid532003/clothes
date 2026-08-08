@@ -1,0 +1,382 @@
+/**
+ * Ma7alyERP — Phone + Tablet shell responsiveness (final cascade)
+ */
+
+/* Keep the whole app inside the device width (no sideways page scroll) */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.app-tenant-shell,
+[data-slot='sidebar-wrapper'],
+[data-slot='sidebar-inset'],
+.app-content-scroll,
+.music1-canvas-inset,
+.employees-v13-canvas,
+.music1-product-canvas {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.app-tenant-shell,
+[data-slot='sidebar-inset'] {
+  overflow-x: clip !important;
+}
+
+/* Canvas iframes must never exceed the inset */
+.employees-v13-canvas iframe,
+.music1-product-canvas iframe,
+[data-product-canvas='true'] iframe,
+[data-purchases-canvas='true'] iframe,
+[data-employees-canvas='true'] iframe,
+[data-suppliers-canvas='true'] iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  display: block !important;
+}
+
+/* ---------- Tablet (≤1024) ---------- */
+@media (max-width: 1024px) {
+  .app-content-container,
+  .app-content-scroll > .app-content-container,
+  [data-slot='sidebar-inset'] .app-content-container {
+    padding-inline: 0.9rem !important;
+    padding-block: 0.85rem !important;
+  }
+
+  .app-profile-copy {
+    max-width: 6.5rem !important;
+  }
+
+  .app-profile-copy strong,
+  .app-profile-copy small {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .lux-theme-switch {
+    --lux-w: 6.4rem !important;
+    --lux-h: 2.4rem !important;
+    --lux-orb: 1.95rem !important;
+  }
+}
+
+/* ---------- Phone + small tablet (≤768) ---------- */
+@media (max-width: 768px) {
+  .app-shell-header {
+    min-height: unset !important;
+    padding-bottom: 0.15rem !important;
+  }
+
+  .app-topbar-primary {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.45rem 0.55rem 0.2rem !important;
+  }
+
+  .app-topbar-start {
+    display: none !important;
+  }
+
+  .app-topbar-actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 0.15rem !important;
+  }
+
+  .app-topbar-actions::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .app-header-right,
+  .app-header-center,
+  .app-header-left {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+  }
+
+  /* Touch targets ≥ 44px */
+  .app-shell-header .app-icon-button,
+  .app-shell-header .app-split-trigger,
+  .app-shell-header .app-language-button,
+  .app-shell-header .app-header-brand {
+    min-width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    height: 2.75rem !important;
+    width: auto !important;
+    padding-inline: 0.65rem !important;
+  }
+
+  .app-shell-header .app-header-brand {
+    font-size: 0.82rem !important;
+    padding-inline: 0.75rem !important;
+  }
+
+  .app-shell-header .app-profile-trigger {
+    min-height: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem !important;
+    padding-inline: 0.35rem !important;
+    gap: 0 !important;
+  }
+
+  /* Avatar-only profile on phones */
+  .app-shell-header .app-profile-copy {
+    display: none !important;
+  }
+
+  .app-shell-header .app-fullscreen-trigger {
+    display: none !important;
+  }
+
+  /* Compact page title strip (don't hide completely) */
+  .app-page-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    padding: 0.35rem 0.7rem 0.55rem !important;
+    border-top: 1px solid rgba(148, 163, 184, 0.18) !important;
+  }
+
+  .app-page-title {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .app-page-title-eyebrow,
+  .app-page-title-meta {
+    display: none !important;
+  }
+
+  .app-page-title h1 {
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .app-page-tools {
+    display: flex !important;
+    gap: 0.35rem !important;
+    flex: 0 0 auto !important;
+  }
+
+  .app-page-tools button {
+    min-width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    padding: 0.45rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .app-page-tools-label {
+    display: none !important;
+  }
+
+  /* Content padding */
+  .app-content-container,
+  .app-content-scroll > .app-content-container,
+  [data-slot='sidebar-inset'] .app-content-container,
+  .app-content-scroll {
+    padding-inline: 0.7rem !important;
+  }
+
+  .app-content-scroll {
+    overflow-x: hidden !important;
+  }
+
+  /* Tables: allow horizontal swipe */
+  .erp-table-scroll,
+  .erp-premium-table-card .overflow-x-auto,
+  .hr-sections-table-card .overflow-x-auto,
+  .report-table-wrap,
+  .app-content-card .overflow-x-auto,
+  [data-slot='sidebar-inset'] .overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+    max-width: 100% !important;
+  }
+
+  .erp-table-scroll table,
+  .erp-premium-table-card table,
+  .hr-sections-table-card table,
+  .report-table-wrap table,
+  .app-content-card table {
+    min-width: 640px !important;
+    width: max(100%, 640px) !important;
+  }
+
+  /* Forms / grids single column */
+  .app-content-card .grid.grid-cols-2,
+  .app-content-card .grid.grid-cols-3,
+  .app-content-card .sm\:grid-cols-2,
+  .app-content-card .sm\:grid-cols-3,
+  .app-content-card .md\:grid-cols-2,
+  .app-content-card .md\:grid-cols-3,
+  .app-content-card .lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Theme switch scale down but keep visible */
+  .lux-theme-switch {
+    --lux-w: 5.6rem !important;
+    --lux-h: 2.2rem !important;
+    --lux-orb: 1.8rem !important;
+  }
+
+  .lux-theme-switch__label {
+    display: none !important;
+  }
+
+  /* Mobile sidebar sheet full-friendly */
+  [data-slot='sheet-content'],
+  [data-mobile='true'] {
+    width: min(88vw, 20rem) !important;
+    max-width: 88vw !important;
+  }
+
+  /* Canvas: fill the phone viewport (do NOT zero min-height on inset) */
+  .music1-canvas-inset,
+  [data-slot='sidebar-inset'].music1-canvas-inset,
+  [data-slot='sidebar-inset'][data-product-canvas='true'],
+  [data-slot='sidebar-inset'][data-purchases-canvas='true'],
+  [data-slot='sidebar-inset'][data-employees-canvas='true'],
+  [data-slot='sidebar-inset'][data-suppliers-canvas='true'] {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+
+  .music1-product-canvas,
+  .employees-v13-canvas,
+  .purchases-v13-canvas,
+  .suppliers-v13-canvas,
+  [data-product-canvas='true']:not([data-slot='sidebar-inset']),
+  [data-purchases-canvas='true']:not([data-slot='sidebar-inset']),
+  [data-employees-canvas='true']:not([data-slot='sidebar-inset']),
+  [data-suppliers-canvas='true']:not([data-slot='sidebar-inset']) {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .music1-product-canvas iframe,
+  .employees-v13-canvas iframe,
+  .purchases-v13-canvas iframe,
+  .suppliers-v13-canvas iframe,
+  [data-product-canvas='true'] iframe,
+  [data-purchases-canvas='true'] iframe,
+  [data-employees-canvas='true'] iframe,
+  [data-suppliers-canvas='true'] iframe,
+  iframe[title*='Canvas'] {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    border: 0 !important;
+  }
+
+  /* Never let html zoom push content past the phone edge */
+  html[data-font-scale] {
+    zoom: 1 !important;
+  }
+
+  /* Fixed overlays / dialogs */
+  [data-slot='dialog-content'],
+  [role='dialog'] {
+    max-width: calc(100vw - 1rem) !important;
+    max-height: min(92dvh, 100%) !important;
+  }
+
+  /* Prevent wide flex toolbars from expanding the page */
+  .app-content-card,
+  .app-content-container {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ---------- Narrow phones (≤480) ---------- */
+@media (max-width: 480px) {
+  .app-shell-header .app-header-brand {
+    max-width: 6.5rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.78rem !important;
+  }
+
+  .app-shell-header .app-fav-trigger {
+    display: none !important;
+  }
+
+  .app-content-container,
+  .app-content-scroll > .app-content-container {
+    padding-inline: 0.55rem !important;
+    padding-block: 0.55rem !important;
+  }
+
+  .erp-table-scroll table,
+  .erp-premium-table-card table,
+  .app-content-card table {
+    width: max(100%, 560px) !important;
+    min-width: 560px !important;
+  }
+
+  .lux-theme-switch {
+    --lux-w: 5rem !important;
+    --lux-h: 2rem !important;
+    --lux-orb: 1.65rem !important;
+  }
+}
+
+/* Landscape phones: keep header compact */
+@media (max-width: 900px) and (max-height: 480px) and (orientation: landscape) {
+  .app-page-toolbar {
+    display: none !important;
+  }
+
+  .app-shell-header .app-icon-button,
+  .app-shell-header .app-split-trigger,
+  .app-shell-header .app-profile-trigger {
+    min-height: 2.4rem !important;
+    height: 2.4rem !important;
+    min-width: 2.4rem !important;
+  }
+}

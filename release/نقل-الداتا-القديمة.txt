@@ -1,0 +1,32 @@
+Ma7alyErp — نقل الداتا القديمة (eid) إلى السحابة
+=================================================
+
+الداتا القديمة على PostgreSQL المحلي (MainClothes + mahaly_t_eid)
+VPS 128.140.127.179 متوقف حالياً — النقل من الجهاز المحلي.
+
+─── خطوة 1: شغّل PostgreSQL ───
+PowerShell كـ Administrator:
+  net start postgresql-x64-16
+
+─── خطoة 2: انقل المنشأة eid ───
+من مجلد المشروع:
+  npm run migrate:fly
+
+أو:
+  powershell -File scripts\migrate-eid-to-fly.ps1 eid
+
+─── خطoة 3: سجّل الدخول ───
+https://mahalyerp.pages.dev
+
+| كود المحل | eid |
+| المستخدم  | eid1 |
+| الباسورد  | 123456789 |
+
+─── منشآت أخرى ───
+  powershell -File scripts\migrate-eid-to-fly.ps1 ahmedeid
+
+─── لو فشل الاتصال المحلي ───
+تأكد backend/.env أو إعدادات DB:
+  DB_USER=postgres
+  DB_PASSWORD=...
+  SAAS_DB_NAME=MainClothes

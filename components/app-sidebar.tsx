@@ -13,6 +13,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { useLanguage } from "@/lib/i18n/LanguageContext"
 import { useAuth } from "@/lib/auth/AuthContext"
@@ -33,6 +34,7 @@ import { isEmployeesCanvasRoute } from "@/components/hr/employeesCanvasNav"
 import { tenantHasCrm, tenantHasModule } from "@/lib/modules"
 import { entityName } from "@/lib/entity-name"
 import {
+  Settings2,
   GalleryVerticalEndIcon,
   AudioLinesIcon,
   TerminalIcon,
@@ -121,6 +123,10 @@ const SUB_ICONS: Record<string, React.ReactNode> = {
   supplierPayments: <BanknoteIcon className="h-4 w-4 shrink-0" />,
   supplierGroups: <UsersIcon className="h-4 w-4 shrink-0" />,
   supplierTypes: <TagsIcon className="h-4 w-4 shrink-0" />,
+  supplierCategories: <TagsIcon className="h-4 w-4 shrink-0" />,
+  saleDiscountNote: <BadgePercentIcon className="h-4 w-4 shrink-0" />,
+  supplierDiscountNote: <BadgePercentIcon className="h-4 w-4 shrink-0" />,
+  supplierReports: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   supplierInventories: <ClipboardListIcon className="h-4 w-4 shrink-0" />,
   generalItemMovement: <BarChart3Icon className="h-4 w-4 shrink-0" />,
   supplierWeeklyReports: <FileTextIcon className="h-4 w-4 shrink-0" />,
@@ -265,7 +271,16 @@ function branchToTeam(branch: BranchSummary, planLabel: string, fallbackIcon: Re
 export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLogout, onProfile, ...props }: AppSidebarProps) {
   const { t, dir, isRtl } = useLanguage()
   const { tenant, user: authUser, branches, activeBranchId, setActiveBranchId, canSwitchAllBranches } = useAuth()
+  const { isMobile, setOpenMobile } = useSidebar()
   const [openSection, setOpenSection] = React.useState<string | null>(null)
+
+  const handleTabChange = React.useCallback(
+    (tab: string) => {
+      onTabChange?.(tab)
+      if (isMobile) setOpenMobile(false)
+    },
+    [onTabChange, isMobile, setOpenMobile],
+  )
 
   React.useEffect(() => {
     if (activeTab && isProductModuleRoute(activeTab)) {
@@ -326,6 +341,8 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
       icon:
         item.id === 'dashboard' ? (
           <LayoutDashboardIcon />
+        ) : item.id === 'settings' ? (
+          <Settings2 />
         ) : (
           <HomeIcon />
         ),
@@ -396,7 +413,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
       <SidebarContent>
         <NavAnalytics
           analytics={analytics}
-          onItemClick={(tab) => onTabChange?.(tab)}
+          onItemClick={handleTabChange}
         />
         {navMain.length > 0 && (
           <NavMain
@@ -404,7 +421,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             label={t('nav.hr')}
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
         {erpNav.length > 0 && (
@@ -413,7 +430,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             label={t('nav.erp')}
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
         {managementNav.length > 0 && (
@@ -423,7 +440,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             hideLabel
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
         {posNav.length > 0 && (
@@ -432,7 +449,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             label={t('nav.pos')}
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
         {crmNav.length > 0 && (
@@ -441,7 +458,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             label={t('nav.crm')}
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
         {accountingNav.length > 0 && (
@@ -450,7 +467,7 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
             label={t('nav.accounting')}
             openSection={openSection}
             onOpenChange={setOpenSection}
-            onItemClick={(tab) => onTabChange?.(tab)}
+            onItemClick={handleTabChange}
           />
         )}
       </SidebarContent>

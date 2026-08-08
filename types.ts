@@ -8,6 +8,7 @@ export interface QuickAction {
   icon: string;
   color: string;
   link: string;
+  tab: string;
   requiredPermission: Permission[];
 }
 

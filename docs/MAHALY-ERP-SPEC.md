@@ -15,7 +15,9 @@
 
 **مرجع SaaS:** https://saas.stockifly.in/admin/login — `superadmin@example.com` / `12345678`
 
-**UI مرجع:** https://aistudio.google.com/apps/f0506090-7fca-41c3-8494-6954996f017b
+**UI مرجع (شاشة مدمجة):** https://aistudio.google.com/apps/f0506090-7fca-41c3-8494-6954996f017b
+
+**UI مرجع (بيع بالباركود):** https://aistudio.google.com/apps/1f6ad303-50ad-47e6-8a9a-306e8c6187ef — يُنفَّذ عبر `PosBarcodePage` + `PosSaleTab` + `pos-premium.css`
 
 ---
 

@@ -9,7 +9,14 @@ import {
   type AuthUser,
   type BranchSummary,
 } from '@/lib/api/auth';
+import { invalidateApiCache } from '@/lib/api/request-cache';
+import { warmInventoryCache } from '@/lib/api/inventory-prefetch';
 import { getStoredBranchId, setStoredBranchId } from '@/lib/auth/branchStorage';
+import {
+  clearAuthSessionCache,
+  readAuthSessionCache,
+  writeAuthSessionCache,
+} from '@/lib/auth/sessionCache';
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -41,19 +48,30 @@ function resolveInitialBranch(user: AuthUser, branches: BranchSummary[]): string
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [tenant, setTenant] = useState<AuthTenant | null>(null);
-  const [loading, setLoading] = useState(true);
+  const boot = typeof window !== 'undefined' ? readAuthSessionCache() : null;
+  const [user, setUser] = useState<AuthUser | null>(() => boot?.user ?? null);
+  const [tenant, setTenant] = useState<AuthTenant | null>(() => boot?.tenant ?? null);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    if (!isLoggedIn()) return false;
+    return !boot;
+  });
   const [activeBranchId, setActiveBranchIdState] = useState<string | null>(null);
   const sessionLoadingRef = useRef(false);
 
   const branches = useMemo(() => (user ? resolveBranches(user) : []), [user]);
   const canSwitchAllBranches = user?.can_switch_all_branches ?? false;
 
-  const applyUser = useCallback((next: AuthUser) => {
+  const applyUser = useCallback((next: AuthUser, nextTenant?: AuthTenant | null) => {
     const list = resolveBranches(next);
+    const branchId = resolveInitialBranch(next, list);
     setUser(next);
-    setActiveBranchIdState(resolveInitialBranch(next, list));
+    setActiveBranchIdState(branchId);
+    setStoredBranchId(branchId);
+    if (nextTenant) {
+      setTenant(nextTenant);
+      writeAuthSessionCache(next, nextTenant);
+    }
   }, []);
 
   const setActiveBranchId = useCallback(
@@ -72,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setTenant(null);
       setActiveBranchIdState(null);
+      clearAuthSessionCache();
       setLoading(false);
       return;
     }
@@ -79,9 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await fetchMe();
       setTenant(data.tenant);
-      applyUser(data.user);
+      applyUser(data.user, data.tenant);
+      warmInventoryCache();
     } catch {
       clearAuthTokens();
+      clearAuthSessionCache();
       setUser(null);
       setTenant(null);
       setActiveBranchIdState(null);
@@ -94,12 +115,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadSession();
     const onLogout = () => {
+      clearAuthSessionCache();
       setUser(null);
       setTenant(null);
       setActiveBranchIdState(null);
     };
     const onFocus = () => {
-      if (isLoggedIn()) loadSession();
+      if (!isLoggedIn()) return;
+      if (sessionLoadingRef.current) return;
+      void loadSession();
     };
     window.addEventListener('auth:logout', onLogout);
     window.addEventListener('focus', onFocus);
@@ -117,14 +141,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(id);
   }, [user, loadSession]);
 
+  useEffect(() => {
+    if (!user || loading) return;
+    warmInventoryCache();
+  }, [user, loading]);
+
   const login = async (tenantSlug: string, username: string, password: string) => {
+    invalidateApiCache();
+    clearAuthSessionCache();
     const data = await apiLogin(tenantSlug, username, password);
     setTenant(data.tenant);
-    applyUser(data.user);
+    applyUser(data.user, data.tenant);
+    setLoading(false);
+    warmInventoryCache();
   };
 
   const logout = async () => {
     await apiLogout();
+    invalidateApiCache();
+    clearAuthSessionCache();
     setUser(null);
     setTenant(null);
     setActiveBranchIdState(null);
@@ -135,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isLoggedIn()) return;
     const data = await fetchMe();
     setTenant(data.tenant);
-    applyUser(data.user);
+    applyUser(data.user, data.tenant);
   }, [applyUser]);
 
   return (

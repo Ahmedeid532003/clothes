@@ -15,6 +15,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { ProductTablePagination } from './ProductTablePagination';
 
 interface ProductsListContainerProps {
   initialViewMode?: 'table' | 'kanban';
@@ -159,8 +160,8 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
           {/* Right Actions (Visually on the Right in RTL, so First in DOM) */}
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button onClick={() => { setTempVisibleColumns({ ...visibleColumns }); setColumnSettingsOpen(!columnSettingsOpen); }} className="w-[32px] h-[32px] flex items-center justify-center text-orange-500 bg-white border border-slate-200 hover:border-orange-400 rounded-[8px] hover:shadow-xs transition cursor-pointer" title={lang === 'ar' ? 'تخصيص الأعمدة' : 'Columns'}>
-                <Settings size={15} className="text-orange-500" />
+              <button onClick={() => { setTempVisibleColumns({ ...visibleColumns }); setColumnSettingsOpen(!columnSettingsOpen); }} className="w-[32px] h-[32px] flex items-center justify-center text-[#f06424] bg-white border border-slate-200 hover:border-orange-400 rounded-[8px] hover:shadow-xs transition cursor-pointer" title={lang === 'ar' ? 'تخصيص الأعمدة' : 'Columns'}>
+                <Settings size={15} className="!text-[#f06424] shrink-0" stroke="currentColor" />
               </button>
               {columnSettingsOpen && (
                 <div className="absolute right-0 rtl:right-0 rtl:left-auto mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-3.5 text-xs text-left rtl:text-right">
@@ -226,16 +227,16 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
                 {extraToolbarAction}
               </div>
             )}
-            <button onClick={() => setDirViewMode(dirViewMode === 'table' ? 'kanban' : 'table')} className="h-[32px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-[8px] hover:border-orange-400 hover:text-orange-500 text-slate-650 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px]" title={lang === 'ar' ? 'تبديل العرض' : 'Toggle View'}>
+            <button onClick={() => setDirViewMode(dirViewMode === 'table' ? 'kanban' : 'table')} className="h-[32px] px-3 flex items-center justify-center gap-1.5 bg-white border border-slate-200 rounded-[8px] hover:border-orange-400 hover:shadow-xs transition cursor-pointer select-none font-black text-[11px] text-slate-700" title={lang === 'ar' ? 'تبديل العرض' : 'Toggle View'}>
               {dirViewMode === 'table' ? (
                 <>
-                  <Grid size={14} className="text-orange-500" />
-                  <span>{lang === 'ar' ? 'بطاقات' : 'Cards'}</span>
+                  <Grid size={14} className="!text-[#f06424] shrink-0" stroke="currentColor" />
+                  <span className="text-slate-700">{lang === 'ar' ? 'بطاقات' : 'Cards'}</span>
                 </>
               ) : (
                 <>
-                  <List size={14} className="text-orange-500" />
-                  <span>{lang === 'ar' ? 'جدول' : 'Table'}</span>
+                  <List size={14} className="!text-[#f06424] shrink-0" stroke="currentColor" />
+                  <span className="text-slate-700">{lang === 'ar' ? 'جدول' : 'Table'}</span>
                 </>
               )}
             </button>
@@ -726,78 +727,20 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
           </div>
         )}
 
-        {/* Desktop Pagination Controls */}
-        <div className="px-4 h-[41px] pt-[0px] pb-[0px] border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4 text-xs bg-slate-50/40 rounded-b-[10px] text-slate-600">
-          <div className="flex items-center gap-1.5 text-slate-500 font-bold font-sans">
-            {lang === 'ar' ? (
-              <>
-                <span>عرض</span>
-                <span className="font-mono font-black bg-slate-200/50 border border-slate-300 px-2 py-0.5 rounded text-[#0a1945]">{paginatedProducts.length}</span>
-                <span>من أصل</span>
-                <span className="font-mono font-black bg-orange-100/50 border border-orange-200 px-2 py-0.5 rounded text-orange-650">{filteredProducts.length}</span>
-              </>
-            ) : (
-              <>
-                <span>Showing</span>
-                <span className="font-mono font-black bg-slate-200/50 border border-slate-300 px-2 py-0.5 rounded text-[#0a1945]">{paginatedProducts.length}</span>
-                <span>of</span>
-                <span className="font-mono font-black bg-orange-100/50 border border-orange-200 px-2 py-0.5 rounded text-orange-650">{filteredProducts.length}</span>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1 select-none">
-            <button
-              disabled={activeProdPage === 1}
-              onClick={() => setProdCurrentPage(prev => Math.max(1, prev - 1))}
-              className="p-1.5 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white hover:border-orange-400 hover:text-orange-500 cursor-pointer h-7 w-7 flex items-center justify-center transition"
-            >
-              {lang === 'ar' ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronLeft size={13} strokeWidth={2.5} />}
-            </button>
-
-            {Array.from({ length: totalProdPages }, (_, i) => i + 1).map(page => {
-              const isActive = page === activeProdPage;
-              return (
-                <button
-                  key={page}
-                  onClick={() => setProdCurrentPage(page)}
-                  className={cn(
-                    "w-7 h-7 rounded-lg font-extrabold cursor-pointer text-xs flex items-center justify-center border font-mono transition",
-                    isActive
-                      ? "bg-[#0a1945] text-white border-[#0a1945]"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-orange-400 hover:text-orange-500"
-                  )}
-                >
-                  {page}
-                </button>
-              );
-            })}
-
-            <button
-              disabled={activeProdPage === totalProdPages}
-              onClick={() => setProdCurrentPage(prev => Math.min(totalProdPages, prev + 1))}
-              className="p-1.5 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white hover:border-orange-400 hover:text-orange-500 cursor-pointer h-7 w-7 flex items-center justify-center transition"
-            >
-              {lang === 'ar' ? <ChevronLeft size={13} strokeWidth={2.5} /> : <ChevronRight size={13} strokeWidth={2.5} />}
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span>{lang === 'ar' ? 'عرض' : 'Show'}</span>
-            <select
-              value={prodPageSize}
-              onChange={(e) => {
-                setProdPageSize(Number(e.target.value));
-                setProdCurrentPage(1);
-              }}
-              className="bg-white border border-slate-200 rounded-[8px] text-xs font-bold outline-none cursor-pointer h-[28px] pl-[1px] pr-[2px]"
-            >
-              {[5, 10, 20, 50].map(sz => (
-                <option key={sz} value={sz}>{sz}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ProductTablePagination
+          lang={lang}
+          page={activeProdPage}
+          pageCount={totalProdPages}
+          pageSize={prodPageSize}
+          shown={paginatedProducts.length}
+          total={filteredProducts.length}
+          onPageChange={setProdCurrentPage}
+          onPageSizeChange={(size) => {
+            setProdPageSize(size);
+            setProdCurrentPage(1);
+          }}
+          className="mt-0 border-t-0 rounded-t-none"
+        />
       </div>
 
       {/* VIEW 2: MOBILE CONTAINER (Visible on screens smaller than md) */}
@@ -928,44 +871,20 @@ export const ProductsListContainer: React.FC<ProductsListContainerProps> = ({
           })
         )}
 
-        {/* Mobile Pagination Controls */}
-        <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-1 select-none">
-            <button
-              disabled={activeProdPage === 1}
-              onClick={() => setProdCurrentPage(prev => Math.max(1, prev - 1))}
-              className="p-2 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white text-slate-650 h-8 w-8 flex items-center justify-center cursor-pointer shadow-xs"
-            >
-              {lang === 'ar' ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronLeft size={13} strokeWidth={2.5} />}
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalProdPages }, (_, i) => i + 1).map(page => {
-                const isActive = page === activeProdPage;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setProdCurrentPage(page)}
-                    className={cn(
-                      "w-8 h-8 rounded-lg font-extrabold cursor-pointer text-xs flex items-center justify-center border font-mono transition",
-                      isActive ? "bg-[#0a1945] text-white border-[#0a1945]" : "bg-white text-slate-700 border-slate-200"
-                    )}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              disabled={activeProdPage === totalProdPages}
-              onClick={() => setProdCurrentPage(prev => Math.min(totalProdPages, prev + 1))}
-              className="p-2 border border-slate-200 disabled:opacity-40 disabled:pointer-events-none rounded-lg bg-white text-slate-650 h-8 w-8 flex items-center justify-center cursor-pointer shadow-xs"
-            >
-              {lang === 'ar' ? <ChevronLeft size={13} strokeWidth={2.5} /> : <ChevronRight size={13} strokeWidth={2.5} />}
-            </button>
-          </div>
-        </div>
+        <ProductTablePagination
+          lang={lang}
+          page={activeProdPage}
+          pageCount={totalProdPages}
+          pageSize={prodPageSize}
+          shown={paginatedProducts.length}
+          total={filteredProducts.length}
+          onPageChange={setProdCurrentPage}
+          onPageSizeChange={(size) => {
+            setProdPageSize(size);
+            setProdCurrentPage(1);
+          }}
+          className="mt-4"
+        />
       </div>
     </div>
   );

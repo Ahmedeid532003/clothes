@@ -2,6 +2,30 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from '@/music1-standalone/App';
 import '@/music1-standalone/index.css';
+import {
+  applyAccentColor,
+  getStoredAccent,
+  initAccentFromStorage,
+  listenForAccentMessages,
+  normalizeHex,
+} from '@/lib/theme/accent';
+import {
+  applyFontScale,
+  getStoredFontScale,
+  initFontScaleFromStorage,
+  listenForFontScaleMessages,
+} from '@/lib/theme/fontScale';
+
+initAccentFromStorage();
+initFontScaleFromStorage();
+const accentFromQuery = normalizeHex(new URLSearchParams(window.location.search).get('accent') || '');
+if (accentFromQuery) applyAccentColor(accentFromQuery);
+else applyAccentColor(getStoredAccent());
+const fontFromQuery = Number(new URLSearchParams(window.location.search).get('fontScale') || '');
+if (Number.isFinite(fontFromQuery) && fontFromQuery > 0) applyFontScale(fontFromQuery);
+else applyFontScale(getStoredFontScale());
+listenForAccentMessages();
+listenForFontScaleMessages();
 
 const erpHome = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/') || '/';
 const isEmbed = new URLSearchParams(window.location.search).get('embed') === '1';

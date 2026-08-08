@@ -6,5 +6,5 @@ pages_build_output_dir = "dist"
 # يمكن أيضاً تعيين MAHALY_API_URL من Dashboard → Settings → Variables
 
 [vars]
-VITE_API_URL = "/api/v1"
+VITE_API_URL = "https://mahalyerp-api.fly.dev/api/v1"
 MAHALY_API_URL = "https://mahalyerp-api.fly.dev/api"

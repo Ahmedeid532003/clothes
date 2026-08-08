@@ -11,8 +11,10 @@ export type NavItem = {
 export const ANALYTICS_NAV = [
   { id: 'home', tab: 'home' },
   { id: 'dashboard', tab: 'dashboard' },
+  { id: 'settings', tab: 'settings' },
 ] as const;
 
+/** 10 V13 employees branches — same order as employees-v13 hrMenus */
 export const HR_NAV: NavItem[] = [
   {
     id: 'employees',
@@ -20,11 +22,13 @@ export const HR_NAV: NavItem[] = [
       { id: 'hrJobStructure', tab: 'hr-job-structure' },
       { id: 'workShifts', tab: 'work-shifts' },
       { id: 'employeeData', tab: 'employee-data' },
-      { id: 'employeeReports', tab: 'employee-reports' },
       { id: 'attendance', tab: 'attendance' },
       { id: 'bonuses', tab: 'bonuses' },
+      { id: 'deductions', tab: 'deductions' },
       { id: 'employeeCommissions', tab: 'employee-commissions' },
       { id: 'payroll', tab: 'payroll' },
+      { id: 'payrollPayments', tab: 'payment-auth-types' },
+      { id: 'employeeReports', tab: 'employee-reports' },
     ],
   },
 ];
@@ -174,16 +178,12 @@ export const ERP_NAV: NavItem[] = [
   {
     id: 'suppliers',
     items: [
+      { id: 'supplierCategories', tab: 'supplier-categories' },
+      { id: 'supplierData', tab: 'supplier-data' },
+      { id: 'saleDiscountNote', tab: 'sale-discount-note' },
+      { id: 'supplierDiscountNote', tab: 'supplier-discount-note' },
       { id: 'supplierPayments', tab: 'supplier-payments' },
-      { id: 'supplierTypes', tab: 'supplier-types' },
-      { id: 'supplierGroups', tab: 'supplier-groups' },
-      { id: 'suppliers', tab: 'suppliers' },
-      { id: 'supplierWeeklyReports', tab: 'supplier-weekly-reports' },
-      { id: 'generalItemMovement', tab: 'general-item-movement' },
-      { id: 'supplierInventories', tab: 'supplier-inventories' },
-      { id: 'supplierAccounts', tab: 'supplier-accounts' },
-      { id: 'supplierDiscounts', tab: 'supplier-discounts' },
-      { id: 'storeDiscounts', tab: 'store-discounts' },
+      { id: 'supplierReports', tab: 'supplier-reports' },
     ],
   },
   {

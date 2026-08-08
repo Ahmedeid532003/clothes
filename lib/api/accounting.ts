@@ -274,6 +274,14 @@ export type PosShiftGate = {
   open_shift: CashShiftDto | null;
 };
 
+export type ShiftOpenOptions = {
+  branches: Array<{ id: string; name: string }>;
+  treasuries: Array<{ id: string; code: string; name_ar: string; label: string }>;
+  can_open: boolean;
+  block_reason: string;
+  open_shift: CashShiftDto | null;
+};
+
 export type CashShiftListParams = {
   status?: string;
   branch?: string;
@@ -295,6 +303,7 @@ export const cashShiftsApi = {
   },
   activeUsers: () => apiFetch<ActiveShiftUser[]>('/accounting/cash-shifts/active/'),
   posGate: () => apiFetch<PosShiftGate>('/accounting/cash-shifts/pos-gate/'),
+  openOptions: () => apiFetch<ShiftOpenOptions>('/accounting/cash-shifts/open-options/'),
   myOpen: () => apiFetch<CashShiftDto | null>('/accounting/cash-shifts/my-open/'),
   detail: (id: string) => apiFetch<CashShiftDto>(`/accounting/cash-shifts/${id}/`),
   dailyReport: (id: string) =>

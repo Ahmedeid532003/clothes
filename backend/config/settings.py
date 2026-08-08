@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, True),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
-    CORS_ALLOWED_ORIGINS=(list, ["http://localhost:3000", "http://127.0.0.1:3000"]),
+    CORS_ALLOWED_ORIGINS=(list, ["http://localhost:8787", "http://127.0.0.1:8787", "http://localhost:3000", "http://127.0.0.1:3000"]),
     CSRF_TRUSTED_ORIGINS=(list, []),
     DEPLOY_GATE_ENABLED=(bool, False),
 )
@@ -63,6 +63,7 @@ DEPLOY_GATE_ENABLED = env.bool("DEPLOY_GATE_ENABLED", default=False)
 DEPLOY_ACCESS_CODE = env("DEPLOY_ACCESS_CODE", default="")
 
 MIDDLEWARE = [
+    "core.middleware.health_bypass.HealthBypassMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -155,6 +156,9 @@ if CLOUD_SHARED_DB:
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r"^https://.*\.netlify\.app$",
         r"^https://.*\.pages\.dev$",
+        # Local Vite (`npm run dev` / `dev:online`) against Fly API
+        r"^http://(localhost|127\.0\.0\.1):8787$",
+        r"^http://(localhost|127\.0\.0\.1):3000$",
     ]
 
 if not DEBUG:

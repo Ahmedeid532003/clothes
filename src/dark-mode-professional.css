@@ -1,0 +1,404 @@
+/**
+ * Ma7alyERP — Professional Dark Mode (final cascade override)
+ * Quiet charcoal surfaces + Ma7aly orange accent. No indigo/purple glow.
+ */
+
+html.dark,
+html[data-app-theme='dark'] {
+  color-scheme: dark;
+
+  --dm-bg: #0c0f14;
+  --dm-surface: #141a22;
+  --dm-surface-2: #1a222d;
+  --dm-surface-3: #222b38;
+  --dm-elevated: #1c2430;
+  --dm-border: rgba(255, 255, 255, 0.08);
+  --dm-border-strong: rgba(255, 255, 255, 0.14);
+  --dm-text: #e8edf4;
+  --dm-text-muted: #9aa8b8;
+  --dm-text-faint: #6b7a8c;
+  --dm-accent: #f06424;
+  --dm-accent-hover: #d9551c;
+  --dm-accent-soft: rgba(240, 100, 36, 0.14);
+  --dm-thead: #1a222d;
+  --dm-row-hover: rgba(240, 100, 36, 0.08);
+  --dm-row-alt: rgba(255, 255, 255, 0.02);
+  --dm-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+
+  --theme-bg: var(--dm-bg);
+  --theme-surface: var(--dm-surface);
+  --theme-surface-soft: var(--dm-surface-2);
+  --theme-text-heading: var(--dm-text);
+  --theme-text-body: var(--dm-text-muted);
+  --theme-text-meta: var(--dm-text-faint);
+  --theme-border: var(--dm-border);
+  --theme-brand: var(--dm-accent);
+  --theme-brand-hover: var(--dm-accent-hover);
+  --theme-brand-soft: var(--dm-accent-soft);
+
+  --background: var(--dm-bg);
+  --foreground: var(--dm-text);
+  --card: var(--dm-surface);
+  --card-foreground: var(--dm-text);
+  --popover: var(--dm-elevated);
+  --popover-foreground: var(--dm-text);
+  --primary: var(--dm-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--dm-surface-2);
+  --secondary-foreground: var(--dm-text);
+  --muted: var(--dm-surface-2);
+  --muted-foreground: var(--dm-text-muted);
+  --accent: var(--dm-accent-soft);
+  --accent-foreground: var(--dm-text);
+  --border: var(--dm-border);
+  --input: var(--dm-border-strong);
+  --ring: rgba(240, 100, 36, 0.45);
+
+  --ui-surface: var(--dm-surface);
+  --ui-surface-muted: var(--dm-surface-2);
+  --ui-text: var(--dm-text);
+  --ui-border: var(--dm-border);
+  --ui-border-strong: var(--dm-border-strong);
+  --ui-brand: var(--dm-accent);
+  --ui-brand-hover: var(--dm-accent-hover);
+  --ui-brand-soft: var(--dm-accent-soft);
+
+  --erp-shell-bg: var(--dm-bg);
+  --erp-table-snow: var(--dm-surface);
+  --erp-table-head-bg: var(--dm-thead);
+  --erp-table-head-text: var(--dm-text);
+  --sf-bg: var(--dm-bg);
+  --sf-surface: var(--dm-surface);
+  --sf-muted: var(--dm-text-muted);
+  --sf-border: var(--dm-border);
+  --app-dark-bg: var(--dm-bg);
+  --app-dark-surface: var(--dm-surface);
+  --app-dark-muted: var(--dm-text-muted);
+}
+
+/* ---------- Page canvas (no purple/blue glow) ---------- */
+html.dark body,
+html[data-app-theme='dark'] body,
+html.dark [data-slot='sidebar-inset'],
+html[data-app-theme='dark'] [data-slot='sidebar-inset'],
+html.dark .app-tenant-shell,
+html[data-app-theme='dark'] .app-tenant-shell,
+html.dark .app-content-scroll,
+html[data-app-theme='dark'] .app-content-scroll,
+html.dark .enterprise-content,
+html[data-app-theme='dark'] .enterprise-content {
+  background: var(--dm-bg) !important;
+  background-image: none !important;
+  color: var(--dm-text) !important;
+}
+
+/* ---------- Header: quiet elevated bar ---------- */
+html.dark .app-shell-header,
+html[data-app-theme='dark'] .app-shell-header {
+  background: rgba(16, 21, 28, 0.94) !important;
+  border-bottom: 1px solid var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+}
+
+html.dark .app-shell-header :where(span, button, svg):not(.lux-theme-switch):not(.lux-theme-switch *),
+html[data-app-theme='dark'] .app-shell-header :where(span, button, svg):not(.lux-theme-switch):not(.lux-theme-switch *) {
+  color: var(--dm-text) !important;
+}
+
+html.dark .app-shell-header :where(button):not(.lux-theme-switch),
+html[data-app-theme='dark'] .app-shell-header :where(button):not(.lux-theme-switch) {
+  background: var(--dm-surface-2) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark .app-shell-header :where(button:hover):not(.lux-theme-switch),
+html[data-app-theme='dark'] .app-shell-header :where(button:hover):not(.lux-theme-switch) {
+  background: var(--dm-surface-3) !important;
+  color: #fff !important;
+}
+
+html.dark .app-header-brand,
+html[data-app-theme='dark'] .app-header-brand {
+  background: linear-gradient(180deg, var(--dm-surface-3), var(--dm-surface-2)) !important;
+  border-color: var(--dm-border-strong) !important;
+  color: var(--dm-accent) !important;
+  box-shadow: none !important;
+}
+
+html.dark .app-profile-trigger,
+html[data-app-theme='dark'] .app-profile-trigger {
+  background: var(--dm-surface-2) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: none !important;
+}
+
+html.dark .app-profile-copy strong,
+html[data-app-theme='dark'] .app-profile-copy strong {
+  color: var(--dm-text) !important;
+}
+
+html.dark .app-profile-copy small,
+html[data-app-theme='dark'] .app-profile-copy small {
+  color: var(--dm-text-muted) !important;
+}
+
+html.dark .app-language-button,
+html[data-app-theme='dark'] .app-language-button,
+html.dark .app-icon-button,
+html[data-app-theme='dark'] .app-icon-button {
+  background: transparent !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text-muted) !important;
+  box-shadow: none !important;
+}
+
+html.dark .app-icon-button:hover,
+html[data-app-theme='dark'] .app-icon-button:hover {
+  background: var(--dm-surface-2) !important;
+  color: var(--dm-accent) !important;
+}
+
+html.dark .app-breadcrumbs,
+html.dark .app-breadcrumbs span,
+html.dark .app-breadcrumbs strong,
+html[data-app-theme='dark'] .app-breadcrumbs,
+html[data-app-theme='dark'] .app-breadcrumbs span,
+html[data-app-theme='dark'] .app-breadcrumbs strong {
+  color: var(--dm-text-muted) !important;
+}
+
+/* ---------- Cards / panels ---------- */
+html.dark .app-content-card,
+html[data-app-theme='dark'] .app-content-card,
+html.dark .erp-crud-page,
+html[data-app-theme='dark'] .erp-crud-page,
+html.dark .erp-table-shell,
+html[data-app-theme='dark'] .erp-table-shell,
+html.dark .erp-premium-table-card,
+html[data-app-theme='dark'] .erp-premium-table-card,
+html.dark .hr-premium-table-card,
+html[data-app-theme='dark'] .hr-premium-table-card,
+html.dark .hr-sections-table-card,
+html[data-app-theme='dark'] .hr-sections-table-card,
+html.dark .enterprise-panel,
+html[data-app-theme='dark'] .enterprise-panel,
+html.dark .form-card,
+html[data-app-theme='dark'] .form-card,
+html.dark .form-section-card,
+html[data-app-theme='dark'] .form-section-card,
+html.dark .report-table-wrap,
+html[data-app-theme='dark'] .report-table-wrap,
+html.dark .dashboard-stat-card,
+html[data-app-theme='dark'] .dashboard-stat-card,
+html.dark .department-kpi-card,
+html[data-app-theme='dark'] .department-kpi-card,
+html.dark .enterprise-kpi-card,
+html[data-app-theme='dark'] .enterprise-kpi-card {
+  background: var(--dm-surface) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: var(--dm-shadow) !important;
+}
+
+html.dark .app-content-card :where(.bg-white, .bg-slate-50, .rounded-xl.border, .rounded-2xl.border),
+html[data-app-theme='dark'] .app-content-card :where(.bg-white, .bg-slate-50, .rounded-xl.border, .rounded-2xl.border),
+html.dark [data-slot='sidebar-inset'] :where(.bg-white, .bg-slate-50),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(.bg-white, .bg-slate-50) {
+  background: var(--dm-surface-2) !important;
+  background-color: var(--dm-surface-2) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark .app-content-card :where(h1, h2, h3, h4, h5, h6, strong),
+html[data-app-theme='dark'] .app-content-card :where(h1, h2, h3, h4, h5, h6, strong),
+html.dark .erp-crud-title-block h1,
+html[data-app-theme='dark'] .erp-crud-title-block h1 {
+  color: var(--dm-text) !important;
+}
+
+html.dark .app-content-card :where(p, small, label, dt, .text-slate-500, .text-slate-600, .text-slate-700, .text-gray-500, .text-gray-600),
+html[data-app-theme='dark'] .app-content-card :where(p, small, label, dt, .text-slate-500, .text-slate-600, .text-slate-700, .text-gray-500, .text-gray-600) {
+  color: var(--dm-text-muted) !important;
+}
+
+html.dark .app-content-card :where(.text-slate-900, .text-slate-800, .text-gray-900, .text-gray-800),
+html[data-app-theme='dark'] .app-content-card :where(.text-slate-900, .text-slate-800, .text-gray-900, .text-gray-800) {
+  color: var(--dm-text) !important;
+}
+
+/* ---------- Tables ---------- */
+html.dark :where(table, .erp-premium-table, .app-content-card table, .erp-table-scroll table),
+html[data-app-theme='dark'] :where(table, .erp-premium-table, .app-content-card table, .erp-table-scroll table) {
+  background: var(--dm-surface) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: none !important;
+}
+
+html.dark :where(table thead, table thead tr, table th, .erp-premium-table th, .erp-table-scroll th),
+html[data-app-theme='dark'] :where(table thead, table thead tr, table th, .erp-premium-table th, .erp-table-scroll th),
+html.dark [data-slot='sidebar-inset'] :where(table thead tr:first-child, table thead tr:first-child th),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(table thead tr:first-child, table thead tr:first-child th) {
+  background: var(--dm-thead) !important;
+  color: var(--dm-text) !important;
+  border-color: var(--dm-border) !important;
+  box-shadow: none !important;
+}
+
+html.dark :where(table td, .erp-premium-table td, .erp-table-scroll td, tbody tr),
+html[data-app-theme='dark'] :where(table td, .erp-premium-table td, .erp-table-scroll td, tbody tr),
+html.dark [data-slot='sidebar-inset'] :where(table tbody tr, table td),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(table tbody tr, table td) {
+  background: var(--dm-surface) !important;
+  color: var(--dm-text) !important;
+  border-color: var(--dm-border) !important;
+}
+
+html.dark :where(table tbody tr:nth-child(even), .erp-table-scroll tbody tr:nth-child(even)),
+html[data-app-theme='dark'] :where(table tbody tr:nth-child(even), .erp-table-scroll tbody tr:nth-child(even)) {
+  background: var(--dm-row-alt) !important;
+}
+
+html.dark :where(table tbody tr:nth-child(even) td, .erp-table-scroll tbody tr:nth-child(even) td),
+html[data-app-theme='dark'] :where(table tbody tr:nth-child(even) td, .erp-table-scroll tbody tr:nth-child(even) td) {
+  background: transparent !important;
+}
+
+html.dark :where(table tbody tr:hover, .erp-premium-table tbody tr:hover, .erp-table-scroll tbody tr:hover),
+html[data-app-theme='dark'] :where(table tbody tr:hover, .erp-premium-table tbody tr:hover, .erp-table-scroll tbody tr:hover),
+html.dark :where(table tbody tr:hover td, .erp-premium-table tbody tr:hover td),
+html[data-app-theme='dark'] :where(table tbody tr:hover td, .erp-premium-table tbody tr:hover td) {
+  background: var(--dm-row-hover) !important;
+}
+
+html.dark .erp-table-footer,
+html[data-app-theme='dark'] .erp-table-footer,
+html.dark .erp-premium-table-card .erp-table-header,
+html[data-app-theme='dark'] .erp-premium-table-card .erp-table-header,
+html.dark .erp-premium-table-card .erp-table-toolbar,
+html[data-app-theme='dark'] .erp-premium-table-card .erp-table-toolbar,
+html.dark .erp-table-tools,
+html[data-app-theme='dark'] .erp-table-tools {
+  background: var(--dm-surface-2) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+/* ---------- Inputs ---------- */
+html.dark :where(input, select, textarea, .erp-table-search, .erp-column-filter-input, .erp-search-bar-input),
+html[data-app-theme='dark'] :where(input, select, textarea, .erp-table-search, .erp-column-filter-input, .erp-search-bar-input),
+html.dark [data-slot='sidebar-inset'] :where(input, select, textarea),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(input, select, textarea),
+html.dark .app-content-card :where(input:not([type='checkbox']):not([type='radio']), select, textarea),
+html[data-app-theme='dark'] .app-content-card :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+  background: var(--dm-surface-2) !important;
+  border-color: var(--dm-border-strong) !important;
+  color: var(--dm-text) !important;
+  box-shadow: none !important;
+}
+
+html.dark :where(input, select, textarea)::placeholder,
+html[data-app-theme='dark'] :where(input, select, textarea)::placeholder {
+  color: var(--dm-text-faint) !important;
+}
+
+html.dark :where(input, select, textarea):focus,
+html[data-app-theme='dark'] :where(input, select, textarea):focus {
+  border-color: var(--dm-accent) !important;
+  box-shadow: 0 0 0 3px var(--dm-accent-soft) !important;
+}
+
+/* ---------- Buttons in content ---------- */
+html.dark [data-slot='sidebar-inset'] :where(button.border, button[variant='outline']),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(button.border, button[variant='outline']),
+html.dark .app-content-card :where(button.border, button[variant='outline']),
+html[data-app-theme='dark'] .app-content-card :where(button.border, button[variant='outline']),
+html.dark .erp-table-tools button:not(.erp-add-action),
+html[data-app-theme='dark'] .erp-table-tools button:not(.erp-add-action) {
+  background: var(--dm-surface-2) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: none !important;
+}
+
+html.dark [data-slot='sidebar-inset'] :where(button.border:hover, button[variant='outline']:hover),
+html[data-app-theme='dark'] [data-slot='sidebar-inset'] :where(button.border:hover, button[variant='outline']:hover) {
+  background: var(--dm-surface-3) !important;
+  border-color: var(--dm-border-strong) !important;
+}
+
+html.dark .erp-add-action,
+html[data-app-theme='dark'] .erp-add-action,
+html.dark .erp-add-save-action,
+html[data-app-theme='dark'] .erp-add-save-action,
+html.dark button.bg-primary,
+html[data-app-theme='dark'] button.bg-primary {
+  background: var(--dm-accent) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(240, 100, 36, 0.28) !important;
+}
+
+/* ---------- Sidebar ---------- */
+html.dark [data-sidebar='sidebar'],
+html[data-app-theme='dark'] [data-sidebar='sidebar'] {
+  background: linear-gradient(180deg, #0a0d12 0%, #10151c 55%, #0c0f14 100%) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+html.dark [data-sidebar='menu-button'][data-active='true'],
+html[data-app-theme='dark'] [data-sidebar='menu-button'][data-active='true'],
+html.dark [data-sidebar='menu-sub-button'][data-active='true'],
+html[data-app-theme='dark'] [data-sidebar='menu-sub-button'][data-active='true'] {
+  background: var(--dm-accent-soft) !important;
+  color: #fff !important;
+}
+
+/* ---------- Dropdowns / dialogs ---------- */
+html.dark [data-slot='dropdown-menu-content'],
+html[data-app-theme='dark'] [data-slot='dropdown-menu-content'],
+html.dark [role='menu'],
+html[data-app-theme='dark'] [role='menu'],
+html.dark [data-slot='sheet-content'],
+html[data-app-theme='dark'] [data-slot='sheet-content'],
+html.dark [role='dialog'],
+html[data-app-theme='dark'] [role='dialog'] {
+  background: var(--dm-elevated) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+  box-shadow: var(--dm-shadow) !important;
+}
+
+/* ---------- Settings / accent page ---------- */
+html.dark .accent-settings-page .bg-white,
+html[data-app-theme='dark'] .accent-settings-page .bg-white,
+html.dark .accent-settings-page .bg-slate-50,
+html[data-app-theme='dark'] .accent-settings-page .bg-slate-50 {
+  background: var(--dm-surface) !important;
+  border-color: var(--dm-border) !important;
+  color: var(--dm-text) !important;
+}
+
+/* ---------- Scrollbars ---------- */
+html.dark *::-webkit-scrollbar-thumb,
+html[data-app-theme='dark'] *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+html.dark *::-webkit-scrollbar-track,
+html[data-app-theme='dark'] *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* Keep lux switch readable on dark header */
+html.dark .lux-theme-switch__label-dark,
+html[data-app-theme='dark'] .lux-theme-switch__label-dark {
+  color: #a5b4fc !important;
+}

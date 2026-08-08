@@ -1,0 +1,9 @@
+﻿Ø§Ø±ÙØ¹ Ù‡Ø°Ø§ Ø§Ù„Ù…Ù„Ù Ø¹Ù„Ù‰ Cloudflare Pages:
+C:\Users\DELL\OneDrive\Desktop\clothes-main\release\MAHALY-CLOUDFLARE-UPLOAD-20260629-1657.zip
+
+1) https://dash.cloudflare.com
+2) Workers & Pages -> mahalyerp
+3) Create deployment -> Upload assets -> Ø§Ø³Ø­Ø¨ Ø§Ù„Ù€ ZIP
+4) Ø¨Ø¹Ø¯ Ø§Ù„Ù†Ø´Ø±: https://mahalyerp.pages.dev (Ctrl+Shift+R)
+
+ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„: eid | eid1 | 123456789

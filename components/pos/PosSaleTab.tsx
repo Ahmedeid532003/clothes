@@ -1,5 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ClipboardList, Pencil, Plus, Receipt, RefreshCw, Search, Settings2, Trash2 } from 'lucide-react';
+import {
+  Banknote,
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  LayoutGrid,
+  Pencil,
+  Plus,
+  QrCode,
+  ScanLine,
+  ShoppingBag,
+  Smartphone,
+  Trash2,
+  User,
+  Zap,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { fetchPosCustomerReview, fetchPosCustomerOpenDocs, type PosCartLine, type PosCustomerReviewRow } from '@/lib/api/pos';
@@ -9,17 +24,13 @@ import { scanOrdersApi } from '@/lib/api/scanOrders';
 import type { InstallmentReceipt } from '@/lib/api/receivables';
 import { canUseFeature } from '@/lib/permissions/access';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LoadFromOrderButton } from '@/components/orders/LoadFromOrderButton';
-import { LoadFromDocButton } from '@/components/orders/LoadFromDocButton';
 import { PosLineEditDialog } from './PosLineEditDialog';
 import { PosPaymentCanvas } from './PosPaymentCanvas';
 import { PosInstallmentReceiptDetail } from './PosInstallmentReceiptDetail';
-import { fmtPosAmount, applySellerToCartLine, lineDiscountAmount, lineGross, lineSubtotal, newLocalId, parsePosAmount, cartShortageLines, cartHasStockShortage, lineStockDeficit } from './pos-utils';
+import { fmtPosAmount, applySellerToCartLine, lineDiscountAmount, lineGross, lineSubtotal, newLocalId, parsePosAmount, cartShortageLines, cartHasStockShortage, lineStockDeficit, flattenGalleryItems } from './pos-utils';
 import { PosDeliveryPanel } from './PosDeliveryPanel';
 import { PosDeliveryHub } from './PosDeliveryHub';
-import { PosInvoiceActionCards } from './PosInvoiceActionCards';
 import { PosStockShortageBanner } from './PosStockShortageBanner';
 import { PosQuotationPreviewPage } from './PosQuotationPreviewPage';
 import { PosStockTransferCanvas } from './PosStockTransferCanvas';
@@ -32,8 +43,11 @@ import {
   readHeldCarts,
 } from './posCustomerDocs';
 import { usePosSellerScan } from './usePosSellerScan';
-import { PosShiftGate } from './PosShiftGate';
 import type { usePosSession } from './usePosSession';
+import { PosPendingOrdersModal, usePendingOrdersCount } from './smart/PosPendingOrdersModal';
+import { PosActiveQuotationsModal, useActiveQuotationsCount } from './smart/PosActiveQuotationsModal';
+import { PosPreReservationsModal, usePreReservationsCount } from './smart/PosPreReservationsModal';
+import type { HeldCartRow } from './posCustomerDocs';
 
 type Session = ReturnType<typeof usePosSession>;
 
@@ -78,6 +92,13 @@ export function PosSaleTab({ session, onMessage }: Props) {
   const [transferOpen, setTransferOpen] = useState(false);
   const [quotationPrint, setQuotationPrint] = useState<SalesQuotationDto | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [pendingOpen, setPendingOpen] = useState(false);
+  const [quotesOpen, setQuotesOpen] = useState(false);
+  const [bookingsOpen, setBookingsOpen] = useState(false);
+  const { count: pendingCount, refresh: refreshPending } = usePendingOrdersCount();
+  const { count: quotesCount, refresh: refreshQuotes } = useActiveQuotationsCount();
+  const { count: bookingsCount, refresh: refreshBookings } = usePreReservationsCount();
+  const quickItems = useMemo(() => flattenGalleryItems(session.quickPicks).slice(0, 8), [session.quickPicks]);
 
   const isCashCustomer = !customerId;
 
@@ -291,6 +312,7 @@ export function PosSaleTab({ session, onMessage }: Props) {
     loadScanOrderToCart(session, order, seller.employees, t('pos.bundleOffer'));
     setLoadedOrderId(order.id);
     onMessage?.(`${t('scanOrders.loaded')} ${order.code} — ${order.employee_name}`);
+    refreshPending();
   };
 
   const handleLoadQuotation = (doc: Awaited<ReturnType<typeof salesQuotationsApi.lookup>>) => {
@@ -304,6 +326,7 @@ export function PosSaleTab({ session, onMessage }: Props) {
     if (doc.customer) setCustomerId(doc.customer);
     if (doc.discount_amount) setInvoiceDiscount(doc.discount_amount);
     onMessage?.(`${t('pos.loadedQuotation')} ${doc.code}`);
+    refreshQuotes();
   };
 
   const handleLoadReservation = (doc: Awaited<ReturnType<typeof customerReservationsApi.lookup>>) => {
@@ -317,6 +340,32 @@ export function PosSaleTab({ session, onMessage }: Props) {
     setCustomerId(doc.customer);
     if (doc.discount_amount) setInvoiceDiscount(doc.discount_amount);
     onMessage?.(`${t('pos.loadedReservation')} ${doc.code}`);
+    refreshBookings();
+  };
+
+  const handleLoadHeld = (held: HeldCartRow) => {
+    session.clearCart();
+    session.setCart(held.lines);
+    if (held.customerId) setCustomerId(held.customerId);
+    if (held.invoiceDiscount) setInvoiceDiscount(held.invoiceDiscount);
+    if (held.deliveryFees) setDeliveryFees(held.deliveryFees);
+    setLoadedOrderId(null);
+    setLoadedDocId(null);
+    onMessage?.(t('pos.cartHeld'));
+    refreshPending();
+  };
+
+  const handleQuickAdd = (code: string) => {
+    if (seller.busy || seller.sellerPromptOpen) return;
+    void seller.submitProduct(code, t('pos.bundleOffer'), t('pos.notFound')).then((ok) => {
+      if (ok) {
+        session.setCart((cart) => {
+          warnShortageFromCart(cart);
+          return cart;
+        });
+        onMessage?.(t('pos.itemAdded'));
+      }
+    });
   };
 
   const loadCustomerDocuments = useCallback(
@@ -629,109 +678,8 @@ export function PosSaleTab({ session, onMessage }: Props) {
     return opts;
   }, [customerId, customers]);
 
-  const sellerPicker = (
-    <div className="w-full rounded-xl border-2 border-emerald-400 bg-gradient-to-b from-emerald-50 to-white p-3 space-y-2 shadow-sm">
-      <label className="flex items-center justify-between gap-2 text-[10px] font-black uppercase text-emerald-900">
-        <span>{t('pos.invoiceSeller')}</span>
-        <button
-          type="button"
-          className="rounded p-0.5 text-emerald-700 hover:bg-emerald-100"
-          title={t('inventory.refresh')}
-          onClick={() => void seller.loadEmployees()}
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${seller.employeesLoading ? 'animate-spin' : ''}`} />
-        </button>
-      </label>
-      <select
-        className="h-10 w-full rounded-lg border border-emerald-300 bg-white px-2 text-sm font-bold shadow-sm"
-        value={seller.defaultSellerId}
-        onChange={(e) => seller.setDefaultSellerId(e.target.value)}
-        disabled={seller.employeesLoading}
-      >
-        <option value="">
-          {seller.employeesLoading ? t('pos.sellersLoading') : t('pos.selectSeller')}
-        </option>
-        {seller.employees.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.employee_code} — {e.full_name || e.username}
-          </option>
-        ))}
-      </select>
-      {seller.employees.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5 max-h-28 overflow-y-auto">
-          {seller.employees.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              title={e.full_name || e.username}
-              className={`rounded-lg border px-2 py-2 text-[11px] font-bold transition text-start truncate ${
-                seller.defaultSellerId === e.id
-                  ? 'border-emerald-600 bg-emerald-600 text-white'
-                  : 'border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-100'
-              }`}
-              onClick={() => seller.setDefaultSellerId(e.id)}
-            >
-              <span className="block font-mono">{e.employee_code}</span>
-              <span className={`block truncate text-[10px] ${seller.defaultSellerId === e.id ? 'text-emerald-100' : 'text-slate-600'}`}>
-                {e.full_name || e.username}
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-      <div className="flex gap-1">
-        <Input
-          className="h-9 flex-1 font-mono text-sm font-bold bg-white"
-          placeholder={t('pos.sellerCodeHint')}
-          value={sellerCodeQ}
-          onChange={(e) => {
-            setSellerCodeQ(e.target.value);
-            setSellerCodeError(null);
-          }}
-          onKeyDown={(e) => e.key === 'Enter' && lookupInvoiceSeller()}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9 shrink-0 border-emerald-400 font-bold text-emerald-900 bg-white"
-          disabled={!sellerCodeQ.trim()}
-          onClick={lookupInvoiceSeller}
-        >
-          ✓
-        </Button>
-      </div>
-      {seller.defaultSeller ? (
-        <p className="text-xs font-bold text-emerald-900 text-center">
-          ✓ {seller.defaultSeller.employee_code} — {seller.defaultSeller.full_name}
-        </p>
-      ) : null}
-      {seller.employeesLoading ? (
-        <p className="text-xs font-bold text-slate-500 text-center">{t('pos.sellersLoading')}</p>
-      ) : null}
-      {!seller.employeesLoading && seller.employees.length === 0 ? (
-        <p className="text-xs font-bold text-amber-800 text-center leading-snug">
-          {t('pos.sellersEmpty')}
-        </p>
-      ) : null}
-      {seller.employeesError ? (
-        <p className="text-xs font-bold text-red-700 text-center">{seller.employeesError}</p>
-      ) : null}
-      {sellerCodeError ? (
-        <p className="text-xs font-bold text-red-700 text-center">{sellerCodeError}</p>
-      ) : null}
-      {session.cart.some((l) => !l.seller_id) && seller.defaultSeller ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-full border-emerald-400 text-xs font-bold text-emerald-900 bg-white"
-          onClick={applyDefaultSellerToCart}
-        >
-          {t('pos.applySellerToLines')}
-        </Button>
-      ) : null}
-    </div>
-  );
+  const customerCode = selectedCustomer?.code || '';
+  const phoneDisplay = phone || selectedCustomer?.phone || selectedCustomer?.whatsapp || t('pos.smart.anonymousCash');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -744,45 +692,56 @@ export function PosSaleTab({ session, onMessage }: Props) {
         onConfirm={handleSellerConfirm}
         onCancel={seller.closeSellerPrompt}
       />
-      <div className="shrink-0 px-4 pt-2">
-        <PosShiftGate />
-      </div>
-      <div className="shrink-0 border-b bg-white px-4 py-3 space-y-2">
+      <div className="psc-search-row">
         {(seller.localError || session.error) ? (
-          <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
+          <div className="mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">
             {seller.localError || session.error}
           </div>
         ) : null}
-        <div className="flex flex-wrap items-stretch gap-3">
-          <div className="relative min-w-[240px] flex flex-1 gap-2">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                id="pos-sale-search"
-                ref={searchRef}
-                value={searchQ}
-                onChange={(e) => setSearchQ(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !seller.busy && runSearch()}
-                placeholder={t('pos.saleSearchPlaceholder')}
-                className="h-11 ps-10 font-mono text-base"
-                autoComplete="off"
-                disabled={seller.busy || seller.sellerPromptOpen}
-              />
-            </div>
-            <Button
-              type="button"
-              className="h-11 shrink-0 px-4 font-bold bg-[#4169E1] hover:bg-[#3451b2]"
-              disabled={seller.busy || seller.sellerPromptOpen || !searchQ.trim()}
-              onClick={runSearch}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+        <div className="psc-search-bar">
+          <div className="psc-search-input-wrap">
+            <input
+              id="pos-sale-search"
+              ref={searchRef}
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !seller.busy && runSearch()}
+              placeholder={t('pos.smart.searchPlaceholder')}
+              autoComplete="off"
+              disabled={seller.busy || seller.sellerPromptOpen}
+            />
           </div>
-          <div className="min-w-[220px] flex-1 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2.5 text-xs leading-relaxed text-amber-900 hidden lg:block">
-            {customerNotes || t('pos.customerNotesHint')}
+          <button type="button" className="psc-btn-search" disabled={seller.busy || !searchQ.trim()} onClick={runSearch}>
+            {t('pos.smart.searchBtn')}
+          </button>
+          <button type="button" className="psc-btn-camera" onClick={runSearch} disabled={seller.busy}>
+            <ScanLine className="h-4 w-4" />
+            {t('pos.smart.cameraBtn')}
+          </button>
+        </div>
+        <div className="psc-actions-row">
+          <button type="button" className="psc-action-chip psc-action-chip--barcode" onClick={() => seller.setSettingsOpen(true)}>
+            <QrCode className="h-3.5 w-3.5" />
+            {t('pos.smart.barcodePanel')}
+          </button>
+          <div className="psc-action-chips">
+            <button type="button" className="psc-action-chip psc-action-chip--order" onClick={() => setPendingOpen(true)}>
+              <FileText className="h-3.5 w-3.5 text-sky-600" />
+              {t('pos.smart.loadPending')}
+              {pendingCount > 0 ? <span className="psc-chip-badge">{t('pos.smart.pendingBadge', { count: String(pendingCount) })}</span> : null}
+            </button>
+            <button type="button" className="psc-action-chip psc-action-chip--quote" onClick={() => setQuotesOpen(true)}>
+              <FileText className="h-3.5 w-3.5 text-violet-600" />
+              {t('pos.smart.pullQuote')}
+              {quotesCount > 0 ? <span className="psc-chip-badge">{t('pos.smart.quotesBadge', { count: String(quotesCount) })}</span> : null}
+            </button>
+            <button type="button" className="psc-action-chip psc-action-chip--booking" onClick={() => setBookingsOpen(true)}>
+              <ShoppingBag className="h-3.5 w-3.5 text-emerald-600" />
+              {t('pos.smart.loadBooking')}
+              {bookingsCount > 0 ? <span className="psc-chip-badge">{t('pos.smart.bookingsBadge', { count: String(bookingsCount) })}</span> : null}
+            </button>
           </div>
         </div>
-        {sellerPicker}
         <PosDeliveryPanel
           active={isDeliveryMode}
           fees={deliveryFees}
@@ -802,295 +761,200 @@ export function PosSaleTab({ session, onMessage }: Props) {
           agentId={deliveryAgentId}
           onAgentChange={setDeliveryAgentId}
         />
-        <PosStockShortageBanner
-          lines={shortageLines}
-          onTransfer={() => setTransferOpen(true)}
-        />
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <LoadFromOrderButton expectedType="sale" onLoaded={handleLoadOrder} />
-          <LoadFromDocButton kind="quotation" onLoaded={handleLoadQuotation} />
-          <LoadFromDocButton kind="reservation" onLoaded={handleLoadReservation} />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 text-slate-500"
-            onClick={() => seller.setSettingsOpen(true)}
-          >
-            <Settings2 className="h-3.5 w-3.5 me-1" />
-            {t('pos.saleSettings')}
-          </Button>
-          {customerId && customerDocsLoading ? (
-            <span className="font-medium text-blue-700">{t('pos.customerDocsLoading')}</span>
-          ) : null}
-          {(loadedOrderId || loadedDocId) ? (
-            <span className="font-bold text-violet-700 flex items-center gap-1">
-              <ClipboardList className="h-3.5 w-3.5" />
-              {t('pos.loadedSourceActive')}
-            </span>
-          ) : null}
-        </div>
+        <PosStockShortageBanner lines={shortageLines} onTransfer={() => setTransferOpen(true)} />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(270px,300px)_1fr]">
-        {/* الشريط الجانبي — يمين في RTL */}
-        <aside className="flex min-h-0 flex-col border-b lg:border-b-0 lg:border-s bg-gradient-to-b from-slate-50 to-white p-3 shadow-[inset_1px_0_0_0_#e2e8f0]">
-          <div className="space-y-2 shrink-0">
-            <Input
-              className="h-9 text-sm font-semibold bg-white"
-              placeholder={t('pos.searchCustomer')}
-              value={customerFilter}
-              onChange={(e) => setCustomerFilter(e.target.value)}
-            />
-            <div className="flex gap-1">
-              <select
-                className="h-10 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold shadow-sm"
-                value={customerId}
-                onChange={(e) => onCustomerChange(e.target.value)}
-              >
+      <div className="psc-workspace">
+        <div className="psc-main">
+          <div className="psc-cart-card">
+            <div className="psc-cart-table-wrap">
+              {session.cart.length === 0 ? (
+                <div className="psc-cart-empty">
+                  <div className="psc-cart-empty-icon">🛍️</div>
+                  <h3>{t('pos.smart.cartEmptyTitle')}</h3>
+                  <p>{t('pos.smart.cartEmptyHint')}</p>
+                </div>
+              ) : (
+                <table className="psc-cart-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>{t('pos.smart.colClothingCode')}</th>
+                      <th>{t('pos.smart.colClothingName')}</th>
+                      <th>{t('pos.colQty')}</th>
+                      <th>{t('pos.colPrice')}</th>
+                      <th>{t('pos.smart.colCustomDiscount')}</th>
+                      <th>{t('pos.colLineTotal')}</th>
+                      <th>{t('pos.colSeller')}</th>
+                      <th>{t('pos.smart.colWarehouse')}</th>
+                      <th>{t('pos.colAction')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {session.cart.map((line, idx) => {
+                      const discAmt = lineDiscountAmount(
+                        line.quantity,
+                        line.unit_price,
+                        line.discount_percent,
+                        line.discount_amount,
+                      );
+                      const lineTotal = lineSubtotal(
+                        line.quantity,
+                        line.unit_price,
+                        line.discount_percent,
+                        line.discount_amount,
+                      );
+                      return (
+                        <tr key={line.key} className={lineStockDeficit(line) > 0 ? 'bg-red-50' : undefined}>
+                          <td>{idx + 1}</td>
+                          <td className="font-mono text-xs font-bold text-blue-800">{line.product_code || '—'}</td>
+                          <td className="font-bold">{line.product_name || line.label}</td>
+                          <td className="text-center font-black">{line.quantity}</td>
+                          <td className="text-end tabular-nums">{fmtPosAmount(parseFloat(line.unit_price) || 0)}</td>
+                          <td className="text-end tabular-nums text-orange-700">{discAmt > 0 ? fmtPosAmount(discAmt) : '—'}</td>
+                          <td className="text-end font-black tabular-nums">{fmtPosAmount(lineTotal)}</td>
+                          <td className="text-emerald-800">{line.seller_name || '—'}</td>
+                          <td className="text-center">{line.available}</td>
+                          <td>
+                            <div className="flex justify-center gap-1">
+                              {canEditLine ? (
+                                <button type="button" className="rounded bg-blue-600 p-1.5 text-white" onClick={() => setEditLine(line)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </button>
+                              ) : null}
+                              <button type="button" className="rounded bg-blue-600 p-1.5 text-white" onClick={() => session.removeLine(line.key)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          <section className="psc-quick-section">
+            <div className="psc-quick-head">
+              <h3>
+                <LayoutGrid className="inline h-4 w-4 me-1 text-blue-600" />
+                {t('pos.smart.quickAccessTitle')}
+              </h3>
+              <span className="psc-stock-tag">
+                <Zap className="h-3 w-3" />
+                {t('pos.smart.stockAvailable')}
+              </span>
+            </div>
+            <div className="psc-quick-grid">
+              {quickItems.map((item) => {
+                const qty = parseFloat(String(item.variant.quantity_available)) || 0;
+                const low = qty > 0 && qty <= 3;
+                const code = item.variant.barcode || item.product.code;
+                return (
+                  <button key={item.key} type="button" className="psc-quick-tile" onClick={() => handleQuickAdd(code)}>
+                    <span className={`psc-stock-dot ${low ? 'psc-stock-dot--low' : 'psc-stock-dot--ok'}`} />
+                    <span className="psc-tile-name">{item.product.name_ar}</span>
+                    <div className="psc-tile-meta">
+                      <span className="psc-tile-code">{item.product.code}</span>
+                      <span className="psc-tile-price">{item.variant.unit_price} {t('dashboard.currency')}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <aside className="psc-sidebar">
+          <div className="psc-total-card">
+            <p>{t('pos.smart.totalDue')}</p>
+            <strong>{fmtPosAmount(cartSummary.netTotal)} {t('dashboard.currency')}</strong>
+          </div>
+
+          <div className="psc-side-card">
+            <h4><User className="h-4 w-4 text-blue-600" />{t('pos.smart.customerCredit')}</h4>
+            {customerCode ? <span className="psc-customer-code">{customerCode}</span> : null}
+            <div className="psc-customer-row">
+              <select value={customerId} onChange={(e) => onCustomerChange(e.target.value)}>
                 <option value="">{t('pos.walkInCustomer')}</option>
                 {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name_ar}
-                  </option>
+                  <option key={c.id} value={c.id}>{c.name_ar}</option>
                 ))}
               </select>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0 border-slate-200 bg-white"
-                title={t('pos.customerDocsReload')}
-                disabled={!customerId || customerDocsLoading}
-                onClick={() => customerId && loadCustomerDocuments(customerId, { manual: true })}
-              >
-                <Receipt className={`h-4 w-4 ${customerDocsLoading ? 'animate-pulse' : ''}`} />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0 border-slate-200 bg-white"
-                title={t('pos.addCustomer')}
-                onClick={() => onMessage?.(t('pos.addCustomerFromList'))}
-              >
+              <button type="button" className="psc-customer-add" onClick={() => onMessage?.(t('pos.addCustomerFromList'))} title={t('pos.addCustomer')}>
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
-            <div className="flex gap-1">
-              <select
-                className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-sm shadow-sm"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={!customerId}
-              >
-                <option value="">{t('pos.selectPhone')}</option>
-                {phoneOptions.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-              <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0 bg-white" disabled={!customerId}>
-                <Plus className="h-3 w-3" />
-              </Button>
+            <select className="mt-2" value={phone} onChange={(e) => setPhone(e.target.value)}>
+              <option value="">{phoneDisplay}</option>
+              {phoneOptions.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="psc-side-card">
+            <h4>{t('pos.smart.invoiceNotes')}</h4>
+            <textarea value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} placeholder={t('pos.smart.notesPlaceholder')} />
+          </div>
+
+          <div className="psc-side-card">
+            <h4><Zap className="h-4 w-4 text-amber-500" />{t('pos.smart.payMethods')}</h4>
+            <div className="psc-pay-methods">
+              <button type="button" className="psc-pay-method psc-pay-method--cash" onClick={openPayment}>
+                <span className="psc-pay-icon"><Banknote className="h-4 w-4" /></span>
+                <span>{t('pos.smart.payFawry')}</span>
+              </button>
+              <button type="button" className="psc-pay-method psc-pay-method--wallet" onClick={openPayment}>
+                <span className="psc-pay-icon"><Smartphone className="h-4 w-4" /></span>
+                <span>{t('pos.smart.payWallet')}</span>
+              </button>
+              <button type="button" className="psc-pay-method psc-pay-method--card" onClick={openPayment}>
+                <span className="psc-pay-icon"><CreditCard className="h-4 w-4" /></span>
+                <span>{t('pos.smart.payCard')}</span>
+              </button>
             </div>
           </div>
 
-          <div className="mt-5 flex-1 min-h-0 overflow-y-auto space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-              <span className="text-slate-600 font-semibold">{t('pos.invoiceTotal')}</span>
-              <span className="text-xl font-black tabular-nums text-slate-900">
-                {fmtPosAmount(cartSummary.grossTotal)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-600 font-semibold shrink-0">{t('pos.invoiceDiscount')}</span>
-              <div className="flex items-center gap-1.5">
-                {cartSummary.lineDiscountTotal > 0 ? (
-                  <span className="text-sm font-bold tabular-nums text-orange-600">
-                    {fmtPosAmount(cartSummary.lineDiscountTotal)}
-                  </span>
-                ) : null}
-                <span className="text-slate-400">+</span>
-                <Input
-                  className="h-9 w-[72px] text-end font-black tabular-nums border-orange-200 bg-orange-50/50"
-                  value={invoiceDiscount}
-                  onChange={(e) => setInvoiceDiscount(e.target.value)}
-                />
-              </div>
-            </div>
-            <div
-              className={`flex items-center justify-between gap-2 rounded-xl px-2 py-1.5 transition ${
-                isDeliveryMode ? 'bg-orange-100 ring-2 ring-orange-300' : ''
-              }`}
-            >
-              <span className={`font-semibold shrink-0 ${isDeliveryMode ? 'text-orange-900' : 'text-slate-600'}`}>
-                {t('pos.deliveryFees')}
-                {isDeliveryMode ? (
-                  <span className="block text-[10px] font-bold text-orange-700">{t('pos.deliveryModeOn')}</span>
-                ) : null}
-              </span>
-              <Input
-                ref={deliveryFeesRef}
-                className={`h-9 w-[88px] text-end font-black tabular-nums ${
-                  isDeliveryMode ? 'border-orange-500 bg-white ring-2 ring-orange-300' : ''
-                }`}
-                value={deliveryFees}
-                onChange={(e) => setDeliveryFees(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="rounded-2xl bg-gradient-to-br from-[#4169E1] to-[#3451b2] px-4 py-5 text-center text-white shadow-lg mt-2">
-              <p className="text-sm font-bold opacity-95">{t('pos.netInvoice')}</p>
-              <p className="text-4xl font-black tabular-nums tracking-tight mt-1">
-                {fmtPosAmount(cartSummary.netTotal)}
-              </p>
-            </div>
+          {payGateError ? (
+            <div className="rounded-lg border border-red-300 bg-red-50 px-2 py-2 text-xs font-bold text-red-700 text-center">{payGateError}</div>
+          ) : null}
+
+          <div className="psc-checkout-row">
+            <button type="button" className="psc-btn-clear" onClick={resetInvoice} title={t('pos.cancelSale')}>
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <button type="button" className="psc-btn-register" disabled={session.cart.length === 0 || session.loading} onClick={openPayment}>
+              <CheckCircle2 className="h-4 w-4" />
+              {session.loading ? t('inventory.loading') : t('pos.smart.registerInvoice')}
+            </button>
           </div>
 
-          <div className="shrink-0 space-y-2 border-t border-slate-200 bg-white/95 pt-3 mt-auto">
-            {payGateError ? (
-              <div className="rounded-lg border border-red-300 bg-red-50 px-2 py-2 text-xs font-bold text-red-700 text-center">
-                {payGateError}
-              </div>
-            ) : null}
-            <p className="text-center text-[10px] leading-snug text-slate-500 px-1">{t('pos.payHint')}</p>
-            <Button
-              className="h-12 w-full bg-[#4169E1] text-base font-black hover:bg-[#3451b2] shadow-md disabled:opacity-60"
-              disabled={session.cart.length === 0}
-              onClick={openPayment}
-            >
-              {session.loading ? t('inventory.loading') : t('pos.payButton')}
-            </Button>
-            <Button
-              variant="outline"
-              className="h-10 w-full border-2 border-red-400 bg-red-50 text-red-700 font-black hover:bg-red-100"
-              onClick={resetInvoice}
-            >
-              {t('pos.cancelSale')}
-            </Button>
-            {hasStockShortage ? (
-              <Button
-                className="h-11 w-full bg-emerald-600 font-black hover:bg-emerald-700 shadow-md"
-                onClick={() => setTransferOpen(true)}
-              >
-                {t('pos.stockTransferBtn')}
-              </Button>
-            ) : null}
-            <PosInvoiceActionCards
-              onReserve={() => void saveReservation()}
-              onQuotation={() => void saveQuotation()}
-              onDelivery={() => setDeliveryHubOpen(true)}
-              onHold={holdCart}
-              disabled={session.cart.length === 0}
-              docSaving={docSaving}
-              deliveryActive={isDeliveryMode}
-            />
-          </div>
+          {hasStockShortage ? (
+            <Button className="w-full bg-emerald-600 font-black" onClick={() => setTransferOpen(true)}>{t('pos.stockTransferBtn')}</Button>
+          ) : null}
+
+          <button type="button" className="psc-util-card" disabled={session.cart.length === 0 || docSaving} onClick={() => void saveReservation()}>
+            <span className="psc-util-icon"><QrCode className="h-4 w-4" /></span>
+            <div><h5>{t('pos.smart.reserveGoods')}</h5><p>{t('pos.smart.reserveDesc')}</p></div>
+          </button>
+          <button type="button" className="psc-util-card" disabled={session.cart.length === 0 || docSaving} onClick={() => void saveQuotation()}>
+            <span className="psc-util-icon"><FileText className="h-3.5 w-3.5" /></span>
+            <div><h5>{t('pos.smart.priceQuote')}</h5><p>{t('pos.smart.quoteDesc')}</p></div>
+          </button>
+
+          <button type="button" className="psc-buyer-btn" onClick={() => onMessage?.(t('pos.smart.buyerScreen'))}>
+            <Smartphone className="h-3 w-3" />
+            {t('pos.smart.buyerScreen')}
+          </button>
         </aside>
-
-        <div className="min-h-0 overflow-auto bg-white">
-          <table
-            className="w-full text-sm min-w-[920px]"
-            style={{ fontFamily: "'Times New Roman', Times, serif" }}
-          >
-            <thead className="sticky top-0 z-10 bg-gradient-to-l from-[#1d4ed8] to-[#2563eb] text-[11px] font-black text-white">
-              <tr>
-                <th className="w-10 px-2 py-3 text-center">#</th>
-                <th className="px-3 py-3 text-start">{t('pos.colCode')}</th>
-                <th className="px-3 py-3 text-start">{t('pos.colName')}</th>
-                <th className="w-16 px-2 py-3 text-center">{t('pos.colQty')}</th>
-                <th className="w-20 px-2 py-3 text-end">{t('pos.colPrice')}</th>
-                <th className="w-16 px-2 py-3 text-end">{t('pos.colDiscount')}</th>
-                <th className="w-20 px-2 py-3 text-end">{t('pos.colLineTotal')}</th>
-                <th className="w-24 px-2 py-3 text-start">{t('pos.colSeller')}</th>
-                <th className="w-16 px-2 py-3 text-center">{t('pos.colStock')}</th>
-                <th className="w-20 px-2 py-3 text-center">{t('pos.colAction')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {session.cart.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="py-20 text-center text-slate-400 text-base">
-                    {t('pos.cartEmpty')}
-                  </td>
-                </tr>
-              ) : (
-                session.cart.map((line, idx) => {
-                  const discAmt = lineDiscountAmount(
-                    line.quantity,
-                    line.unit_price,
-                    line.discount_percent,
-                    line.discount_amount,
-                  );
-                  const lineTotal = lineSubtotal(
-                    line.quantity,
-                    line.unit_price,
-                    line.discount_percent,
-                    line.discount_amount,
-                  );
-                  return (
-                  <tr
-                    key={line.key}
-                    className={`border-b border-slate-100 hover:bg-blue-50/50 even:bg-slate-50/40 ${
-                      lineStockDeficit(line) > 0 ? 'bg-red-50/80 ring-1 ring-inset ring-red-200' : ''
-                    }`}
-                  >
-                    <td className="px-2 py-2.5 text-center text-slate-500 font-bold">{idx + 1}</td>
-                    <td className="px-3 py-2.5 font-mono text-xs font-bold text-blue-800">
-                      {line.product_code || '—'}
-                    </td>
-                    <td className="px-3 py-2.5 font-bold text-slate-900">
-                      {line.product_name || line.label}
-                    </td>
-                    <td className="px-2 py-2.5 text-center font-black tabular-nums text-base">
-                      {line.quantity}
-                    </td>
-                    <td className="px-2 py-2.5 text-end tabular-nums font-semibold">
-                      {fmtPosAmount(parseFloat(line.unit_price) || 0)}
-                    </td>
-                    <td className="px-2 py-2.5 text-end tabular-nums font-bold text-orange-700">
-                      {discAmt > 0 ? fmtPosAmount(discAmt) : '—'}
-                    </td>
-                    <td className="px-2 py-2.5 text-end font-black tabular-nums text-base">
-                      {fmtPosAmount(lineTotal)}
-                    </td>
-                    <td className="px-2 py-2.5 text-sm font-bold text-emerald-800">
-                      {line.seller_name || '—'}
-                    </td>
-                    <td className={`px-2 py-2.5 text-center text-sm font-black ${lineStockDeficit(line) > 0 ? 'text-red-600' : 'text-blue-700'}`}>
-                      {line.available}
-                      {lineStockDeficit(line) > 0 ? (
-                        <span className="block text-[10px] text-red-500">-{lineStockDeficit(line)}</span>
-                      ) : null}
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <div className="flex justify-center gap-1">
-                        {canEditLine ? (
-                          <button
-                            type="button"
-                            className="flex h-8 w-8 items-center justify-center rounded-md bg-[#4169E1] text-white hover:bg-[#3451b2] shadow-sm"
-                            onClick={() => setEditLine(line)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-md bg-[#4169E1] text-white hover:bg-[#3451b2] shadow-sm"
-                          onClick={() => session.removeLine(line.key)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
+
+      <PosPendingOrdersModal open={pendingOpen} onClose={() => setPendingOpen(false)} onLoadScanOrder={handleLoadOrder} onLoadHeld={handleLoadHeld} />
+      <PosActiveQuotationsModal open={quotesOpen} onClose={() => setQuotesOpen(false)} onLoad={handleLoadQuotation} />
+      <PosPreReservationsModal open={bookingsOpen} onClose={() => setBookingsOpen(false)} onLoad={handleLoadReservation} />
 
       <PosLineEditDialog
         line={editLine}
