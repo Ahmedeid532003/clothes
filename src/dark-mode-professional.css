@@ -102,20 +102,20 @@ html[data-app-theme='dark'] .app-shell-header {
   backdrop-filter: blur(16px) saturate(120%) !important;
 }
 
-html.dark .app-shell-header :where(span, button, svg):not(.lux-theme-switch):not(.lux-theme-switch *),
-html[data-app-theme='dark'] .app-shell-header :where(span, button, svg):not(.lux-theme-switch):not(.lux-theme-switch *) {
+html.dark .app-shell-header :where(span, button, svg):not(.pro-theme-switch):not(.pro-theme-switch *),
+html[data-app-theme='dark'] .app-shell-header :where(span, button, svg):not(.pro-theme-switch):not(.pro-theme-switch *) {
   color: var(--dm-text) !important;
 }
 
-html.dark .app-shell-header :where(button):not(.lux-theme-switch),
-html[data-app-theme='dark'] .app-shell-header :where(button):not(.lux-theme-switch) {
+html.dark .app-shell-header :where(button):not(.pro-theme-switch__option),
+html[data-app-theme='dark'] .app-shell-header :where(button):not(.pro-theme-switch__option) {
   background: var(--dm-surface-2) !important;
   border-color: var(--dm-border) !important;
   color: var(--dm-text) !important;
 }
 
-html.dark .app-shell-header :where(button:hover):not(.lux-theme-switch),
-html[data-app-theme='dark'] .app-shell-header :where(button:hover):not(.lux-theme-switch) {
+html.dark .app-shell-header :where(button:hover):not(.pro-theme-switch__option),
+html[data-app-theme='dark'] .app-shell-header :where(button:hover):not(.pro-theme-switch__option) {
   background: var(--dm-surface-3) !important;
   color: #fff !important;
 }
@@ -397,8 +397,8 @@ html[data-app-theme='dark'] *::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
-/* Keep lux switch readable on dark header */
-html.dark .lux-theme-switch__label-dark,
-html[data-app-theme='dark'] .lux-theme-switch__label-dark {
-  color: #a5b4fc !important;
+/* Professional theme switch stays self-styled on dark header */
+html.dark .app-shell-header .pro-theme-switch__option[data-active='true'],
+html[data-app-theme='dark'] .app-shell-header .pro-theme-switch__option[data-active='true'] {
+  color: #f8fafc !important;
 }

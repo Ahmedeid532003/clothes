@@ -66,10 +66,9 @@ html {
     white-space: nowrap !important;
   }
 
-  .lux-theme-switch {
-    --lux-w: 6.4rem !important;
-    --lux-h: 2.4rem !important;
-    --lux-orb: 1.95rem !important;
+  .pro-theme-switch {
+    width: 8.6rem !important;
+    --pro-theme-h: 2.25rem !important;
   }
 }
 
@@ -242,15 +241,14 @@ html {
     grid-template-columns: 1fr !important;
   }
 
-  /* Theme switch scale down but keep visible */
-  .lux-theme-switch {
-    --lux-w: 5.6rem !important;
-    --lux-h: 2.2rem !important;
-    --lux-orb: 1.8rem !important;
+  /* Theme switch compact on phone */
+  .pro-theme-switch {
+    width: 7.6rem !important;
+    --pro-theme-h: 2.15rem !important;
   }
 
-  .lux-theme-switch__label {
-    display: none !important;
+  .app-shell-header .pro-theme-switch__option span:not(.pro-theme-switch__icon) {
+    font-size: 0.68rem !important;
   }
 
   /* Mobile sidebar sheet full-friendly */
@@ -359,10 +357,13 @@ html {
     min-width: 560px !important;
   }
 
-  .lux-theme-switch {
-    --lux-w: 5rem !important;
-    --lux-h: 2rem !important;
-    --lux-orb: 1.65rem !important;
+  .pro-theme-switch {
+    width: 6.8rem !important;
+    --pro-theme-h: 2.05rem !important;
+  }
+
+  .app-shell-header .pro-theme-switch__option span:last-child {
+    display: none !important;
   }
 }
 
