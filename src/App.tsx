@@ -800,7 +800,6 @@ export default function App() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <LanguageSwitcher variant="header" />
             <FullscreenToggle className="app-icon-button app-fullscreen-trigger" />
           </div>
         </div>

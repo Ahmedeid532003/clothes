@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Minus, Pipette, Plus, Settings2, Type } from 'lucide-react';
+import { Check, Languages, Minus, Pipette, Plus, Settings2, Type } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
 import {
@@ -255,7 +255,7 @@ function ColorSwatch({
 }
 
 export function InterfaceSettingsPage() {
-  const { locale } = useLanguage();
+  const { locale, setLocale } = useLanguage();
   const isAr = locale === 'ar';
   const [panel, setPanel] = useState<Panel>('home');
   const [baseHex, setBaseHex] = useState(() => getStoredAccent());
@@ -658,6 +658,42 @@ export function InterfaceSettingsPage() {
               </span>
             </div>
           </button>
+
+          <div className="rounded-2xl border border-gray-200 bg-slate-50/60 p-5 text-start">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-orange-100 bg-orange-50">
+              <Languages className="h-5 w-5 text-orange-500" />
+            </div>
+            <h3 className="text-sm font-black text-slate-800">{isAr ? 'اللغة' : 'Language'}</h3>
+            <p className="mt-1 text-[11px] font-bold text-slate-400">
+              {isAr ? 'تبديل لغة واجهة النظام' : 'Switch system interface language'}
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLocale('ar')}
+                className={cn(
+                  'h-10 rounded-xl border text-xs font-black transition',
+                  locale === 'ar'
+                    ? 'border-orange-500 bg-orange-500 text-white'
+                    : 'border-gray-200 bg-white text-slate-600 hover:border-orange-300',
+                )}
+              >
+                العربية
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocale('en')}
+                className={cn(
+                  'h-10 rounded-xl border text-xs font-black transition',
+                  locale === 'en'
+                    ? 'border-orange-500 bg-orange-500 text-white'
+                    : 'border-gray-200 bg-white text-slate-600 hover:border-orange-300',
+                )}
+              >
+                English
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
