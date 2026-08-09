@@ -29,6 +29,7 @@ import { SuppliersCanvasPage } from "@/components/suppliers/SuppliersCanvasPage"
 import { isSuppliersCanvasRoute } from "@/components/suppliers/suppliersCanvasNav";
 import { PosBarcodePage } from '@/components/pos/PosBarcodePage';
 import { PosIntegratedPage } from '@/components/pos/PosIntegratedPage';
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { FullscreenToggle } from "@/components/fullscreen-toggle";
 import { ThemeModeControls } from "@/components/theme-mode-controls";
 import { TenantAppLayout } from "@/components/layout/TenantAppLayout";
@@ -800,6 +801,7 @@ export default function App() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <LanguageSwitcher variant="header" />
             <FullscreenToggle className="app-icon-button app-fullscreen-trigger" />
           </div>
         </div>
