@@ -6,7 +6,6 @@ import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import { NavAnalytics } from "@/components/nav-analytics"
-import { ThemeModeControls } from "@/components/theme-mode-controls"
 import {
   Sidebar,
   SidebarContent,
@@ -472,9 +471,6 @@ export function AppSidebar({ activeTab, onTabChange, side, user: userProp, onLog
         )}
       </SidebarContent>
       <SidebarFooter className="border-t border-white/5 gap-2">
-        <div className="px-1 py-0.5">
-          <ThemeModeControls className="pro-theme-switch--sidebar" />
-        </div>
         <NavUser user={user} onLogout={onLogout} onProfile={onProfile} />
       </SidebarFooter>
       <SidebarRail />
